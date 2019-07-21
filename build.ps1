@@ -1,5 +1,6 @@
 [CmdletBinding()]
 Param(
+    # Process-specific parameters
     [Parameter()]
     [string]
     $ModuleName = 'PSProfile',
@@ -10,7 +11,7 @@ Param(
         PowerShellGet     = '2.1.2'
         InvokeBuild       = '5.5.2'
     },
-
+    #region: Invoke-Build parameters
     [Parameter()]
     [ValidateSet('Init','Clean','Build','Test','Deploy')]
     [string[]]
@@ -24,6 +25,7 @@ Param(
     [Parameter()]
     [switch]
     $Summary
+    #endregion: Invoke-Build parameters
 )
 
 #region: Import Azure Pipeline Helper functions from Gist
@@ -53,21 +55,21 @@ $PSDefaultParameterValues = @{
     'Install-Module:SkipPublisherCheck' = $true
 }
 Add-Heading "Resolving module dependencies"
-foreach ($dependency in $Dependencies.Keys) {
+foreach ($module in $Dependencies.Keys) {
     $parameters = @{
-        Name           = $dependency
-        MinimumVersion = $Dependencies[$dependency]
+        Name           = $module
+        MinimumVersion = $Dependencies[$module]
     }
-    Write-BuildLog "[$dependency] Resolving"
+    Write-BuildLog "[$module] Resolving"
     try {
-        if ($imported = Get-Module $dependency) {
-            Write-BuildLog "[$dependency] Removing imported module"
+        if ($imported = Get-Module $module) {
+            Write-BuildLog "[$module] Removing imported module"
             $imported | Remove-Module
         }
         Import-Module @parameters
     }
     catch {
-        Write-BuildLog "[$dependency] Installing missing module"
+        Write-BuildLog "[$module] Installing missing module"
         Install-Module @parameters
         Import-Module @parameters
     }
