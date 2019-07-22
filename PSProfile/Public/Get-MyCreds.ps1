@@ -17,14 +17,14 @@ function Get-MyCreds {
     Process {
         if ($Item) {
             Write-Verbose "Checking Credential Vault for user '$Item'"
-            if ($script:PSProfile.CredStore.$Item) {
+            if ($global:PSProfile.Vault._secrets.$Item) {
                 Write-Verbose "Found item in CredStore"
-                return $script:PSProfile.CredStore.$Item
+                return $global:PSProfile.Vault._secrets.$Item
             }
             else {
                 $PSCmdlet.ThrowTerminatingError(
                     [System.Management.Automation.ErrorRecord]::new(
-                        ([System.Management.Automation.ItemNotFoundException]"Could not find creden"),
+                        ([System.Management.Automation.ItemNotFoundException]"Could not find credentials"),
                         'My.ID',
                         [System.Management.Automation.ErrorCategory]::InvalidArgument,
                         $MyObject
@@ -33,7 +33,9 @@ function Get-MyCreds {
             }
         }
         else {
-            $script:PSProfile
+            $global:PSProfile.Vault._secrets
         }
     }
 }
+
+New-Alias -Name Creds -Value 'Get-MyCreds' -Option AllScope -Scope Global -Force

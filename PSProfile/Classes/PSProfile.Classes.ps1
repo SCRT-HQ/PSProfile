@@ -103,6 +103,7 @@ class PSProfile {
     [hashtable[]] $Plugins
     [string[]] $PluginPaths
     [string[]] $ProjectPaths
+    [hashtable] $Prompts
     [string[]] $ScriptPaths
     [hashtable] $SymbolicLinks
     [hashtable] $Variables
@@ -149,6 +150,7 @@ class PSProfile {
             'Plugins'
             'PluginPaths'
             'ProjectPaths'
+            'Prompts'
             'ScriptPaths'
             'SymbolicLinks'
             'Variables'
@@ -268,6 +270,7 @@ class PSProfile {
                 $p = $_
                 $cnt = 0
                 if (Test-Path $p) {
+                    $p = (Resolve-Path $p).Path
                     $cnt++
                     $pInfo = [System.IO.DirectoryInfo]::new($p)
                     $this.PathAliases["@$($pInfo.Name)"] = $pInfo.FullName
