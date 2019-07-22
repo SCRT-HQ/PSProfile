@@ -85,8 +85,11 @@ task Build Clean,{
             }
         }
     }
-    Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -in @('lib','bin')} | ForEach-Object {
+    Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -notin @('Classes','Private','Public')} | ForEach-Object {
         Copy-Item $_.FullName -Destination $TargetVersionDirectory -Container -Recurse
+    }
+    if (Test-Path (Join-Path $SourceModuleDirectory 'Configuration.psd1')) {
+        Copy-Item (Join-Path $SourceModuleDirectory 'Configuration.psd1') -Destination $TargetVersionDirectory
     }
 
     # Copy over manifest

@@ -1,16 +1,8 @@
 @{
-    _internal        = @{
-        GitPathMap       = @{ }
-        Vault            = @{
-            _secrets     = @{ }
-        }
-    }
-    GistsToInvoke    = @()
+    Settings         = @{}
     ModulesToImport  = @()
     ModulesToInstall = @()
-    PathAliases      = @{
-        '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
-    }
+    PathAliases      = @{}
     Plugins = @(
         @{
             Name = 'PSProfile.GitAliases'
@@ -53,30 +45,8 @@
             }
         }
     )
-    PluginPaths      = @(
-        $(Join-Path (Get-Module PSProfile).ModuleBase "Plugins")
-    )
-    ProjectPaths     = @(
-        '~\WorkGit'
-        '~\ScrtGit'
-        'E:\Git'
-    )
-    Settings         = @{
-        DefaultPrompt          = 'Default'
-        ProjectPathSearchDepth = 4
-        PSVersionStringLength  = 3
-    }
-    SymbolicLinks    = @{
-        'C:\workstation' = 'E:\Git\workstation'
-    }
-    Variables        = @{
-        Environment = @{
-            Home     = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
-            UserName = [System.Environment]::UserName
-        }
-        Global      = @{
-            PathAliasDirectorySeparator    = [System.IO.Path]::DirectorySeparatorChar
-            AltPathAliasDirectorySeparator = [char]0xe0b1
-        }
-    }
+    PluginPaths      = @()
+    ProjectPaths     = @()
+    SymbolicLinks    = @{}
+    Variables        = @{}
 }
