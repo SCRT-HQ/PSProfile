@@ -53,7 +53,7 @@ class PSProfileSecret {
     }
 }
 class PSProfileVault {
-    hidden [System.Collections.Generic.Dictionary[[string],[PSProfileSecret]]] $_secrets
+    [System.Collections.Generic.Dictionary[[string],[PSProfileSecret]]] $_secrets
 
     PSProfileVault(){
         $this._secrets = [System.Collections.Generic.Dictionary[[string],[PSProfileSecret]]]::new()
@@ -81,33 +81,9 @@ class PSProfileVault {
         $this._secrets.Remove($name)
     }
 }
-class PSProfileInternal {
-    [System.Collections.Generic.List[PSProfileEvent]] $Log
-    [datetime] $ProfileLoadStart
-    [datetime] $ProfileLoadEnd
-    [timespan] $ProfileLoadDuration
-    hidden [PSProfileVault] $Vault
-
-    PSProfileInternal() {
-        $this.ProfileLoadStart = [datetime]::Now
-        $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
-        $this.Vault = [PSProfileVault]::new()
-    }
-}
-class PSProfileSettings {
-    [System.Collections.Generic.List[PSProfileEvent]] $Log
-    [datetime] $ProfileLoadStart
-    [datetime] $ProfileLoadEnd
-    [timespan] $ProfileLoadDuration
-    hidden [PSProfileVault] $Vault
-
-    PSProfileInternal() {
-        $this.ProfileLoadStart = [datetime]::Now
-        $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
-        $this.Vault = [PSProfileVault]::new()
-    }
-}
 class PSProfile {
+    [hashtable] $_internal
+    [hashtable] $Settings
     [hashtable] $GitPathMap
     [string[]] $GistsToInvoke
     [string[]] $ModulesToImport
@@ -116,26 +92,57 @@ class PSProfile {
     [hashtable[]] $Plugins
     [string[]] $PluginPaths
     [string[]] $ProjectPaths
-    [PSProfileSettings] $Settings
     [hashtable] $SymbolicLinks
-    hidden [PSProfileInternal] $_internal
+    [hashtable] $Variables
 
     PSProfile() {
-        # Instantiate default/base properties
         $this.GitPathMap = @{}
         $this.PathAliasMap = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
         }
-        $this.Settings = [PSProfileSettings]::new()
-        $this._internal = [PSProfileInternal]::new()
+        $this.Settings = @{
+            DefaultPrompt          = 'Default'
+            ProjectPathSearchDepth = 4
+            PSVersionStringLength  = 3
+        }
+        $this._internal = @{
+            ProfileLoadStart = [datetime]::Now
+            Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
+            Vault = [PSProfileVault]::new()
+        }
     }
     [void] Load() {
         # Load the cached profile via the Configuration module
-        $this._LoadProfile()
+        $configuration = Get-PSProfileConfig
 
-        # Process addition items, i.e. Plugins, etc
+        if ($configuration.Plugins.Count) {
+            $this._loadPlugins($configuration.Plugins)
+        }
 
-        $this.Plugins.ForEach({
+        # Mark the profile load as complete
+        $this._internal.ProfileLoadEnd = [datetime]::Now
+        $this._internal.ProfileLoadDuration = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
+        Write-Host "Loading personal profile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
+    }
+    hidden [void] _installModules([object[]]$modules){
+        $sb = {
+            Param (
+                [parameter()]
+                $Module
+            )
+
+        }
+        $modules | ForEach-Object {
+            if ($_ -is [string]) {
+                @{Name = $_}
+            }
+            else {
+                $_
+            }
+        } | Start-RSJob -Name "_PSProfile_InstallModule_$($_.Name)" -ScriptBlock $sb
+    }
+    hidden [void] _loadPlugins([hashtable[]]$plugins){
+        $plugins.ForEach({
             try {
                 $importParams = @{
                     ErrorAction = 'Stop'
@@ -149,30 +156,24 @@ class PSProfile {
                 elseif ($this.PluginPaths.Count) {
 
                 }
-                $this.Log(
+                $this._log(
                     "'$($_.Class)' plugin loaded!",
                     'Plugins'
                 )
             }
             catch {
-                $this.Log(
+                $this._log(
                     "'$($_.Class)' plugin not found!",
                     'Plugins',
                     'Warning'
                 )
             }
         })
-
-        # Mark the profile load as complete
-        $this._internal.ProfileLoadEnd = [datetime]::Now
-        $this._internal.ProfileLoadDuration = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
-        Write-Host "Loading personal profile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
     }
-    hidden [void] Log([string]$message,[string]$section,[PSProfileLogLevel]$logLevel) {
+    hidden [void] _log([string]$message,[string]$section,[PSProfileLogLevel]$logLevel) {
         $dt = Get-Date
         $shortMessage = "[$($dt.ToString('HH:mm:ss'))] $message"
 
-        # "[$($timestamp)] $(if($logLevel -ne 'Quiet'){"[$logLevel] "} )$message"
         $lastCommand = if ($this._internal.Log.Count) {
             $dt - $this._internal.Log[-1].Time
         }
@@ -207,15 +208,15 @@ class PSProfile {
             }
         }
     }
-    hidden [void] Log([string]$message,[string]$section) {
+    hidden [void] _log([string]$message,[string]$section) {
         $this._internal.Log($message,$section,'Quiet')
     }
     [void] SetPathAlias([string]$alias,[string]$path,[PSProfileLogLevel]$logLevel) {
-        $this.Log("Setting Path Alias '$alias' to '$path'",$logLevel)
+        $this._log("Setting Path Alias '$alias' to '$path'",$logLevel)
         $this.PathAliases[$alias] = $path
     }
     [void] RemovePathAlias([string]$alias,[PSProfileLogLevel]$logLevel) {
-        $this.Log("Removing Path Alias '$alias'",$logLevel)
+        $this._log("Removing Path Alias '$alias'",$logLevel)
         $this.PathAliases.Remove($alias)
     }
     [void] SetPathAlias([string]$alias,[string]$path) {

@@ -1,10 +1,8 @@
 @{
     _internal        = @{
         GitPathMap       = @{ }
-        ProfileLoadStart = Get-Date
         Vault            = @{
-            Secrets     = @{ }
-            Credentials = @{ }
+            _secrets     = @{ }
         }
     }
     GistsToInvoke    = @()
