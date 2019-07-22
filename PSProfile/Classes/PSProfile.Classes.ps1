@@ -335,13 +335,24 @@ class PSProfile {
         if (-not [string]::IsNullOrEmpty((-join $this.ScriptPaths))) {
             $this.ScriptPaths | ForEach-Object {
                 $p = $_
-                [System.IO.DirectoryInfo]::new($p).EnumerateFiles('*.ps1',[System.IO.SearchOption]::AllDirectories) | ForEach-Object {
-                    $this._log(
-                        "'$($_.Name)' Invoking script",
-                        'InvokeScripts',
-                        'Debug'
-                    )
-                    Invoke-Expression ([System.IO.File]::ReadAllText($_.FullName))
+                [System.IO.DirectoryInfo]::new($p).EnumerateFiles('*.ps1',[System.IO.SearchOption]::AllDirectories) | Where-Object {$_.BaseName -notmatch '^(profile|CONFIG|WIP)'} | ForEach-Object {
+                    $s = $_
+                    try {
+                        $this._log(
+                            "'$($s.Name)' Invoking script",
+                            'InvokeScripts',
+                            'Debug'
+                        )
+                        Invoke-Expression ([System.IO.File]::ReadAllText($s.FullName))
+                    }
+                    catch {
+                        $e = $_
+                        $this._log(
+                            "'$($s.Name)' Failed to invoke script! Error: $e",
+                            'InvokeScripts',
+                            'Warning'
+                        )
+                    }
                 }
             }
         }
