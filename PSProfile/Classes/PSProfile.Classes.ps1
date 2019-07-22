@@ -64,14 +64,25 @@ class PSProfileVault : Hashtable {
             $password
         )
     }
+    [void] SetSecret([pscredential]$psCredential) {
+        $this._secrets[$psCredential.UserName] = $psCredential
+    }
     [void] SetSecret([string]$name, [pscredential]$psCredential) {
         $this._secrets[$name] = $psCredential
     }
     [void] SetSecret([string]$name, [securestring]$secureString) {
         $this._secrets[$name] = $secureString
     }
-    [object] GetSecret() {
-        return $this._secrets[$env:USERNAME]
+    [pscredential] GetSecret() {
+        if ($env:USERNAME) {
+            return $this._secrets[$env:USERNAME]
+        }
+        elseif ($env:USER) {
+            return $this._secrets[$env:USER]
+        }
+        else {
+            return $null
+        }
     }
     [object] GetSecret([string]$name) {
         return $this._secrets[$name]
@@ -182,21 +193,9 @@ class PSProfile {
             'Debug'
         )
         if ($null -ne $this.SymbolicLinks.Keys) {
-            $this.SymbolicLinks.GetEnumerator() | ForEach-Object {
+            $null = $this.SymbolicLinks.GetEnumerator() | Start-RSJob -Name {"_PSProfile_SymbolicLinks_" + $_.Key} -ScriptBlock {
                 if (-not (Test-Path $_.Key)) {
-                    $this._log(
-                        "'$($_.Key)' >> '$($_.Value)'",
-                        'SymbolicLinks',
-                        'Debug'
-                    )
                     New-Item -ItemType SymbolicLink -Path $_.Key -Value $_.Value
-                }
-                else {
-                    $this._log(
-                        "'$($_.Key)' Path already exists!",
-                        'SymbolicLinks',
-                        'Debug'
-                    )
                 }
             }
         }
