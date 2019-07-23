@@ -9,8 +9,8 @@ function Get-Definition {
     )
     Process {
         try {
-            $Defintion = (Get-Command $Command -ErrorAction Stop).Definition
-            "function $Command {$Defintion}"
+            $Definition = (Get-Command $Command -ErrorAction Stop).Definition
+            "function $Command {$Definition}"
         }
         catch {
             throw
