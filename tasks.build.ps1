@@ -25,7 +25,7 @@ Param(
     $TargetVersionDirectory
 )
 
-task . Init,Clean,Build,Import,Test
+task . Init,Clean,Build
 
 $sb = {
     "Task: $($Task.Name)"
@@ -107,7 +107,7 @@ task Build Clean,{
     Get-ChildItem $TargetVersionDirectory | Format-Table -Autosize
 }
 
-task Import -If {Test-Path $TargetManifestPath} Init,{
+task Import -If {Test-Path $TargetManifestPath} Build,{
     Import-Module -Name $TargetModuleDirectory -ErrorAction Stop
 }
 

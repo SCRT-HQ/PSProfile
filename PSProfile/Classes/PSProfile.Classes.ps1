@@ -55,8 +55,8 @@ class PSProfileSecret {
 class PSProfileVault : Hashtable {
     [hashtable] $_secrets
 
-    PSProfileVault(){
-        $this._secrets = @{}
+    PSProfileVault() {
+        $this._secrets = @{ }
     }
     [void] SetSecret([string]$name, [string]$userName, [securestring]$password) {
         $this._secrets[$name] = [PSCredential]::new(
@@ -112,10 +112,10 @@ class PSProfile {
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
-        $this._internal = @{}
-        $this.GitPathMap = @{}
-        $this.PSBuildPathMap = @{}
-        $this.SymbolicLinks = @{}
+        $this._internal = @{ }
+        $this.GitPathMap = @{ }
+        $this.PSBuildPathMap = @{ }
+        $this.SymbolicLinks = @{ }
         $this.Variables = @{
             Environment = @{
                 Home     = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -127,8 +127,8 @@ class PSProfile {
             }
         }
         $this.Settings = @{
-            Prompt          = 'Default'
-            PSVersionStringLength  = 3
+            DefaultPrompt         = 'Default'
+            PSVersionStringLength = 3
         }
         $this.ProjectPaths = @()
         $this.PluginPaths = @()
@@ -142,20 +142,20 @@ class PSProfile {
         # Load the cached profile via the Configuration module
         $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
         foreach ($prop in @(
-            'Settings'
-            'GitPathMap'
-            'ModulesToImport'
-            'ModulesToInstall'
-            'PathAliases'
-            'Plugins'
-            'PluginPaths'
-            'ProjectPaths'
-            'Prompts'
-            'ScriptPaths'
-            'SymbolicLinks'
-            'Variables'
-            'Vault'
-        )) {
+                'Settings'
+                'GitPathMap'
+                'ModulesToImport'
+                'ModulesToInstall'
+                'PathAliases'
+                'Plugins'
+                'PluginPaths'
+                'ProjectPaths'
+                'Prompts'
+                'ScriptPaths'
+                'SymbolicLinks'
+                'Variables'
+                'Vault'
+            )) {
             if ($null -ne ($conf."$prop")) {
                 if ($prop -eq 'Vault') {
                     foreach ($key in $conf.Vault._secrets.Keys) {
@@ -179,11 +179,10 @@ class PSProfile {
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         Write-Host "Loading personal profile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
-        #$this._log("Loading personal profile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms.","ProfileLoad","Information")
     }
     [void] Save() {
-        $out = @{}
-        $this.PSObject.Properties.Name | Where-Object {$_ -ne '_internal'} | ForEach-Object {
+        $out = @{ }
+        $this.PSObject.Properties.Name | Where-Object { $_ -ne '_internal' } | ForEach-Object {
             $out[$_] = $this.$_
         }
         $out | Export-Configuration -Name PSProfile -CompanyName 'SCRT HQ'
@@ -195,7 +194,7 @@ class PSProfile {
             'Debug'
         )
         if ($null -ne $this.SymbolicLinks.Keys) {
-            $null = $this.SymbolicLinks.GetEnumerator() | Start-RSJob -Name {"_PSProfile_SymbolicLinks_" + $_.Key} -ScriptBlock {
+            $null = $this.SymbolicLinks.GetEnumerator() | Start-RSJob -Name { "_PSProfile_SymbolicLinks_" + $_.Key } -ScriptBlock {
                 if (-not (Test-Path $_.Key)) {
                     New-Item -ItemType SymbolicLink -Path $_.Key -Value $_.Value
                 }
@@ -337,24 +336,55 @@ class PSProfile {
         if (-not [string]::IsNullOrEmpty((-join $this.ScriptPaths))) {
             $this.ScriptPaths | ForEach-Object {
                 $p = $_
-                [System.IO.DirectoryInfo]::new($p).EnumerateFiles('*.ps1',[System.IO.SearchOption]::AllDirectories) | Where-Object {$_.BaseName -notmatch '^(profile|CONFIG|WIP)'} | ForEach-Object {
-                    $s = $_
-                    try {
-                        $this._log(
-                            "'$($s.Name)' Invoking script",
-                            'InvokeScripts',
-                            'Debug'
-                        )
-                        Invoke-Expression ([System.IO.File]::ReadAllText($s.FullName))
+                if (Test-Path $p) {
+                    $i = Get-Item $p
+                    $p = $i.FullName
+                    if ($p -match '\.ps1$') {
+                        try {
+                            $this._log(
+                                "'$($i.Name)' Invoking script",
+                                'InvokeScripts',
+                                'Debug'
+                            )
+                            Invoke-Expression ([System.IO.File]::ReadAllText($i.FullName))
+                        }
+                        catch {
+                            $e = $_
+                            $this._log(
+                                "'$($i.Name)' Failed to invoke script! Error: $e",
+                                'InvokeScripts',
+                                'Warning'
+                            )
+                        }
                     }
-                    catch {
-                        $e = $_
-                        $this._log(
-                            "'$($s.Name)' Failed to invoke script! Error: $e",
-                            'InvokeScripts',
-                            'Warning'
-                        )
+                    else {
+                        [System.IO.DirectoryInfo]::new($p).EnumerateFiles('*.ps1',[System.IO.SearchOption]::AllDirectories) | Where-Object { $_.BaseName -notmatch '^(profile|CONFIG|WIP)' } | ForEach-Object {
+                            $s = $_
+                            try {
+                                $this._log(
+                                    "'$($s.Name)' Invoking script",
+                                    'InvokeScripts',
+                                    'Debug'
+                                )
+                                Invoke-Expression ([System.IO.File]::ReadAllText($s.FullName))
+                            }
+                            catch {
+                                $e = $_
+                                $this._log(
+                                    "'$($s.Name)' Failed to invoke script! Error: $e",
+                                    'InvokeScripts',
+                                    'Warning'
+                                )
+                            }
+                        }
                     }
+                }
+                else {
+                    $this._log(
+                        "'$p' Unable to resolve path!",
+                        'FindProjects',
+                        'Debug'
+                    )
                 }
             }
         }
@@ -371,7 +401,7 @@ class PSProfile {
             'Debug'
         )
     }
-    hidden [void] _installModules(){
+    hidden [void] _installModules() {
         $this._log(
             "SECTION START",
             'InstallModules',
@@ -395,7 +425,7 @@ class PSProfile {
                     'Debug'
                 )
                 $_
-            } | Start-RSJob -Name {"_PSProfile_InstallModule_$($_)"} -ScriptBlock $sb
+            } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -ScriptBlock $sb
         }
         else {
             $this._log(
@@ -410,7 +440,7 @@ class PSProfile {
             'Debug'
         )
     }
-    hidden [void] _importModules(){
+    hidden [void] _importModules() {
         $this._log(
             "SECTION START",
             'ImportModules',
@@ -453,68 +483,69 @@ class PSProfile {
             'Debug'
         )
     }
-    hidden [void] _loadPlugins(){
+    hidden [void] _loadPlugins() {
         $this._log(
             "SECTION START",
             'LoadPlugins',
             'Debug'
         )
         if ($this.Plugins.Count) {
-            $this.Plugins.ForEach({
-                $plugin = $_
-                $this._log(
-                    "'$($plugin.Name)' Searching for plugin",
-                    'LoadPlugins',
-                    'Debug'
-                )
-                try {
-                    $found = $null
-                    $importParams = @{
-                        ErrorAction = 'Stop'
-                    }
-                    if ($plugin.Arguments) {
-                        $importParams['ArgumentList'] = $plugin.Arguments
-                    }
-                    if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                        Import-Module $plugin.Name @importParams
-                        $this._log(
-                            "'$($plugin.Name)' plugin loaded from PSModulePath!",
-                            'LoadPlugins'
-                        )
-                    }
-                    else {
-                        foreach ($plugPath in @($this.PluginPaths,(Join-Path $PSScriptRoot "Plugins"))) {
-                            $fullPath = [System.IO.Path]::Combine($plugPath,$plugin.Name)
-                            $this._log(
-                                "'$($plugin.Name)' Checking path: $fullPath",
-                                'LoadPlugins',
-                                'Debug'
-                            )
-                            if (Test-Path $fullPath) {
-                                Import-Module $fullPath @importParams
-                                $found = $fullPath
-                                break
-                            }
+            $this.Plugins.ForEach( {
+                    $plugin = $_
+                    $this._log(
+                        "'$($plugin.Name)' Searching for plugin",
+                        'LoadPlugins',
+                        'Debug'
+                    )
+                    try {
+                        $found = $null
+                        $importParams = @{
+                            ErrorAction = 'Stop'
+                            Global      = $true
                         }
-                        if ($null -ne $found) {
+                        if ($plugin.Arguments) {
+                            $importParams['ArgumentList'] = $plugin.Arguments
+                        }
+                        if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                            Import-Module $plugin.Name @importParams
                             $this._log(
-                                "'$($plugin.Name)' plugin loaded from path: $found",
+                                "'$($plugin.Name)' plugin loaded from PSModulePath!",
                                 'LoadPlugins'
                             )
                         }
                         else {
-                            $this._log(
-                                "'$($plugin.Name)' plugin not found!",
-                                'LoadPlugins',
-                                'Warning'
-                            )
+                            foreach ($plugPath in @($this.PluginPaths,(Join-Path $PSScriptRoot "Plugins"))) {
+                                $fullPath = [System.IO.Path]::Combine($plugPath,$plugin.Name)
+                                $this._log(
+                                    "'$($plugin.Name)' Checking path: $fullPath",
+                                    'LoadPlugins',
+                                    'Debug'
+                                )
+                                if (Test-Path $fullPath) {
+                                    Import-Module $fullPath @importParams
+                                    $found = $fullPath
+                                    break
+                                }
+                            }
+                            if ($null -ne $found) {
+                                $this._log(
+                                    "'$($plugin.Name)' plugin loaded from path: $found",
+                                    'LoadPlugins'
+                                )
+                            }
+                            else {
+                                $this._log(
+                                    "'$($plugin.Name)' plugin not found!",
+                                    'LoadPlugins',
+                                    'Warning'
+                                )
+                            }
                         }
                     }
-                }
-                catch {
-                    throw
-                }
-            })
+                    catch {
+                        throw
+                    }
+                })
         }
         else {
             $this._log(

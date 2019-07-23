@@ -1,4 +1,5 @@
 function Get-MyCreds {
+    [OutputType('PSCredential')]
     [CmdletBinding()]
     Param(
         [parameter(Mandatory = $false,Position = 0)]
@@ -19,7 +20,14 @@ function Get-MyCreds {
             Write-Verbose "Checking Credential Vault for user '$Item'"
             if ($global:PSProfile.Vault._secrets.$Item) {
                 Write-Verbose "Found item in CredStore"
-                return $global:PSProfile.Vault._secrets.$Item
+                $creds = $global:PSProfile.Vault._secrets.$Item
+                if (!$env:USERDOMAIN) {
+                    $env:USERDOMAIN = [System.Environment]::MachineName
+                }
+                if ($IncludeDomain -and $creds.UserName -notlike "$($env:USERDOMAIN)\*") {
+                    $creds = New-Object PSCredential "$($env:USERDOMAIN)\$($creds.UserName)",$creds.Password
+                }
+                return $creds
             }
             else {
                 $PSCmdlet.ThrowTerminatingError(
