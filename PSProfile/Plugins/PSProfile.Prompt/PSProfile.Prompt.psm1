@@ -5,7 +5,39 @@ Param (
     $Prompt
 )
 
-
+function Get-Prompt {
+    [CmdletBinding()]
+    Param(
+        [Parameter()]
+        [Switch]
+        $Global,
+        [Parameter()]
+        [Switch]
+        $Raw
+    )
+    $i = 0
+    $leadingWhiteSpace = $null
+    $g = if ($Global) {
+        'global:prompt'
+    }
+    else {
+        'prompt'
+    }
+    $(if ($Raw){''}else{"function $g {`n"}) + $((Get-Command prompt).Definition -split "`n" | ForEach-Object {
+            if (-not [String]::IsNullOrWhiteSpace($_)) {
+                if ($null -eq $leadingWhiteSpace) {
+                    $leadingWhiteSpace = ($_ | Select-String -Pattern '^\s+').Matches[0].Value
+                }
+                $_ -replace "^$leadingWhiteSpace",'    '
+                "`n"
+            }
+            elseif ($i) {
+                $_
+                "`n"
+            }
+            $i++
+        }) + $(if ($Raw){''}else{"}"})
+}
 
 function Get-PSVersion {
     [OutputType('System.String')]
@@ -215,11 +247,79 @@ function Set-Prompt {
                 $function:prompt = $global:PSProfile.Prompts[$Name]
                 if (-not $Temporary) {
                     $global:PSProfile.Settings.DefaultPrompt = $Name
+                    $global:PSProfile.Save()
                 }
             }
             Content {
                 $function:prompt = $Content
             }
+        }
+    }
+}
+
+function Save-Prompt {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position = 0)]
+        [String]
+        $Name = $global:PSProfile.Settings.DefaultPrompt,
+        [Parameter()]
+        [switch]
+        $SetAsDefault
+    )
+    Process {
+        if ($null -eq $Name) {
+            throw "No value set for the Name parameter or resolved from PSProfile!"
+        }
+        else {
+            $global:PSProfile.Prompts[$Name] = Get-Prompt -Raw
+            if ($SetAsDefault) {
+                $global:PSProfile.Settings.DefaultPrompt = $Name
+            }
+            $global:PSProfile.Save()
+        }
+    }
+}
+
+function Edit-Prompt {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Position = 0)]
+        [String]
+        $EditorString = '{0} | code -',
+        [Parameter()]
+        [Switch]
+        $Save
+    )
+    Process {
+        $in = @{
+            StdIn = Get-Prompt -Global
+            TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"ps-prompt-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")
+        }
+        $handler = {
+            Param(
+                [hashtable]
+                $in
+            )
+            try {
+                $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+                $in.StdIn | Set-Content $in.TmpFile -Force
+                & $code $in.TmpFile --wait
+            }
+            catch {
+                throw
+            }
+            finally {
+                if (Test-Path $in.TmpFile -ErrorAction SilentlyContinue) {
+                    Invoke-Expression ([System.IO.File]::ReadAllText($in.TmpFile))
+                    Remove-Item $in.TmpFile -Force
+                }
+            }
+        }
+        Write-Verbose "Opening prompt in VS Code"
+        .$handler($in)
+        if ($Save) {
+            Save-Prompt
         }
     }
 }

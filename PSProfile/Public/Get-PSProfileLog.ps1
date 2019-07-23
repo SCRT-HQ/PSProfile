@@ -6,7 +6,7 @@ function Get-PSProfileLog {
         $Summary
     )
     if ($Summary) {
-        $PSProfile.Log | Group-Object Section | % {
+        $Global:PSProfile.Log | Group-Object Section | % {
             [PSCustomObject]@{
                 Section = $_.Name
                 Start = $_.Group[0].Time
@@ -16,6 +16,6 @@ function Get-PSProfileLog {
         }
     }
     else {
-        $PSProfile.Log
+        $Global:PSProfile.Log
     }
 }
