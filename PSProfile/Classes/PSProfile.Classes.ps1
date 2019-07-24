@@ -178,7 +178,7 @@ class PSProfile {
         # Mark the profile load as complete
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
-        Write-Host "Loading personal profile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
+        Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
     }
     [void] Save() {
         $out = @{ }
