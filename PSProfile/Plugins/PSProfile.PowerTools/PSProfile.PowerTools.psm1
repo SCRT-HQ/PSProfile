@@ -259,6 +259,11 @@ function Open-Item {
         }
         return  $RuntimeParamDic
     }
+    Begin {
+        if (-not $PSBoundParameters.ContainsKey('Path')) {
+            $PSBoundParameters['Path'] = $PWD.Path
+        }
+    }
     Process {
         $target = switch ($PSCmdlet.ParameterSetName) {
             Path {
