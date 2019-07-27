@@ -166,6 +166,11 @@ class PSProfile {
                             $this.Vault.SetSecret($key,$conf.Vault._secrets[$key])
                         }
                     }
+                    PluginPaths {
+                        $conf.PluginPaths | ForEach-Object {
+                            $this.PluginPaths += $_
+                        }
+                    }
                     default {
                         $this."$prop" = $conf."$prop"
                     }
@@ -446,7 +451,8 @@ class PSProfile {
                                     'InvokeScripts',
                                     'Debug'
                                 )
-                                Invoke-Expression ([System.IO.File]::ReadAllText($s.FullName))
+                                $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($s.FullName))))
+                                .$sb
                             }
                             catch {
                                 $e = $_
