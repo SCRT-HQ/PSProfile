@@ -120,6 +120,7 @@ class PSProfile {
             Environment = @{
                 Home     = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
                 UserName = [System.Environment]::UserName
+                ComputerName = [System.Environment]::MachineName
             }
             Global      = @{
                 PathAliasDirectorySeparator    = "$([System.IO.Path]::DirectorySeparatorChar)"
@@ -265,7 +266,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ProjectPaths))) {
-            $this.ProjectPaths | ForEach-Object {
+            $null = $this.ProjectPaths | Start-RSJob -Name {"_PSProfile_FindProjects_" + $_} -VariablesToImport this -ScriptBlock {
                 $p = $_
                 $cnt = 0
                 if (Test-Path $p) {

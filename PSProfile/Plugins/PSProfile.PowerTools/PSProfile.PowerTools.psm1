@@ -211,17 +211,10 @@ function Install-LatestModule {
         }
         else {
             try {
-                # Uninstall all installed versions
-                Get-Module $Name -ListAvailable | Uninstall-Module -Verbose
-
-                # Install the latest module from the PowerShell Gallery
-                Install-Module $Name -Repository PSGallery -Scope CurrentUser -Verbose -AllowClobber -SkipPublisherCheck -AcceptLicense
-
-                # Import the freshly installed module
-                Import-Module $Name
-
-                # Test that everything still works as expected
-                Get-GSUser | Select-Object @{N="ModuleVersion";E={(Get-Module $Name).Version}},PrimaryEmail,OrgUnitPath
+                Write-Verbose "Uninstalling all version of module: $Name"
+                Get-Module $Name -ListAvailable | Uninstall-Module
+                Write-Verbose "Installing latest module version from PowerShell Gallery"
+                Install-Module $Name -Repository PSGallery -Scope CurrentUser -AllowClobber -SkipPublisherCheck -AcceptLicense
             } catch {
                 throw
             }
