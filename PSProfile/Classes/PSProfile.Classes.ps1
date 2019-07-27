@@ -118,8 +118,8 @@ class PSProfile {
         $this.SymbolicLinks = @{ }
         $this.Variables = @{
             Environment = @{
-                Home     = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
-                UserName = [System.Environment]::UserName
+                Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
+                UserName     = [System.Environment]::UserName
                 ComputerName = [System.Environment]::MachineName
             }
             Global      = @{
@@ -132,7 +132,9 @@ class PSProfile {
             PSVersionStringLength = 3
         }
         $this.ProjectPaths = @()
-        $this.PluginPaths = @()
+        $this.PluginPaths = @(
+            (Join-Path $PSScriptRoot "Plugins")
+        )
         $this.ScriptPaths = @()
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -158,14 +160,76 @@ class PSProfile {
                 'Vault'
             )) {
             if ($null -ne ($conf."$prop")) {
-                if ($prop -eq 'Vault') {
-                    foreach ($key in $conf.Vault._secrets.Keys) {
-                        $this.Vault.SetSecret($key,$conf.Vault._secrets[$key])
+                switch ($prop) {
+                    Vault {
+                        foreach ($key in $conf.Vault._secrets.Keys) {
+                            $this.Vault.SetSecret($key,$conf.Vault._secrets[$key])
+                        }
+                    }
+                    default {
+                        $this."$prop" = $conf."$prop"
                     }
                 }
-                else {
-                    $this."$prop" = $conf."$prop"
-                }
+                    <# PluginPaths {
+                        $conf.PluginPaths | ForEach-Object {
+                            $this.PluginPaths += $_
+                        }
+                    }
+                    ModulesToImport { #ProjectPaths|Plugins) {
+                        $conf.ModulesToImport | ForEach-Object {
+                            $this.ModulesToImport += $_
+                        }
+                    }
+                    ProjectPaths {
+                        $conf.ProjectPaths | ForEach-Object {
+                            $this.ProjectPaths += $_
+                        }
+                    }
+                    Plugins {
+                        $conf.Plugins | ForEach-Object {
+                            $this.Plugins += $_
+                        }
+                    }
+                    GitPathMap {
+                        foreach ($key in $conf.GitPathMap.Keys) {
+                            $this.GitPathMap[$key] = $conf.GitPathMap[$key]
+                        }
+                    }
+                    PathAliases {
+                        foreach ($key in $conf.PathAliases.Keys) {
+                            $this.PathAliases[$key] = $conf.PathAliases[$key]
+                        }
+                    }
+                    Prompts {
+                        foreach ($key in $conf.Prompts.Keys) {
+                            $this.Prompts[$key] = $conf.Prompts[$key]
+                        }
+                    }
+                    PSBuildPathMap {
+                        foreach ($key in $conf.PSBuildPathMap.Keys) {
+                            $this.PSBuildPathMap[$key] = $conf.PSBuildPathMap[$key]
+                        }
+                    }
+                    Settings {
+                        foreach ($key in $conf.Settings.Keys) {
+                            $this.Settings[$key] = $conf.Settings[$key]
+                        }
+                    }
+                    SymbolicLinks {
+                        foreach ($key in $conf.SymbolicLinks.Keys) {
+                            $this.SymbolicLinks[$key] = $conf.SymbolicLinks[$key]
+                        }
+                    }
+                    Variables {
+                        foreach ($scope in @('Environment','Global')) {
+                            if ($conf.Variables.ContainsKey($scope)) {
+                                foreach ($key in $conf.Variables[$scope]) {
+                                    $this.Variables.$scope.$key = $conf.Variables.$scope.$key
+                                }
+                            }
+                        }
+                    }
+                } #>
             }
         }
         $this._findProjects()
@@ -266,7 +330,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ProjectPaths))) {
-            $null = $this.ProjectPaths | Start-RSJob -Name {"_PSProfile_FindProjects_" + $_} -VariablesToImport this -ScriptBlock {
+            $null = $this.ProjectPaths | Start-RSJob -Name { "_PSProfile_FindProjects_" + $_ } -VariablesToImport this -ScriptBlock {
                 $p = $_
                 $cnt = 0
                 if (Test-Path $p) {
@@ -492,45 +556,53 @@ class PSProfile {
         )
         if ($this.Plugins.Count) {
             $this.Plugins.ForEach( {
-                    $plugin = $_
-                    $this._log(
-                        "'$($plugin.Name)' Searching for plugin",
-                        'LoadPlugins',
-                        'Debug'
-                    )
-                    try {
-                        $found = $null
-                        $importParams = @{
-                            ErrorAction = 'Stop'
-                            Global      = $true
-                        }
-                        if ($plugin.Arguments) {
-                            $importParams['ArgumentList'] = $plugin.Arguments
-                        }
-                        if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                            Import-Module $plugin.Name @importParams
+                $plugin = $_
+                $this._log(
+                    "'$($plugin.Name)' Searching for plugin",
+                    'LoadPlugins',
+                    'Debug'
+                )
+                try {
+                    $found = $null
+                    $importParams = @{
+                        ErrorAction = 'Stop'
+                        Global      = $true
+                    }
+                    if ($plugin.Arguments) {
+                        $importParams['ArgumentList'] = $plugin.Arguments
+                    }
+                    if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                        Import-Module $plugin.Name @importParams
+                        $this._log(
+                            "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                            'LoadPlugins'
+                        )
+                    }
+                    else {
+                        foreach ($plugPath in $this.PluginPaths) {
+                            $fullPath = [System.IO.Path]::Combine($plugPath,$plugin.Name)
                             $this._log(
-                                "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                                "'$($plugin.Name)' Checking path: $fullPath",
+                                'LoadPlugins',
+                                'Debug'
+                            )
+                            if (Test-Path $fullPath) {
+                                Import-Module $fullPath @importParams
+                                $found = $fullPath
+                                break
+                            }
+                        }
+                        if ($null -ne $found) {
+                            $this._log(
+                                "'$($plugin.Name)' plugin loaded from path: $found",
                                 'LoadPlugins'
                             )
                         }
                         else {
-                            foreach ($plugPath in @($this.PluginPaths,(Join-Path $PSScriptRoot "Plugins"))) {
-                                $fullPath = [System.IO.Path]::Combine($plugPath,$plugin.Name)
+                            if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                                Import-Module $plugin.Name @importParams
                                 $this._log(
-                                    "'$($plugin.Name)' Checking path: $fullPath",
-                                    'LoadPlugins',
-                                    'Debug'
-                                )
-                                if (Test-Path $fullPath) {
-                                    Import-Module $fullPath @importParams
-                                    $found = $fullPath
-                                    break
-                                }
-                            }
-                            if ($null -ne $found) {
-                                $this._log(
-                                    "'$($plugin.Name)' plugin loaded from path: $found",
+                                    "'$($plugin.Name)' plugin loaded from PSModulePath!",
                                     'LoadPlugins'
                                 )
                             }
@@ -543,10 +615,11 @@ class PSProfile {
                             }
                         }
                     }
-                    catch {
-                        throw
-                    }
-                })
+                }
+                catch {
+                    throw
+                }
+            })
         }
         else {
             $this._log(

@@ -607,3 +607,76 @@ function Format-Syntax {
 }
 
 New-Alias -Name Syntax -Value Format-Syntax -Option AllScope -Scope Global -Force
+
+function Get-LongPath {
+    [CmdletBinding(DefaultParameterSetName = 'Path')]
+    Param (
+        [parameter(Position = 0,ParameterSetName = 'Path')]
+        [String]
+        $Path = $PWD.Path,
+        [parameter(ValueFromRemainingArguments,Position = 1,ParameterSetName = 'Path')]
+        [String[]]
+        $Subpaths
+    )
+    DynamicParam {
+        if ($global:PSProfile.GitPathMap.ContainsKey('chef-repo')) {
+            $RuntimeParamDic = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
+            $ParamAttrib = New-Object System.Management.Automation.ParameterAttribute
+            $ParamAttrib.Mandatory = $true
+            $ParamAttrib.ParameterSetName = 'Cookbook'
+            $AttribColl = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
+            $AttribColl.Add($ParamAttrib)
+            $set = (Get-ChildItem (Join-Path $global:PSProfile.GitPathMap['chef-repo'] 'cookbooks') -Directory).Name
+            $AttribColl.Add((New-Object System.Management.Automation.ValidateSetAttribute($set)))
+            $AttribColl.Add((New-Object System.Management.Automation.AliasAttribute('c')))
+            $RuntimeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Cookbook',  [string], $AttribColl)
+            $RuntimeParamDic.Add('Cookbook',  $RuntimeParam)
+        }
+        return  $RuntimeParamDic
+    }
+    Begin {
+        if (-not $PSBoundParameters.ContainsKey('Path')) {
+            $PSBoundParameters['Path'] = $PWD.Path
+        }
+    }
+    Process {
+        $target = switch ($PSCmdlet.ParameterSetName) {
+            Path {
+                if ($PSBoundParameters['Path'] -eq '.') {
+                    $PWD.Path
+                }
+                elseif ($null -ne $global:PSProfile.GitPathMap.Keys) {
+                    if ($global:PSProfile.GitPathMap.ContainsKey($PSBoundParameters['Path'])) {
+                        $global:PSProfile.GitPathMap[$PSBoundParameters['Path']]
+                    }
+                    else {
+                        $PSBoundParameters['Path']
+                    }
+                }
+                else {
+                    $PSBoundParameters['Path']
+                }
+            }
+            Cookbook {
+                [System.IO.Path]::Combine($global:PSProfile.GitPathMap['chef-repo'],'cookbooks',$PSBoundParameters['Cookbook'])
+            }
+        }
+        if ($Subpaths) {
+            Join-Path $target ($Subpaths -join [System.IO.Path]::DirectorySeparatorChar)
+        }
+        else {
+            $target
+        }
+    }
+}
+
+if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.GitPathMap.Keys) {
+    Register-ArgumentCompleter -CommandName 'Get-LongPath' -ParameterName 'Path' -ScriptBlock {
+        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+        $global:PSProfile.GitPathMap.Keys| Where-Object {$_ -like "$wordToComplete*"} | Sort-Object | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
+}
+
+New-Alias -Name path -Value 'Get-LongPath' -Scope Global -Option AllScope -Force

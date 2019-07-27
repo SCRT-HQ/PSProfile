@@ -3,19 +3,32 @@ function Get-PSProfileLog {
     Param(
         [Parameter()]
         [Switch]
-        $Summary
+        $Summary,
+        [Parameter()]
+        [Switch]
+        $SectionOnly
     )
     if ($Summary) {
-        $Global:PSProfile.Log | Group-Object Section | % {
+        $sections = $Global:PSProfile.Log | Group-Object Section
+        $sections | ForEach-Object {
+            $Group = $_.Group
+            if ($SectionOnly) {
+                $Group = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
+            }
             [PSCustomObject]@{
                 Section = $_.Name
-                Start = $_.Group[0].Time
-                End = $_.Group[-1].Time
-                Duration = "$([Math]::Round(($_.Group[-1].Time - $_.Group[0].Time).TotalMilliseconds))ms"
+                Start = $Group[0].Time
+                End = $Group[-1].Time
+                Duration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
             }
         }
     }
     else {
-        $Global:PSProfile.Log
+        if ($SectionOnly) {
+            $Global:PSProfile.Log | Where-Object {$_.Message -match '^SECTION (START|END)$'}
+        }
+        else {
+            $Global:PSProfile.Log
+        }
     }
 }

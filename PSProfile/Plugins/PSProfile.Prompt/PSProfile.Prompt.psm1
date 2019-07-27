@@ -264,6 +264,9 @@ function Save-Prompt {
         [String]
         $Name = $global:PSProfile.Settings.DefaultPrompt,
         [Parameter()]
+        [object]
+        $Content,
+        [Parameter()]
         [switch]
         $SetAsDefault
     )
@@ -272,7 +275,12 @@ function Save-Prompt {
             throw "No value set for the Name parameter or resolved from PSProfile!"
         }
         else {
-            $global:PSProfile.Prompts[$Name] = Get-Prompt -Raw
+            if ($Content) {
+                $global:PSProfile.Prompts[$Name] = $Content.ToString()
+            }
+            else {
+                $global:PSProfile.Prompts[$Name] = Get-Prompt -Raw
+            }
             if ($SetAsDefault) {
                 $global:PSProfile.Settings.DefaultPrompt = $Name
             }
@@ -289,7 +297,7 @@ function Edit-Prompt {
         $EditorString = '{0} | code -',
         [Parameter()]
         [Switch]
-        $Save
+        $Temporary
     )
     Process {
         $in = @{
@@ -318,7 +326,7 @@ function Edit-Prompt {
         }
         Write-Verbose "Opening prompt in VS Code"
         .$handler($in)
-        if ($Save) {
+        if (-not $Temporary) {
             Save-Prompt
         }
     }
@@ -332,7 +340,7 @@ if (
 ) {
     $global:PSProfile.Settings.DefaultPrompt = 'Default'
     $global:PSProfile.Prompts = @{
-        Default = $function:prompt
+        Default = $function:prompt.ToString()
     }
     $global:PSProfile.Save()
 }
