@@ -252,6 +252,20 @@ class PSProfile {
         }
         $out | Export-Configuration -Name PSProfile -CompanyName 'SCRT HQ'
     }
+    hidden [string] _globalize([string]$content) {
+        $noScopePattern = 'function\s+(?<Name>[\w+_-]{1,})\s+\{'
+        $globalScopePattern = 'function\s+global\:'
+        $noScope = [RegEx]::Matches($content, $noScopePattern, "Multiline, IgnoreCase")
+        $globalScope = [RegEx]::Matches($content,$globalScopePattern,"Multiline, IgnoreCase")
+        if ($noScope.Count -ge $globalScope.Count) {
+            foreach ($match in $noScope) {
+                $fullValue = ($match.Groups | Where-Object { $_.Name -eq 0 }).Value
+                $funcName = ($match.Groups | Where-Object { $_.Name -eq 'Name' }).Value
+                $content = $content.Replace($fullValue, "function global:$funcName {")
+            }
+        }
+        return $content
+    }
     hidden [void] _createSymbolicLinks() {
         $this._log(
             "SECTION START",
@@ -411,7 +425,8 @@ class PSProfile {
                                 'InvokeScripts',
                                 'Debug'
                             )
-                            Invoke-Expression ([System.IO.File]::ReadAllText($i.FullName))
+                            $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($i.FullName))))
+                            .$sb
                         }
                         catch {
                             $e = $_
@@ -566,53 +581,49 @@ class PSProfile {
                     $found = $null
                     $importParams = @{
                         ErrorAction = 'Stop'
-                        Global      = $true
                     }
                     if ($plugin.Arguments) {
                         $importParams['ArgumentList'] = $plugin.Arguments
                     }
-                    if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                        Import-Module $plugin.Name @importParams
+                    foreach ($plugPath in $this.PluginPaths) {
+                        $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
                         $this._log(
-                            "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                            "'$($plugin.Name)' Checking path: $fullPath",
+                            'LoadPlugins',
+                            'Debug'
+                        )
+                        if (Test-Path $fullPath) {
+                            $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
+                            if ($plugin.Arguments) {
+                                .$sb($plugin.Arguments)
+                            }
+                            else {
+                                .$sb
+                            }
+                            $found = $fullPath
+                            break
+                        }
+                    }
+                    if ($null -ne $found) {
+                        $this._log(
+                            "'$($plugin.Name)' plugin loaded from path: $found",
                             'LoadPlugins'
                         )
                     }
                     else {
-                        foreach ($plugPath in $this.PluginPaths) {
-                            $fullPath = [System.IO.Path]::Combine($plugPath,$plugin.Name)
+                        if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                            Import-Module $plugin.Name @importParams
                             $this._log(
-                                "'$($plugin.Name)' Checking path: $fullPath",
-                                'LoadPlugins',
-                                'Debug'
-                            )
-                            if (Test-Path $fullPath) {
-                                Import-Module $fullPath @importParams
-                                $found = $fullPath
-                                break
-                            }
-                        }
-                        if ($null -ne $found) {
-                            $this._log(
-                                "'$($plugin.Name)' plugin loaded from path: $found",
+                                "'$($plugin.Name)' plugin loaded from PSModulePath!",
                                 'LoadPlugins'
                             )
                         }
                         else {
-                            if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                                Import-Module $plugin.Name @importParams
-                                $this._log(
-                                    "'$($plugin.Name)' plugin loaded from PSModulePath!",
-                                    'LoadPlugins'
-                                )
-                            }
-                            else {
-                                $this._log(
-                                    "'$($plugin.Name)' plugin not found!",
-                                    'LoadPlugins',
-                                    'Warning'
-                                )
-                            }
+                            $this._log(
+                                "'$($plugin.Name)' plugin not found!",
+                                'LoadPlugins',
+                                'Warning'
+                            )
                         }
                     }
                 }

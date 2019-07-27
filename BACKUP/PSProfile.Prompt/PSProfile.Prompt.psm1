@@ -352,9 +352,7 @@ if (
 ) {
     Register-ArgumentCompleter -CommandName 'Set-Prompt' -ParameterName 'Name' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        $global:PSProfile.Prompts.Keys | Where-Object {$_ -like "$wordToComplete*"} | Sort-Object | ForEach-Object {
-            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
+        Get-PSProfileArguments Prompts @PSBoundParameters
     }
 }
 
