@@ -1,37 +1,33 @@
-function Set-PSProfileSetting {
+function Get-PSProfileSetting {
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory,Position = 0)]
         [String]
-        $Path,
-        [Parameter(Mandatory,Position = 1)]
-        [object]
-        $Value
+        $Path
     )
     Process {
         $split = $Path.Split('.')
         switch ($split.Count) {
             5 {
-                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"."$($split[3])"."$($split[4])" = $Value
+                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"."$($split[3])"."$($split[4])"
             }
             4 {
-                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"."$($split[3])" = $Value
+                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"."$($split[3])"
             }
             3 {
-                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])" = $Value
+                $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"
             }
             2 {
-                $Global:PSProfile."$($split[0])"."$($split[1])" = $Value
+                $Global:PSProfile."$($split[0])"."$($split[1])"
             }
             1 {
-                $Global:PSProfile.$Path = $Value
+                $Global:PSProfile.$Path
             }
         }
-        Save-PSProfile
     }
 }
 
-Register-ArgumentCompleter -CommandName 'Set-PSProfileSetting' -ParameterName Path -ScriptBlock {
+Register-ArgumentCompleter -CommandName 'Get-PSProfileSetting' -ParameterName Path -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     $split = $wordToComplete.Split('.')
     switch ($split.Count) {

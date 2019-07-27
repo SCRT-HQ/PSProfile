@@ -182,7 +182,7 @@ New-Alias -Name code -Value 'Open-Code' -Scope Global -Option AllScope -Force
 if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.GitPathMap.Keys) {
     Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Path' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments GitPathMap @PSBoundParameters
+        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
     }
 }
 
@@ -285,7 +285,7 @@ function Open-Item {
 if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.GitPathMap.Keys) {
     Register-ArgumentCompleter -CommandName 'Open-Item' -ParameterName 'Path' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments GitPathMap @PSBoundParameters
+        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
     }
 }
 
@@ -340,7 +340,7 @@ New-Alias -Name pop -Value Pop-Location -Option AllScope -Scope Global -Force
 if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.GitPathMap.Keys) {
     Register-ArgumentCompleter -CommandName 'Push-Path' -ParameterName 'Path' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments GitPathMap @PSBoundParameters
+        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
     }
 }
 
@@ -574,7 +574,7 @@ function Start-BuildScript {
 if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.PSBuildPathMap.Keys) {
     Register-ArgumentCompleter -CommandName 'Start-BuildScript' -ParameterName 'Project' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments PSBuildPathMap @PSBoundParameters
+        Get-PSProfileArguments -WordToComplete "PSBuildPathMap.$wordToComplete" -FinalKeyOnly
     }
 }
 
@@ -665,7 +665,7 @@ function Get-LongPath {
 if ($null -ne $global:PSProfile -and $null -ne $global:PSProfile.GitPathMap.Keys) {
     Register-ArgumentCompleter -CommandName 'Get-LongPath' -ParameterName 'Path' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments GitPathMap @PSBoundParameters
+        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
     }
 }
 

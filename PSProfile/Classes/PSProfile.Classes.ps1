@@ -160,15 +160,17 @@ class PSProfile {
                 'Vault'
             )) {
             if ($null -ne ($conf."$prop")) {
-                switch ($prop) {
-                    Vault {
+                switch -RegEx ($prop) {
+                    '^Vault$' {
                         foreach ($key in $conf.Vault._secrets.Keys) {
                             $this.Vault.SetSecret($key,$conf.Vault._secrets[$key])
                         }
                     }
-                    PluginPaths {
-                        $conf.PluginPaths | ForEach-Object {
-                            $this.PluginPaths += $_
+                    '^(ModulesToImport|PluginPaths|Plugins|ProjectPaths)$' {
+                        $conf.$prop | ForEach-Object {
+                            if ($this.$prop -notcontains $_) {
+                                $this.$prop += $_
+                            }
                         }
                     }
                     default {
