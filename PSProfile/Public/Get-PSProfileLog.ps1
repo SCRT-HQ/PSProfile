@@ -1,12 +1,18 @@
 function Get-PSProfileLog {
-    [CmdletBinding()]
+    [CmdletBinding(DefaultParameterSetName = 'Full')]
     Param(
-        [Parameter(Position = 0)]
-        [String]
+        [Parameter(Position = 0,ParameterSetName = 'Full')]
+        [String[]]
         $Section,
-        [Parameter()]
+        [Parameter(Position = 1,ParameterSetName = 'Full')]
+        [PSProfileLogLevel[]]
+        $LogLevel,
+        [Parameter(ParameterSetName = 'Summary')]
         [Switch]
-        $Summary
+        $Summary,
+        [Parameter(ParameterSetName = 'Full')]
+        [Switch]
+        $Raw
     )
     if ($Summary) {
         $sections = $Global:PSProfile.Log | Group-Object Section
@@ -19,14 +25,20 @@ function Get-PSProfileLog {
                 Section = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
                 Full = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
             }
-        } | Sort-Object Start
+        } | Sort-Object Start | Format-Table -AutoSize
     }
     else {
-        if ($Section) {
-            $Global:PSProfile.Log | Where-Object {$_.Section -eq $Section}
+        $items = if ($Section) {
+            $Global:PSProfile.Log | Where-Object {$_.Section -in $Section}
         }
         else {
             $Global:PSProfile.Log
+        }
+        if ($LogLevel) {
+            $items = $items | Where-Object {$_.LogLevel -in $LogLevel}
+        }
+        if (-not $Raw) {
+            $items | Format-Table -AutoSize
         }
     }
 }
