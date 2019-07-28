@@ -15,15 +15,16 @@ function Get-PSProfileLog {
         $Raw
     )
     if ($Summary) {
-        $sections = $Global:PSProfile.Log | Group-Object Section
-        $sections | ForEach-Object {
+        $Global:PSProfile.Log | Group-Object Section | ForEach-Object {
+            $section = $_[0].Name
             $Group = $_.Group
             $sectCaps = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
             [PSCustomObject]@{
-                Name = $_.Name
+                Name = $section
                 Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
                 Section = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
                 Full = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
+                RunningJobs = Get-RSJob -State Running | Where-Object {$_.Name -match $Section} | Select-Object -ExpandProperty Name
             }
         } | Sort-Object Start | Format-Table -AutoSize
     }
