@@ -1,5 +1,10 @@
 ﻿@{
-    Prompts          = @{
+    Plugins = @(
+        @{
+            Name = 'PSProfile.Prompt'
+        }
+    )
+    Prompts = @{
         Basic     = '
             "PS $($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) ";
             # .Link
