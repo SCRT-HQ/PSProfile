@@ -1,34 +1,39 @@
 function Get-PSProfileLog {
     [CmdletBinding()]
     Param(
+        [Parameter(Position = 0)]
+        [String]
+        $Section,
         [Parameter()]
         [Switch]
-        $Summary,
-        [Parameter()]
-        [Switch]
-        $SectionOnly
+        $Summary
     )
     if ($Summary) {
         $sections = $Global:PSProfile.Log | Group-Object Section
         $sections | ForEach-Object {
             $Group = $_.Group
-            if ($SectionOnly) {
-                $Group = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
-            }
+            $sectCaps = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
             [PSCustomObject]@{
-                Section = $_.Name
-                Start = $Group[0].Time
-                End = $Group[-1].Time
-                Duration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
+                Name = $_.Name
+                Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
+                Section = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
+                Full = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
             }
-        }
+        } | Sort-Object Start
     }
     else {
-        if ($SectionOnly) {
-            $Global:PSProfile.Log | Where-Object {$_.Message -match '^SECTION (START|END)$'}
+        if ($Section) {
+            $Global:PSProfile.Log | Where-Object {$_.Section -eq $Section}
         }
         else {
             $Global:PSProfile.Log
         }
+    }
+}
+
+Register-ArgumentCompleter -CommandName 'Get-PSProfileLog' -ParameterName 'Section' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    $Global:PSProfile.Log.Section | Sort-Object -Unique | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }

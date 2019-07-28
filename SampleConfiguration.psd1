@@ -1,8 +1,4 @@
 ﻿@{
-    Vault            = @{
-        _secrets = @{ }
-    }
-    PathAliases      = @{}
     Prompts          = @{
         Basic     = '
             "PS $($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) ";
@@ -309,67 +305,4 @@
             )
         '
     }
-    SymbolicLinks    = @{}
-    ScriptPaths      = @()
-    ModulesToImport  = @('posh-git')
-    Variables        = @{
-        Environment = @{}
-        Global      = @{
-            AltPathAliasDirectorySeparator = ''
-            PathAliasDirectorySeparator    = '\'
-        }
-    }
-    Plugins          = @(@{
-            Arguments = @{
-                amend   = '!git add -A && git commit --amend --no-edit'
-                stg     = 'checkout stg'
-                a       = '!git add . && git status'
-                dev     = 'checkout dev'
-                conl    = '!git --no-pager config --local --list'
-                con     = '!git --no-pager config --list'
-                pu      = '!git push -u origin `$(git branch | grep \* | cut -d '' '' -f2)'
-                cons    = '!git --no-pager config --list --show-origin'
-                s       = 'status'
-                cm      = 'commit -m'
-                b       = 'branch'
-                master  = 'checkout master'
-                cam     = 'commit -am'
-                f       = 'fetch --all'
-                ba      = 'branch --all'
-                d       = '!git --no-pager diff'
-                c       = 'commit'
-                ss      = 'status -s'
-                alias   = '!git config --get-regexp ''^alias\.'' | sort'
-                aa      = '!git add . && git add -u . && git status'
-                current = '!git branch | grep \* | cut -d '' '' -f2'
-                p       = '!git push'
-                co      = 'checkout'
-                pf      = '!git push -f'
-                llg     = 'log --color --graph --pretty=format:''%C(bold white)%H %d%Creset%n%s%n%+b%C(bold blue)%an <%ae>%Creset %C(bold green)%cr (%ci)'' --abbrev-commit'
-                n       = 'checkout -b'
-                fp      = 'fetch --all --prune'
-                au      = '!git add -u . && git status'
-                lg      = 'log --color --graph --pretty=format:''%C(bold white)%h%Creset -%C(bold green)%d%Creset %s %C(bold green)(%cr)%Creset %C(bold blue)<%an>%Creset'' --abbrev-commit --date=relative'
-                l       = 'log --graph --all --pretty=format:''%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'''
-                conls   = '!git --no-pager config --local --list --show-origin'
-                ll      = 'log --stat --abbrev-commit'
-                acm     = '!git add . && git commit -m'
-                ca      = 'commit --amend # careful'
-                ac      = '!git add . && git commit'
-            }
-            Name      = 'PSProfile.GitAliases'
-        },@{
-            Name = 'PSProfile.Prompt'
-        },@{
-            Name = 'PSProfile.PowerTools'
-        })
-    GitPathMap       = @{}
-    PSBuildPathMap   = @{}
-    ProjectPaths     = @()
-    PluginPaths      = @()
-    Settings         = @{
-        DefaultPrompt         = 'SlimDrop'
-        PSVersionStringLength = 3
-    }
-    ModulesToInstall = @('')
 }

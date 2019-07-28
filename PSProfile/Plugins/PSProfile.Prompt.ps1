@@ -23,7 +23,12 @@ function Get-Prompt {
     else {
         'prompt'
     }
-    $(if ($Raw){''}else{"function $g {`n"}) + $((Get-Command prompt).Definition -split "`n" | ForEach-Object {
+    $(if ($Raw) {
+            ''
+        }
+        else {
+            "function $g {`n"
+        }) + $((Get-Command prompt).Definition -split "`n" | ForEach-Object {
             if (-not [String]::IsNullOrWhiteSpace($_)) {
                 if ($null -eq $leadingWhiteSpace) {
                     $leadingWhiteSpace = ($_ | Select-String -Pattern '^\s+').Matches[0].Value
@@ -36,7 +41,12 @@ function Get-Prompt {
                 "`n"
             }
             $i++
-        }) + $(if ($Raw){''}else{"}"})
+        }) + $(if ($Raw) {
+            ''
+        }
+        else {
+            "}"
+        })
 }
 
 function Get-PSVersion {
@@ -86,7 +96,12 @@ function Test-IfGit {
                 [PSCustomObject]@{
                     TopLevel = (Resolve-Path $topLevel).Path
                     Origin   = $origin
-                    Repo     = $(if ($repo -notmatch '(\.git|\.ssh|\.tfs)$') {$repo} else {$repo.Substring(0,($repo.LastIndexOf('.')))})
+                    Repo     = $(if ($repo -notmatch '(\.git|\.ssh|\.tfs)$') {
+                            $repo
+                        }
+                        else {
+                            $repo.Substring(0,($repo.LastIndexOf('.')))
+                        })
                 }
             }
         }
@@ -105,14 +120,19 @@ function Get-PathAlias {
         $Path = $PWD.Path,
         [parameter(Position = 1)]
         [string]
-        $DirectorySeparator = $(if ($null -ne $global:PathAliasDirectorySeparator) {$global:PathAliasDirectorySeparator} else {[System.IO.Path]::DirectorySeparatorChar})
+        $DirectorySeparator = $(if ($null -ne $global:PathAliasDirectorySeparator) {
+                $global:PathAliasDirectorySeparator
+            }
+            else {
+                [System.IO.Path]::DirectorySeparatorChar
+            })
     )
     Begin {
         try {
             $origPath = $Path
             if ($null -eq $global:PSProfile) {
                 $global:PSProfile = @{
-                    Settings = @{
+                    Settings     = @{
                         PSVersionStringLength = 3
                     }
                     PathAliasMap = @{
@@ -146,7 +166,7 @@ function Get-PathAlias {
             Write-Verbose "Alias map => JSON: $($global:PSProfile._internal.PathAliasMap | ConvertTo-Json -Depth 5)"
             $aliasKey = $null
             $aliasValue = $null
-            foreach ($hash in $global:PSProfile._internal.PathAliasMap.GetEnumerator() | Sort-Object {$_.Value.Length} -Descending) {
+            foreach ($hash in $global:PSProfile._internal.PathAliasMap.GetEnumerator() | Sort-Object { $_.Value.Length } -Descending) {
                 if ($Path -like "$($hash.Value)*") {
                     $Path = $Path.Replace($hash.Value,$hash.Key)
                     $aliasKey = $hash.Key
@@ -244,10 +264,21 @@ function Set-Prompt {
     Process {
         switch ($PSCmdlet.ParameterSetName) {
             Name {
-                $function:prompt = $global:PSProfile.Prompts[$Name]
-                if (-not $Temporary) {
-                    $global:PSProfile.Settings.DefaultPrompt = $Name
-                    $global:PSProfile.Save()
+                if ($global:PSProfile.Prompts.ContainsKey($Name)) {
+                    $function:prompt = $global:PSProfile.Prompts[$Name]
+                    if (-not $Temporary) {
+                        $global:PSProfile.Settings.DefaultPrompt = $Name
+                        $global:PSProfile.Save()
+                    }
+                }
+                else {
+                    Write-Warning "Falling back to default prompt -- '$Name' not found in Configuration prompts!"
+                    $function:prompt = '
+                        "PS $($executionContext.SessionState.Path.CurrentLocation)$(''>'' * ($nestedPromptLevel + 1)) ";
+                        # .Link
+                        # https://go.microsoft.com/fwlink/?LinkID=225750
+                        # .ExternalHelp System.Management.Automation.dll-help.xml
+                    '
                 }
             }
             Content {
@@ -301,7 +332,7 @@ function Edit-Prompt {
     )
     Process {
         $in = @{
-            StdIn = Get-Prompt -Global
+            StdIn   = Get-Prompt -Global
             TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"ps-prompt-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")
         }
         $handler = {
@@ -345,11 +376,7 @@ if (
     $global:PSProfile.Save()
 }
 
-if (
-    $null -ne $global:PSProfile -and
-    $null -ne $global:PSProfile.Prompts -and
-    $null -ne $global:PSProfile.Prompts.Keys
-) {
+if ($null -ne (Get-Command Get-PSProfileArguments*)) {
     Register-ArgumentCompleter -CommandName 'Set-Prompt' -ParameterName 'Name' -ScriptBlock {
         param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
         Get-PSProfileArguments -WordToComplete "Prompts.$wordToComplete" -FinalKeyOnly

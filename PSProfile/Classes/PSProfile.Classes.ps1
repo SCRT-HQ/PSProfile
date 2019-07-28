@@ -112,10 +112,14 @@ class PSProfile {
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
-        $this._internal = @{ }
+        $this._internal = @{
+            ConfigurationPath = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+            ProfileLoadStart = [datetime]::Now
+        }
         $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
+        $this.Prompts = @{ }
         $this.Variables = @{
             Environment = @{
                 Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -141,104 +145,12 @@ class PSProfile {
         }
     }
     [void] Load() {
-        $this._internal['ProfileLoadStart'] = [datetime]::Now
-        # Load the cached profile via the Configuration module
-        $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
-        foreach ($prop in @(
-                'Settings'
-                'GitPathMap'
-                'ModulesToImport'
-                'ModulesToInstall'
-                'PathAliases'
-                'Plugins'
-                'PluginPaths'
-                'ProjectPaths'
-                'Prompts'
-                'ScriptPaths'
-                'SymbolicLinks'
-                'Variables'
-                'Vault'
-            )) {
-            if ($null -ne ($conf."$prop")) {
-                switch -RegEx ($prop) {
-                    '^Vault$' {
-                        foreach ($key in $conf.Vault._secrets.Keys) {
-                            $this.Vault.SetSecret($key,$conf.Vault._secrets[$key])
-                        }
-                    }
-                    '^(ModulesToImport|PluginPaths|Plugins|ProjectPaths)$' {
-                        $conf.$prop | ForEach-Object {
-                            if ($this.$prop -notcontains $_) {
-                                $this.$prop += $_
-                            }
-                        }
-                    }
-                    default {
-                        $this."$prop" = $conf."$prop"
-                    }
-                }
-                    <# PluginPaths {
-                        $conf.PluginPaths | ForEach-Object {
-                            $this.PluginPaths += $_
-                        }
-                    }
-                    ModulesToImport { #ProjectPaths|Plugins) {
-                        $conf.ModulesToImport | ForEach-Object {
-                            $this.ModulesToImport += $_
-                        }
-                    }
-                    ProjectPaths {
-                        $conf.ProjectPaths | ForEach-Object {
-                            $this.ProjectPaths += $_
-                        }
-                    }
-                    Plugins {
-                        $conf.Plugins | ForEach-Object {
-                            $this.Plugins += $_
-                        }
-                    }
-                    GitPathMap {
-                        foreach ($key in $conf.GitPathMap.Keys) {
-                            $this.GitPathMap[$key] = $conf.GitPathMap[$key]
-                        }
-                    }
-                    PathAliases {
-                        foreach ($key in $conf.PathAliases.Keys) {
-                            $this.PathAliases[$key] = $conf.PathAliases[$key]
-                        }
-                    }
-                    Prompts {
-                        foreach ($key in $conf.Prompts.Keys) {
-                            $this.Prompts[$key] = $conf.Prompts[$key]
-                        }
-                    }
-                    PSBuildPathMap {
-                        foreach ($key in $conf.PSBuildPathMap.Keys) {
-                            $this.PSBuildPathMap[$key] = $conf.PSBuildPathMap[$key]
-                        }
-                    }
-                    Settings {
-                        foreach ($key in $conf.Settings.Keys) {
-                            $this.Settings[$key] = $conf.Settings[$key]
-                        }
-                    }
-                    SymbolicLinks {
-                        foreach ($key in $conf.SymbolicLinks.Keys) {
-                            $this.SymbolicLinks[$key] = $conf.SymbolicLinks[$key]
-                        }
-                    }
-                    Variables {
-                        foreach ($scope in @('Environment','Global')) {
-                            if ($conf.Variables.ContainsKey($scope)) {
-                                foreach ($key in $conf.Variables[$scope]) {
-                                    $this.Variables.$scope.$key = $conf.Variables.$scope.$key
-                                }
-                            }
-                        }
-                    }
-                } #>
-            }
-        }
+        $this._log(
+            "SECTION START",
+            "MAIN",
+            "Debug"
+        )
+        $this._loadConfiguration()
         $this._findProjects()
         $this._installModules()
         $this._importModules()
@@ -246,8 +158,11 @@ class PSProfile {
         $this._invokeScripts()
         $this._setVariables()
         $this._createSymbolicLinks()
-
-        # Mark the profile load as complete
+        $this._log(
+            "SECTION END",
+            "MAIN",
+            "Debug"
+        )
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
@@ -272,6 +187,54 @@ class PSProfile {
             }
         }
         return $content
+    }
+    hidden [void] _loadAdditionalConfiguration([string]$configurationPath) {
+        $this._log(
+            "SECTION START",
+            "AddlConfiguration",
+            "Debug"
+        )
+        $this._log(
+            "Importing additional file: $configurationPath",
+            "AddlConfiguration",
+            "Debug"
+        )
+        $additional = Import-Metadata -Path $configurationPath
+        $this._log(
+            "Adding additional configuration to PSProfile object",
+            "AddlConfiguration",
+            "Debug"
+        )
+        $this | Update-Object $additional
+        $this._log(
+            "SECTION END",
+            "AddlConfiguration",
+            "Debug"
+        )
+    }
+    hidden [void] _loadConfiguration() {
+        $this._log(
+            "SECTION START",
+            "Configuration",
+            "Debug"
+        )
+        $this._log(
+            "Importing layered Configuration",
+            "Configuration",
+            "Debug"
+        )
+        $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
+        $this._log(
+            "Adding layered configuration to PSProfile object",
+            "Configuration",
+            "Debug"
+        )
+        $this | Update-Object $conf
+        $this._log(
+            "SECTION END",
+            "Configuration",
+            "Debug"
+        )
     }
     hidden [void] _createSymbolicLinks() {
         $this._log(
@@ -496,24 +459,33 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $sb = {
+            $null = $this.ModulesToInstall | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
                     [string]
                     $ModuleName
                 )
-                if ($null -eq (Get-Module $ModuleName -ListAvailable)) {
-                    Install-Module -Name $ModuleName -Repository PSGallery -Scope CurrentUser -AllowClobber -SkipPublisherCheck
-                }
-            }
-            $null = $this.ModulesToInstall | ForEach-Object {
                 $this._log(
-                    "'$($_)' Installing module in background if missing",
+                    "'$($ModuleName)' Checking if module is installed already",
                     'InstallModules',
                     'Debug'
                 )
-                $_
-            } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -ScriptBlock $sb
+                if ($null -eq (Get-Module $ModuleName -ListAvailable)) {
+                    $this._log(
+                        "'$($ModuleName)' Installing missing module",
+                        'InstallModules',
+                        'Debug'
+                    )
+                    Install-Module -Name $ModuleName -Repository PSGallery -Scope CurrentUser -AllowClobber -SkipPublisherCheck
+                }
+                else {
+                    $this._log(
+                        "'$($ModuleName)' Module already installed, skipping",
+                        'InstallModules',
+                        'Debug'
+                    )
+                }
+            }
         }
         else {
             $this._log(
