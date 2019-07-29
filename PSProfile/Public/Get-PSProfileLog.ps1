@@ -22,8 +22,8 @@ function Get-PSProfileLog {
             [PSCustomObject]@{
                 Name = $sectName
                 Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
-                Section = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
-                Full = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
+                SectionDuration = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
+                FullDuration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
                 RunningJobs = Get-RSJob -State Running | Where-Object {$_.Name -match $sectName} | Select-Object -ExpandProperty Name
             }
         } | Sort-Object Start | Format-Table -AutoSize
