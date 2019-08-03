@@ -160,18 +160,10 @@ class PSProfile {
         $this._loadConfiguration()
         if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
             $withRefresh = ' with refresh.'
-            $this._log(
-                "Refreshing project map, checking for modules to install and creating symbolic links",
-                "MAIN",
-                "Debug"
-                )
-                $this._findProjects()
-                $this._installModules()
-                $this._createSymbolicLinks()
-                $this.LastRefresh = [datetime]::Now
-            }
-            else {
-                $withRefresh = '.'
+            $this.Refresh()
+        }
+        else {
+            $withRefresh = '.'
             $this._log(
                 "Skipped full refresh! Frequency set to '$($this.RefreshFrequency)', but last refresh was: $($this.LastRefresh.ToString())",
                 "MAIN",
@@ -182,7 +174,6 @@ class PSProfile {
         $this._loadPlugins()
         $this._invokeScripts()
         $this._setVariables()
-        $this.Save()
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         $this._log(
@@ -191,6 +182,18 @@ class PSProfile {
             "Debug"
         )
         Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
+    }
+    [void] Refresh() {
+        $this._log(
+            "Refreshing project map, checking for modules to install and creating symbolic links",
+            "MAIN",
+            "Debug"
+        )
+        $this._findProjects()
+        $this._installModules()
+        $this._createSymbolicLinks()
+        $this.LastRefresh = [datetime]::Now
+        $this.Save()
     }
     [void] Save() {
         $out = @{ }
@@ -339,7 +342,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ProjectPaths))) {
-            $null = $this.ProjectPaths | Start-RSJob -Name { "_PSProfile_FindProjects_" + $_ } -VariablesToImport this -ScriptBlock {
+            $this.ProjectPaths | ForEach-Object {
                 $p = $_
                 $cnt = 0
                 if (Test-Path $p) {
