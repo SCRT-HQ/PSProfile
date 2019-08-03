@@ -95,6 +95,8 @@ class PSProfile {
     hidden [System.Collections.Generic.List[PSProfileEvent]] $Log
     [hashtable] $_internal
     [hashtable] $Settings
+    [datetime] $LastRefresh
+    [string] $RefreshFrequency
     [hashtable] $GitPathMap
     [hashtable] $PSBuildPathMap
     [string[]] $ModulesToImport
@@ -113,10 +115,11 @@ class PSProfile {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
         $this._internal = @{
-            ConfigurationPath = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
             ProfileLoadStart = [datetime]::Now
         }
-        $this.GitPathMap = @{ }
+        $this.GitPathMap = @{
+            PSProfileConfiguration = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+        }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
         $this.Prompts = @{ }
@@ -135,6 +138,8 @@ class PSProfile {
             DefaultPrompt         = 'Default'
             PSVersionStringLength = 3
         }
+        $this.LastRefresh
+        $this.RefreshFrequency
         $this.ProjectPaths = @()
         $this.PluginPaths = @(
             (Join-Path $PSScriptRoot "Plugins")
@@ -151,20 +156,42 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
-        $this._findProjects()
-        $this._installModules()
+        if ($null -eq $this.RefreshFrequency) {
+            $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
+        }
+        if ($null -eq $this.LastRefresh) {
+            $this.LastRefresh = [datetime]::Now.AddHours(-2)
+        }
+        if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
+            $this._log(
+                "Refreshing project map, checking for modules to install and creating symbolic links",
+                "MAIN",
+                "Debug"
+            )
+            $this._findProjects()
+            $this._installModules()
+            $this._createSymbolicLinks()
+            $this.LastRefresh = [datetime]::Now
+        }
+        else {
+            $this._log(
+                "Skipped full refresh! Frequency set to '$($this.RefreshFrequency)', but last refresh was: $($this.LastRefresh.ToString())",
+                "MAIN",
+                "Debug"
+            )
+        }
         $this._importModules()
         $this._loadPlugins()
         $this._invokeScripts()
         $this._setVariables()
-        $this._createSymbolicLinks()
+        $this.Save()
+        $this._internal['ProfileLoadEnd'] = [datetime]::Now
+        $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         $this._log(
             "SECTION END",
             "MAIN",
             "Debug"
         )
-        $this._internal['ProfileLoadEnd'] = [datetime]::Now
-        $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
     }
     [void] Save() {
