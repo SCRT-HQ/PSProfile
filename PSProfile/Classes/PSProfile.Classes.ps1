@@ -138,6 +138,8 @@ class PSProfile {
             DefaultPrompt         = 'Default'
             PSVersionStringLength = 3
         }
+        $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
+        $this.LastRefresh = [datetime]::Now.AddHours(-2)
         $this.LastRefresh
         $this.RefreshFrequency
         $this.ProjectPaths = @()
@@ -156,24 +158,20 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
-        if ($null -eq $this.RefreshFrequency) {
-            $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
-        }
-        if ($null -eq $this.LastRefresh) {
-            $this.LastRefresh = [datetime]::Now.AddHours(-2)
-        }
         if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
+            $withRefresh = ' with refresh.'
             $this._log(
                 "Refreshing project map, checking for modules to install and creating symbolic links",
                 "MAIN",
                 "Debug"
-            )
-            $this._findProjects()
-            $this._installModules()
-            $this._createSymbolicLinks()
-            $this.LastRefresh = [datetime]::Now
-        }
-        else {
+                )
+                $this._findProjects()
+                $this._installModules()
+                $this._createSymbolicLinks()
+                $this.LastRefresh = [datetime]::Now
+            }
+            else {
+                $withRefresh = '.'
             $this._log(
                 "Skipped full refresh! Frequency set to '$($this.RefreshFrequency)', but last refresh was: $($this.LastRefresh.ToString())",
                 "MAIN",
@@ -192,7 +190,7 @@ class PSProfile {
             "MAIN",
             "Debug"
         )
-        Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms."
+        Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
     }
     [void] Save() {
         $out = @{ }
