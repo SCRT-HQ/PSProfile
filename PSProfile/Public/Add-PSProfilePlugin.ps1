@@ -16,9 +16,9 @@ function Add-PSProfilePlugin {
     If $true, saves the updated PSProfile after updating.
 
     .EXAMPLE
-    Add-PSProfilePlugin -Name 'PSProfle.Prompt' -Save
+    Add-PSProfilePlugin -Name 'PSProfile.PowerTools' -Save
 
-    Adds the included plugin 'PSProfile.Prompt' to your PSProfile and saves it so it persists.
+    Adds the included plugin 'PSProfile.PowerTools' to your PSProfile and saves it so it persists.
     #>
     [CmdletBinding()]
     Param (

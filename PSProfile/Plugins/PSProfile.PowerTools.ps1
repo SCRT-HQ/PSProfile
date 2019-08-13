@@ -1,6 +1,24 @@
 [CmdletBinding()]
 Param()
 function Get-Definition {
+    <#
+    .SYNOPSIS
+    Convenience function to easily get the defition of a function
+
+    .DESCRIPTION
+    Convenience function to easily get the defition of a function
+
+    .PARAMETER Command
+    The command or function to get the definition for
+
+    .EXAMPLE
+    Get-Definition Open-Code
+
+    .EXAMPLE
+    def Open-Code
+
+    Uses the shorter alias to get the definition of the Open-Code function
+    #>
     [CmdletBinding()]
     Param(
         [parameter(Mandatory,Position = 0)]
@@ -28,6 +46,44 @@ Register-ArgumentCompleter -CommandName 'Get-Definition' -ParameterName 'Command
 }
 
 function Open-Code {
+    <#
+    .SYNOPSIS
+    A drop-in replacement for the Visual Studio Code CLI `code`
+
+    .DESCRIPTION
+    A drop-in replacement for the Visual Studio Code CLI `code`
+
+    .PARAMETER Path
+    The path of the file or folder to open with Code. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .PARAMETER Cookbook
+    If you are using Chef and have your chef-repo folder in your GitPaths, this will allow you to specify a cookbook path to open from the Cookbooks subfolder.
+
+    .PARAMETER AddToWorkspace
+    If $true, adds the folder to the current Code workspace.
+
+    .PARAMETER InputObject
+    Pipeline input to display as a temporary file in Code. Temp files are automatically cleaned up after the file is closed in Code. No need to add the `-` after `code` to specify that pipeline input is expected.
+
+    .PARAMETER Language
+    The language or extension of the temporary file created from the pipeline input. This allows specifying a file type like 'powershell' or 'csv' or an extension like 'ps1', enabling opening of the temp file with the editor file language already set correctly.
+
+    .PARAMETER Wait
+    If $true, waits for the file to be closed in Code before returning to the prompt. If $false, opens the file using a background job to allow immediately returning to the prompt. Defaults to $false.
+
+    .PARAMETER Arguments
+    Any additional arguments to be passed directly to the Code CLI command, e.g. `Open-Code --list-extensions` or `code --list-extensions` will still work the same as expected.
+
+    .EXAMPLE
+    Get-Process | ConvertTo-Csv | Open-Code -Language csv
+
+    Gets the current running processes, converts to CSV format and opens it in Code via background job as a CSV. Easy Out-GridView!
+
+    .EXAMPLE
+    def Set-PSProfileSetting | code -l ps1
+
+    Using shorter aliases, gets the current function definition of the Set-PSProfileSetting function and opens it in Code as a PowerShell file to take advantage of immediate syntax highlighting.
+    #>
     [CmdletBinding(DefaultParameterSetName = 'Path')]
     Param (
         [parameter(Mandatory,Position = 0,ParameterSetName = 'Path')]
@@ -74,27 +130,27 @@ function Open-Code {
         if ($PSCmdlet.ParameterSetName -eq 'InputObject') {
             $collection = New-Object System.Collections.Generic.List[object]
             $extDict = @{
-                txt = 'txt'
+                txt        = 'txt'
                 powershell = 'ps1'
-                csv = 'csv'
-                sql = 'sql'
-                xml = 'xml'
-                json = 'json'
-                yml = 'yml'
-                csharp = 'cs'
-                fsharp = 'fs'
-                ruby = 'rb'
-                html = 'html'
-                css = 'css'
-                go = 'go'
-                jsonc = 'jsonc'
+                csv        = 'csv'
+                sql        = 'sql'
+                xml        = 'xml'
+                json       = 'json'
+                yml        = 'yml'
+                csharp     = 'cs'
+                fsharp     = 'fs'
+                ruby       = 'rb'
+                html       = 'html'
+                css        = 'css'
+                go         = 'go'
+                jsonc      = 'jsonc'
                 javascript = 'js'
                 typescript = 'ts'
-                less = 'less'
-                log = 'log'
-                python = 'py'
-                razor = 'cshtml'
-                markdown = 'md'
+                less       = 'less'
+                log        = 'log'
+                python     = 'py'
+                razor      = 'cshtml'
+                markdown   = 'md'
             }
         }
     }
@@ -139,11 +195,12 @@ function Open-Code {
         if ($PSCmdlet.ParameterSetName -eq 'InputObject') {
             $ext = if ($extDict.ContainsKey($Language)) {
                 $extDict[$Language]
-            } else {
+            }
+            else {
                 $Language
             }
             $in = @{
-                StdIn = $collection
+                StdIn   = $collection
                 TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"code-stdin-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).$ext")
             }
             $handler = {
@@ -188,33 +245,58 @@ if ($null -ne (Get-Command Get-PSProfileArguments*)) {
 
 Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Language' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-    'txt','powershell','csv','sql','xml','json','yml','csharp','fsharp','ruby','html','css','go','jsonc','javascript','typescript','less','log','python','razor','markdown' | Sort-Object | Where-Object {$_ -like "$wordToComplete*"} | Sort-Object | ForEach-Object {
+    'txt','powershell','csv','sql','xml','json','yml','csharp','fsharp','ruby','html','css','go','jsonc','javascript','typescript','less','log','python','razor','markdown' | Sort-Object | Where-Object { $_ -like "$wordToComplete*" } | Sort-Object | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
 
 function Install-LatestModule {
+    <#
+    .SYNOPSIS
+    A helper function to uninstall any existing versions of the target module before installing the latest one.
+
+    .DESCRIPTION
+    A helper function to uninstall any existing versions of the target module before installing the latest one. Defaults to CurrentUser scope when installing the latest module version from the desired repository.
+
+    .PARAMETER Name
+    The name of the module to install the latest version of
+
+    .PARAMETER Repository
+    The PowerShell repository to install the latest module from. Defaults to the PowerShell Gallery.
+
+    .PARAMETER ConfirmNotImported
+    If $true, safeguards module removal if the module you are trying to update is currently imported by throwing a terminating error.
+
+    .EXAMPLE
+    Install-LatestModule PSProfile
+    #>
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory,Position = 0,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [String]
+        [String[]]
         $Name,
+        [Parameter()]
+        [String]
+        $Repository = 'PSGallery',
         [Parameter()]
         [Switch]
         $ConfirmNotImported
     )
     Process {
-        if ($ConfirmNotImported -and (Get-Module $Name)) {
-            throw "$Name cannot be loaded if trying to install!"
-        }
-        else {
-            try {
-                Write-Verbose "Uninstalling all version of module: $Name"
-                Get-Module $Name -ListAvailable | Uninstall-Module
-                Write-Verbose "Installing latest module version from PowerShell Gallery"
-                Install-Module $Name -Repository PSGallery -Scope CurrentUser -AllowClobber -SkipPublisherCheck -AcceptLicense
-            } catch {
-                throw
+        foreach ($module in $Name) {
+            if ($ConfirmNotImported -and (Get-Module $module)) {
+                throw "$module cannot be loaded if trying to install!"
+            }
+            else {
+                try {
+                    Write-Verbose "Uninstalling all version of module: $module"
+                    Get-Module $module -ListAvailable | Uninstall-Module
+                    Write-Verbose "Installing latest module version from PowerShell Gallery"
+                    Install-Module $module -Repository $Repository -Scope CurrentUser -AllowClobber -SkipPublisherCheck -AcceptLicense
+                }
+                catch {
+                    throw
+                }
             }
         }
     }
@@ -228,6 +310,35 @@ Register-ArgumentCompleter -CommandName 'Install-LatestModule' -ParameterName 'N
 }
 
 function Open-Item {
+    <#
+    .SYNOPSIS
+    Opens the item specified using Invoke-Item. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .DESCRIPTION
+    Opens the item specified using Invoke-Item. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .PARAMETER Path
+    The path you would like to open. Supports anything that Invoke-Item normally supports, i.e. files, folders, URIs.
+
+    .PARAMETER Cookbook
+    If you are using Chef and have your chef-repo folder in your GitPaths, this will allow you to specify a cookbook path to open from the Cookbooks subfolder.
+
+    .EXAMPLE
+    Open-Item
+
+    Opens the current path in Explorer/Finder/etc.
+
+    .EXAMPLE
+    open
+
+    Uses the shorter alias to open the current path
+
+    .EXAMPLE
+    open MyWorkRepo
+
+    Opens the folder for the Git Repo 'MyWorkRepo' in Explorer/Finder/etc.
+    #>
+
     [CmdletBinding(DefaultParameterSetName = 'Path')]
     Param (
         [parameter(Position = 0,ParameterSetName = 'Path')]
@@ -293,6 +404,33 @@ New-Alias -Name open -Value 'Open-Item' -Scope Global -Option AllScope -Force
 
 
 function Push-Path {
+    <#
+    .SYNOPSIS
+    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .DESCRIPTION
+    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .PARAMETER Path
+    The path you would like to push your location to.
+
+    .PARAMETER Cookbook
+    If you are using Chef and have your chef-repo folder in your GitPaths, this will allow you to specify a cookbook path to push your location to from the Cookbooks subfolder.
+
+    .EXAMPLE
+    Push-Path MyWorkRepo
+
+    Changes your current directory to your Git Repo named 'MyWorkRepo'.
+
+    .EXAMPLE
+    push MyWorkRepo
+
+    Same as the first example but using the shorter alias.
+
+    .NOTES
+    Since Push-Location is being called from a function, Pop-Location doesn't have any actual effect after :-(. This is effectively Set-Location, given that caveat.
+    #>
+
     [CmdletBinding()]
     Param(
         [parameter(Mandatory,Position = 0,ParameterSetName = 'Path')]
@@ -345,6 +483,34 @@ if ($null -ne (Get-Command Get-PSProfileArguments*)) {
 }
 
 function Get-Gist {
+    <#
+    .SYNOPSIS
+    Gets a GitHub Gist's contents using the public API
+
+    .DESCRIPTION
+    Gets a GitHub Gist's contents using the public API
+
+    .PARAMETER Id
+    The ID of the Gist to get
+
+    .PARAMETER File
+    The specific file from the Gist to get. If excluded, gets all of the files as an array of objects.
+
+    .PARAMETER Sha
+    The SHA of the specific Gist to get, if desired.
+
+    .PARAMETER Metadata
+    Any additional metadata you want to include on the resulting object, e.g. for identifying what the Gist is, add notes, etc.
+
+    .PARAMETER Invoke
+    If $true, invokes the Gist contents. If the Gist contains any PowerShell functions, it will adjust the scope to Global before invoking so the function remains available in the session after Get-Gist finishes. Useful for loading functions directly from a Gist.
+
+    .EXAMPLE
+    Get-Gist -Id f784228937183a1cf8105351872d2f8a -Invoke
+
+    Gets the Update-Release and Test-GetGist functions from the following Gist URL and loads them into the current session for subsequent use: https://gist.github.com/scrthq/f784228937183a1cf8105351872d2f8a
+    #>
+
     [CmdletBinding()]
     Param (
         [parameter(Mandatory,ValueFromPipeline,ValueFromPipelineByPropertyName,Position = 0)]
@@ -357,7 +523,7 @@ function Get-Gist {
         [parameter(ValueFromPipelineByPropertyName)]
         [String]
         $Sha,
-        [parameter(ValueFromPipelineByPropertyName,ValueFromRemainingArguments)]
+        [parameter(ValueFromPipelineByPropertyName)]
         [Object]
         $Metadata,
         [parameter()]
@@ -417,16 +583,45 @@ function Get-Gist {
                 )
             }
             [PSCustomObject]@{
-                File    = $fileName
-                Sha     = $Sha
-                Count   = $lines
-                Content = $content -join "`n"
+                File     = $fileName
+                Sha      = $Sha
+                Lines    = $lines
+                Metadata = $Metadata
+                Content  = $content -join "`n"
             }
         }
     }
 }
 
 function Enter-CleanEnvironment {
+    <#
+    .SYNOPSIS
+    Enters a clean environment with -NoProfile and sets a couple helpers, e.g. a prompt to advise you are in a clean environment and some PSReadline helper settings for convenience.
+
+    .DESCRIPTION
+    Enters a clean environment with -NoProfile and sets a couple helpers, e.g. a prompt to advise you are in a clean environment and some PSReadline helper settings for convenience.
+
+    .PARAMETER Engine
+    The engine to open the clean environment with between powershell, pwsh, and pwsh-preview. Defaults to the current engine the clean environment is opened from.
+
+    .PARAMETER ImportModule
+    If $true, imports the module found in the BuildOutput folder if present. Useful for quickly testing compiled modules after building in a clean environment to avoid assembly locking and other gotchas.
+
+    .EXAMPLE
+    Enter-CleanEnvironment
+
+    Opens a clean environment from the current path.
+
+    .EXAMPLE
+    cln
+
+    Does the same as Example 1, but using the shorter alias 'cln'.
+
+    .EXAMPLE
+    cln -ipmo
+
+    Enters the clean environment and imports the built module in the BuildOutput folder, if present.
+    #>
     [CmdletBinding()]
     Param (
         [parameter(Position = 0)]
@@ -434,14 +629,14 @@ function Enter-CleanEnvironment {
         [Alias('E')]
         [String]
         $Engine = $(if ($PSVersionTable.PSVersion.ToString() -match 'preview') {
-            'pwsh-preview'
-        }
-        elseif ($PSVersionTable.PSVersion.Major -ge 6) {
-            'pwsh'
-        }
-        else {
-            'powershell'
-        }),
+                'pwsh-preview'
+            }
+            elseif ($PSVersionTable.PSVersion.Major -ge 6) {
+                'pwsh'
+            }
+            else {
+                'powershell'
+            }),
         [Parameter()]
         [Alias('ipmo','Import')]
         [Switch]
@@ -466,6 +661,38 @@ function Enter-CleanEnvironment {
 New-Alias -Name cln -Value Enter-CleanEnvironment -Option AllScope -Scope Global -Force
 
 function Start-BuildScript {
+    <#
+    .SYNOPSIS
+    For those using the typical build.ps1 build scripts for PowerShell projects, this will allow invoking the build script quickly from wherever folder you are currently in using a child process.
+
+    .DESCRIPTION
+    For those using the typical build.ps1 build scripts for PowerShell projects, this will allow invoking the build script quickly from wherever folder you are currently in using a child process. Any projects in the ProjectPaths list that were discovered during PSProfile load and have a build.ps1 file will be able to be tab-completed for convenience. Temporarily sets the path to the build folder, invokes the build.ps1 file, then returns to the original path that it was invoked from.
+
+    .PARAMETER Project
+    The path of the project to build. Allows tab-completion of PSBuildPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+
+    .PARAMETER Task
+    The list of Tasks to specify to the build.ps1 script.
+
+    .PARAMETER Engine
+    The engine to open the clean environment with between powershell, pwsh, and pwsh-preview. Defaults to the current engine the clean environment is opened from.
+
+    .PARAMETER NoExit
+    If $true, does not exit the child process once build.ps1 has completed and imports the built module in BuildOutput (if present to allow testing of the built project in a clean environment.
+
+    .PARAMETER NoRestore
+    If $true, sets $env:NoNugetRestore to $false to prevent NuGet package restoration (if applicable).
+
+    .EXAMPLE
+    Start-BuildScript MyModule -NoExit
+
+    Changes directories to the repo root of MyModule, invokes build.ps1, imports the compiled module in a clean child process and stops before exiting to allow testing of the newly compiled module.
+
+    .EXAMPLE
+    bld MyModule -ne
+
+    Same experience as Example 1 but uses the shorter alias 'bld' to call. Also uses the parameter alias `-ne` instead of `-NoExit`
+    #>
     [CmdletBinding(PositionalBinding = $false)]
     Param (
         [parameter()]
@@ -581,6 +808,26 @@ if ($null -ne (Get-Command Get-PSProfileArguments*)) {
 New-Alias -Name bld -Value Start-BuildScript -Option AllScope -Scope Global -Force
 
 function Format-Syntax {
+    <#
+    .SYNOPSIS
+    Formats a command's syntax in an easy-to-read view.
+
+    .DESCRIPTION
+    Formats a command's syntax in an easy-to-read view.
+
+    .PARAMETER Command
+    The command to get the syntax of.
+
+    .EXAMPLE
+    Format-Syntax Get-Process
+
+    Gets the formatted syntax by parameter set for Get-Process
+
+    .EXAMPLE
+    syntax Get-Process
+
+    Same as Example 1, but uses the alias 'syntax' instead.
+    #>
     [CmdletBinding()]
     param (
         $Command
@@ -598,9 +845,32 @@ function Format-Syntax {
     (Get-Command @params) -replace '(\s(?=\[)|\s(?=-))', "`r`n "
 }
 
-New-Alias -Name Syntax -Value Format-Syntax -Option AllScope -Scope Global -Force
+New-Alias -Name syntax -Value Format-Syntax -Option AllScope -Scope Global -Force
 
 function Get-LongPath {
+    <#
+    .SYNOPSIS
+    Expands a short-alias from the GitPathMap to the full path
+
+    .DESCRIPTION
+    Expands a short-alias from the GitPathMap to the full path
+
+    .PARAMETER Path
+    The short path to expand
+
+    .PARAMETER Subpaths
+    Any subpaths to join to the main path before resolving.
+
+    .EXAMPLE
+    Get-LongPath MyWorkRepo
+
+    Gets the full path to MyWorkRepo
+
+    .EXAMPLE
+    path MyWorkRepo
+
+    Same as Example 1, but uses the short-alias 'path' instead.
+    #>
     [CmdletBinding(DefaultParameterSetName = 'Path')]
     Param (
         [parameter(Position = 0,ParameterSetName = 'Path')]
