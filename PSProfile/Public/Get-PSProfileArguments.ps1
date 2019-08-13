@@ -1,14 +1,40 @@
 function Get-PSProfileArguments {
-    param(
-        [Switch]$FinalKeyOnly,
-        [object]$CommandName,
-        [object]$ParameterName,
+    <#
+    .SYNOPSIS
+    Used for PSProfile Plugins to provide easy Argument Completers using PSProfile constructs.
+
+    .DESCRIPTION
+    Used for PSProfile Plugins to provide easy Argument Completers using PSProfile constructs.
+
+    .PARAMETER FinalKeyOnly
+    Returns only the final key of the completed argument to the list of completers. If $false, returns the full path.
+
+    .PARAMETER WordToComplete
+    The word to complete, typically passed in from the scriptblock arguments.
+
+    .EXAMPLE
+    Get-PSProfileArguments -WordToComplete "Prompts.$wordToComplete" -FinalKeyOnly
+
+    Gets the list of prompt names under the Prompts PSProfile primary key.
+
+    .EXAMPLE
+    Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
+
+    Gets the list of Git Path short names under the GitPathMap PSProfile primary key.
+    #>
+    [OutputType('System.Management.Automation.CompletionResult')]
+    [CmdletBinding()]
+    Param(
+        [switch]$FinalKeyOnly,
         [string]$WordToComplete,
-        [object]$CommandAst,
-        [object]$FakeBoundParameter
+        [object]$commandName,
+        [object]$parameterName,
+        [object]$commandAst,
+        [object]$fakeBoundParameter
     )
-    process {
+    Process {
         $split = $WordToComplete.Split('.')
+        $setting = $null
         switch ($split.Count) {
             5 {
                 $setting = $Global:PSProfile."$($split[0])"."$($split[1])"."$($split[2])"."$($split[3])"
@@ -26,17 +52,20 @@ function Get-PSProfileArguments {
                 $setting = $Global:PSProfile."$($split[0])"
                 $base = $split[0]
             }
-            1 {
-                $setting = $Global:PSProfile
-                $base = $null
-            }
         }
-        $final = $split | Select-Object -Last 1
+        if ($null -eq $setting) {
+            $setting = $Global:PSProfile
+            $base = $null
+            $final = $WordToComplete
+        }
+        else {
+            $final = $split | Select-Object -Last 1
+        }
         $props = if ($setting.PSTypeNames -match 'Hashtable') {
             $setting.Keys | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
         }
         else {
-            ($setting | Get-Member -MemberType Property).Name | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
+            ($setting | Get-Member -MemberType Property,NoteProperty).Name | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
         }
         $props | ForEach-Object {
             $result = if (-not $FinalKeyOnly -and $null -ne $base) {

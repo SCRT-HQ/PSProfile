@@ -68,6 +68,7 @@ task Clean Init,{
 
 task Build Clean,{
     $functionsToExport = @()
+    $aliasesToExport = @()
     Write-BuildLog 'Creating psm1...'
     $psm1 = New-Item -Path $TargetPSM1Path -ItemType File -Force
 
@@ -83,6 +84,15 @@ task Build Clean,{
             }
         }
     }
+    $aliasPath = [System.IO.Path]::Combine($SourceModuleDirectory,"$($ModuleName).Aliases.ps1")
+    if (Test-Path $aliasPath) {
+        $aliasHash = . $aliasPath
+        $aliasHash.GetEnumerator() | ForEach-Object {
+            $aliasesToExport += $_.Key
+            "New-Alias -Name '$($_.Key)' -Value '$($_.Value)'" | Add-Content -Path $psm1 -Encoding UTF8
+            "Export-ModuleMember -Alias '$($_.Key)'" | Add-Content -Path $psm1 -Encoding UTF8
+        }
+    }
 
     Get-Content (Join-Path $SourceModuleDirectory "$($ModuleName).psm1") -Raw  | Add-Content -Path $psm1 -Encoding UTF8
 
@@ -96,8 +106,15 @@ task Build Clean,{
     # Copy over manifest
     Copy-Item -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -Destination $TargetVersionDirectory
 
-    # Update FunctionsToExport on manifest
-    Update-ModuleManifest -Path $TargetManifestPath -FunctionsToExport ($functionsToExport | Sort-Object)
+    # Update FunctionsToExport and AliasesToExport on manifest
+    $params = @{
+        Path = $TargetManifestPath
+        FunctionsToExport = ($functionsToExport | Sort-Object)
+    }
+    if ($aliasesToExport.Count) {
+        $params['AliasesToExport'] = ($aliasesToExport | Sort-Object)
+    }
+    Update-ModuleManifest @params
 
     if ((Get-ChildItem $TargetVersionDirectory | Where-Object {$_.Name -eq "$($ModuleName).psd1"}).BaseName -cne $ModuleName) {
         Write-BuildLog "Renaming manifest to correct casing"

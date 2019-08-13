@@ -1,4 +1,32 @@
 function Get-MyCreds {
+    <#
+    .SYNOPSIS
+    Gets a credential object from the PSProfile Vault. Defaults to getting your current user's PSCredentials if stored in the Vault.
+
+    .DESCRIPTION
+    Gets a credential object from the PSProfile Vault. Defaults to getting your current user's PSCredentials if stored in the Vault.
+
+    .PARAMETER Item
+    The name of the Secret you would like to retrieve from the Vault.
+
+    .PARAMETER IncludeDomain
+    If $true, prepends the domain found in $env:USERDOMAIN to the Username on the PSCredential object before returning it. If not currently in a domain, prepends the MachineName instead.
+
+    .EXAMPLE
+    Get-MyCreds
+
+    Gets the current user's PSCredentials from the Vault.
+
+    .EXAMPLE
+    Invoke-Command -ComputerName Server01 -Credential (Creds)
+
+    Passes your current user credentials via the `Creds` alias to the Credential parameter of Invoke-Command to make a call against Server01 using your PSCredential
+
+    .EXAMPLE
+    Invoke-Command -ComputerName Server01 -Credential (Get-MyCreds SvcAcct07)
+
+    Passes the credentials for account SvcAcct07 to the Credential parameter of Invoke-Command to make a call against Server01 using a different PSCredential than your own.
+    #>
     [OutputType('PSCredential')]
     [CmdletBinding()]
     Param(
@@ -45,5 +73,3 @@ function Get-MyCreds {
         }
     }
 }
-
-New-Alias -Name Creds -Value 'Get-MyCreds' -Option AllScope -Scope Global -Force

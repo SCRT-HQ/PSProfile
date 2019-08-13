@@ -1,4 +1,38 @@
 function Get-PSProfileLog {
+    <#
+    .SYNOPSIS
+    Gets the PSProfile Log events.
+
+    .DESCRIPTION
+    Gets the PSProfile Log events.
+
+    .PARAMETER Section
+    Limit results to only a specific section.
+
+    .PARAMETER LogLevel
+    Limit results to only a specific LogLevel.
+
+    .PARAMETER Summary
+    Get a high-level summary of the PSProfile Log.
+
+    .PARAMETER Raw
+    Return the raw PSProfile Events. Returns the results via Format-Table for readability otherwise.
+
+    .EXAMPLE
+    Get-PSProfileLog
+
+    Gets the current Log in full.
+
+    .EXAMPLE
+    Get-PSProfileLog -Summary
+
+    Gets the Log summary.
+
+    .EXAMPLE
+    Get-PSProfileLog -Section InvokeScripts,LoadPlugins -Raw
+
+    Gets the Log Events for only sections 'InvokeScripts' and 'LoadPlugins' and returns the raw Event objects.
+    #>
     [CmdletBinding(DefaultParameterSetName = 'Full')]
     Param(
         [Parameter(Position = 0,ParameterSetName = 'Full')]
@@ -40,6 +74,9 @@ function Get-PSProfileLog {
         }
         if (-not $Raw) {
             $items | Format-Table -AutoSize
+        }
+        else {
+            $items
         }
     }
 }

@@ -114,9 +114,7 @@ class PSProfile {
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
-        $this._internal = @{
-            ProfileLoadStart = [datetime]::Now
-        }
+        $this._internal = @{}
         $this.GitPathMap = @{
             PSProfileConfiguration = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
         }
@@ -140,8 +138,6 @@ class PSProfile {
         }
         $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
-        $this.LastRefresh
-        $this.RefreshFrequency
         $this.ProjectPaths = @()
         $this.PluginPaths = @(
             (Join-Path $PSScriptRoot "Plugins")
@@ -152,6 +148,7 @@ class PSProfile {
         }
     }
     [void] Load() {
+        $this._internal['ProfileLoadStart'] = [datetime]::Now
         $this._log(
             "SECTION START",
             "MAIN",
