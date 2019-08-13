@@ -363,8 +363,6 @@ function Edit-Prompt {
     }
 }
 
-Export-ModuleMember -Function '*-*'
-
 if (
     $null -ne $global:PSProfile -and
     $null -eq $global:PSProfile.Prompts
