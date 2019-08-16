@@ -19,12 +19,15 @@ function Set-PSProfileSetting {
     If $true, saves the updated PSProfile after updating.
 
     .EXAMPLE
-    Set-PSProfileSetting
+    Set-PSProfileSetting -Path Settings.PSVersionStringLength -Value 3 -Save
 
-    .NOTES
-    General notes
+    Updates the PSVersionStringLength setting to 3 and saves the configuration.
+
+    .EXAMPLE
+    Set-PSProfileSetting -Path ScriptPaths -Value ~\ProfileLoad.ps1 -Add -Save
+
+    *Adds* the 'ProfileLoad.ps1' script to the $PSProfile.ScriptPaths array of scripts to invoke during profile load, then saves the configuration.
     #>
-
     [CmdletBinding()]
     Param(
         [Parameter(Mandatory,Position = 0)]

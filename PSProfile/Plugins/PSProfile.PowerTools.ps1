@@ -48,10 +48,10 @@ Register-ArgumentCompleter -CommandName 'Get-Definition' -ParameterName 'Command
 function Open-Code {
     <#
     .SYNOPSIS
-    A drop-in replacement for the Visual Studio Code CLI `code`
+    A drop-in replacement for the Visual Studio Code CLI `code`. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
 
     .DESCRIPTION
-    A drop-in replacement for the Visual Studio Code CLI `code`
+    A drop-in replacement for the Visual Studio Code CLI `code`. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
 
     .PARAMETER Path
     The path of the file or folder to open with Code. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.

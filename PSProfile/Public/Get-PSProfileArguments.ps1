@@ -61,20 +61,22 @@ function Get-PSProfileArguments {
         else {
             $final = $split | Select-Object -Last 1
         }
-        $props = if ($setting.PSTypeNames -match 'Hashtable') {
-            $setting.Keys | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
-        }
-        else {
-            ($setting | Get-Member -MemberType Property,NoteProperty).Name | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
-        }
-        $props | ForEach-Object {
-            $result = if (-not $FinalKeyOnly -and $null -ne $base) {
-                @($base,$_) -join "."
+        if ($setting -isnot [System.String]) {
+            $props = if ($setting.PSTypeNames -match 'Hashtable') {
+                $setting.Keys | Where-Object {$_ -ne '_internal' -and $_ -like "$final*"} | Sort-Object
             }
             else {
-                $_
+                ($setting | Get-Member -MemberType Property,NoteProperty).Name | Where-Object {$_ -notmatch '^_' -and $_ -like "$final*"} | Sort-Object
             }
-            [System.Management.Automation.CompletionResult]::new($result, $result, 'ParameterValue', $result)
+            $props | ForEach-Object {
+                $result = if (-not $FinalKeyOnly -and $null -ne $base) {
+                    @($base,$_) -join "."
+                }
+                else {
+                    $_
+                }
+                [System.Management.Automation.CompletionResult]::new($result, $result, 'ParameterValue', $result)
+            }
         }
     }
 }

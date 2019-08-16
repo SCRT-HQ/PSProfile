@@ -6,6 +6,22 @@ Param (
 )
 
 function Get-Prompt {
+    <#
+    .SYNOPSIS
+    Gets the current prompt's definition as a string. Useful for inspection of the prompt in use.
+
+    .DESCRIPTION
+    Gets the current prompt's definition as a string. Useful for inspection of the prompt in use.
+
+    .PARAMETER Global
+    If $true, adds the global scope to the returned prompt, e.g. `function global:prompt`
+
+    .PARAMETER Raw
+    If $true, returns only the prompt definition and does not add the `function prompt {...}` enclosure.
+
+    .EXAMPLE
+    Get-Prompt
+    #>
     [CmdletBinding()]
     Param(
         [Parameter()]
@@ -50,6 +66,22 @@ function Get-Prompt {
 }
 
 function Get-PSVersion {
+    <#
+    .SYNOPSIS
+    Gets the short formatted PSVersion string for use in a prompt or wherever else desired.
+
+    .DESCRIPTION
+    Gets the short formatted PSVersion string for use in a prompt or wherever else desired.
+
+    .PARAMETER Places
+    How many decimal places you would like the returned version string to be. Defaults to $PSProfile.Settings.PSVersionStringLength if present.
+
+    .EXAMPLE
+    Get-PSVersion -Places 2
+
+    Returns `6.2` when using PowerShell 6.2.2, or `5.1` when using Windows PowerShell 5.1.18362.10000
+    #>
+
     [OutputType('System.String')]
     [CmdletBinding()]
     Param (
@@ -81,6 +113,16 @@ function Get-PSVersion {
 }
 
 function Test-IfGit {
+    <#
+    .SYNOPSIS
+    Tests if the current path is in a Git repo folder and returns the basic details as an object if so. Useful in prompts when determining current folder's Git status
+
+    .DESCRIPTION
+    Tests if the current path is in a Git repo folder and returns the basic details as an object if so. Useful in prompts when determining current folder's Git status
+
+    .EXAMPLE
+    Test-IfGit
+    #>
     [CmdletBinding()]
     Param ()
     Process {
@@ -113,6 +155,22 @@ function Test-IfGit {
 }
 
 function Get-PathAlias {
+    <#
+    .SYNOPSIS
+    Gets the Path alias using either the short name from $PSProfile.GitPathMap or a path alias stored in $PSProfile.PathAliases, falls back to using a shortened version of the root drive + current directory.
+
+    .DESCRIPTION
+    Gets the Path alias using either the short name from $PSProfile.GitPathMap or a path alias stored in $PSProfile.PathAliases, falls back to using a shortened version of the root drive + current directory.
+
+    .PARAMETER Path
+    The full path to get the PathAlias for. Defaults to $PWD.Path
+
+    .PARAMETER DirectorySeparator
+    The desired DirectorySeparator character. Defaults to $global:PathAliasDirectorySeparator if present, falls back to [System.IO.Path]::DirectorySeparatorChar if not.
+
+    .EXAMPLE
+    Get-PathAlias
+    #>
     [CmdletBinding()]
     Param (
         [parameter(Position = 0)]
@@ -225,6 +283,26 @@ function Get-PathAlias {
 }
 
 function Get-Elapsed {
+    <#
+    .SYNOPSIS
+    Gets the elapsed time of the last command via Get-History. Intended to be used in prompts.
+
+    .DESCRIPTION
+    Gets the elapsed time of the last command via Get-History. Intended to be used in prompts.
+
+    .PARAMETER Id
+    The Id of the command to get from the history.
+
+    .PARAMETER Format
+    Parameter description
+
+    .EXAMPLE
+    An example
+
+    .NOTES
+    General notes
+    #>
+
     [CmdletBinding()]
     param(
         [Parameter()]

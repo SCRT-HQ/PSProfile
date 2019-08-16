@@ -339,6 +339,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ProjectPaths))) {
+            $this.GitPathMap = @{}
             $this.ProjectPaths | ForEach-Object {
                 $p = $_
                 $cnt = 0
