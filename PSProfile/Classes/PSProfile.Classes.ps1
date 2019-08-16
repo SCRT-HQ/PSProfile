@@ -99,8 +99,10 @@ class PSProfile {
     [string] $RefreshFrequency
     [hashtable] $GitPathMap
     [hashtable] $PSBuildPathMap
-    [string[]] $ModulesToImport
-    [string[]] $ModulesToInstall
+    #[string[]] $ModulesToImport
+    #[string[]] $ModulesToInstall
+    [object[]] $ModulesToImport
+    [object[]] $ModulesToInstall
     [hashtable] $PathAliases
     [hashtable[]] $Plugins
     [string[]] $PluginPaths
@@ -114,7 +116,7 @@ class PSProfile {
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
-        $this._internal = @{}
+        $this._internal = @{ }
         $this.GitPathMap = @{
             PSProfileConfiguration = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
         }
@@ -164,8 +166,20 @@ class PSProfile {
             $this._log(
                 "Skipped full refresh! Frequency set to '$($this.RefreshFrequency)', but last refresh was: $($this.LastRefresh.ToString())",
                 "MAIN",
-                "Debug"
+                "Verbose"
             )
+        }
+        if ($Global:PSDefaultParameterValues.Keys.Count) {
+            $Global:PSDefaultParameterValues['Import-Module:Global'] = $true
+            $Global:PSDefaultParameterValues['Import-Module:Force'] = $true
+            $Global:PSDefaultParameterValues['Import-Module:Verbose'] = $false
+        }
+        else {
+            $Global:PSDefaultParameterValues = @{
+                'Import-Module:Global'  = $true
+                'Import-Module:Force'   = $true
+                'Import-Module:Verbose' = $false
+            }
         }
         $this._importModules()
         $this._loadPlugins()
@@ -184,7 +198,7 @@ class PSProfile {
         $this._log(
             "Refreshing project map, checking for modules to install and creating symbolic links",
             "MAIN",
-            "Debug"
+            "Verbose"
         )
         $this._findProjects()
         $this._installModules()
@@ -222,13 +236,13 @@ class PSProfile {
         $this._log(
             "Importing additional file: $configurationPath",
             "AddlConfiguration",
-            "Debug"
+            "Verbose"
         )
         $additional = Import-Metadata -Path $configurationPath
         $this._log(
             "Adding additional configuration to PSProfile object",
             "AddlConfiguration",
-            "Debug"
+            "Verbose"
         )
         $this | Update-Object $additional
         $this._log(
@@ -246,13 +260,13 @@ class PSProfile {
         $this._log(
             "Importing layered Configuration",
             "Configuration",
-            "Debug"
+            "Verbose"
         )
         $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
         $this._log(
             "Adding layered configuration to PSProfile object",
             "Configuration",
-            "Debug"
+            "Verbose"
         )
         $this | Update-Object $conf
         $this._log(
@@ -278,7 +292,7 @@ class PSProfile {
             $this._log(
                 "No symbolic links specified!",
                 'SymbolicLinks',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -301,7 +315,7 @@ class PSProfile {
                             $this._log(
                                 "`$env:$($_.Key) = '$($_.Value)'",
                                 'SetVariables',
-                                'Debug'
+                                'Verbose'
                             )
                             Set-Item "Env:\$($_.Key)" -Value $_.Value -Force
                         }
@@ -311,7 +325,7 @@ class PSProfile {
                             $this._log(
                                 "`$global:$($_.Key) = '$($_.Value)'",
                                 'SetVariables',
-                                'Debug'
+                                'Verbose'
                             )
                             Set-Variable -Name $_.Key -Value $_.Value -Scope Global -Force
                         }
@@ -323,7 +337,7 @@ class PSProfile {
             $this._log(
                 "No variables key/value pairs provided!",
                 'SetVariables',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -339,7 +353,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ProjectPaths))) {
-            $this.GitPathMap = @{}
+            $this.GitPathMap = @{ }
             $this.ProjectPaths | ForEach-Object {
                 $p = $_
                 $cnt = 0
@@ -351,7 +365,7 @@ class PSProfile {
                     $this._log(
                         "Added path alias: @$($pInfo.Name) >> $($pInfo.FullName)",
                         'FindProjects',
-                        'Debug'
+                        'Verbose'
                     )
                     $g = 0
                     $b = 0
@@ -360,7 +374,7 @@ class PSProfile {
                         $this._log(
                             "Found git project @ $($_.Parent.FullName)",
                             'FindProjects',
-                            'Debug'
+                            'Verbose'
                         )
                         $this.GitPathMap[$_.Parent.BaseName] = $_.Parent.FullName
                         $bldPath = [System.IO.Path]::Combine($_.Parent.FullName,'build.ps1')
@@ -369,7 +383,7 @@ class PSProfile {
                             $this._log(
                                 "Found build script @ $($_.FullName)",
                                 'FindProjects',
-                                'Debug'
+                                'Verbose'
                             )
                             $this.PSBuildPathMap[$_.Parent.BaseName] = $_.Parent.FullName
                         }
@@ -377,14 +391,14 @@ class PSProfile {
                     $this._log(
                         "$p :: Found: $g git | $b build",
                         'FindProjects',
-                        'Debug'
+                        'Verbose'
                     )
                 }
                 else {
                     $this._log(
                         "'$p' Unable to resolve path!",
                         'FindProjects',
-                        'Debug'
+                        'Verbose'
                     )
                 }
             }
@@ -393,7 +407,7 @@ class PSProfile {
             $this._log(
                 "No project paths specified to search in!",
                 'FindProjects',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -419,7 +433,7 @@ class PSProfile {
                             $this._log(
                                 "'$($i.Name)' Invoking script",
                                 'InvokeScripts',
-                                'Debug'
+                                'Verbose'
                             )
                             $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($i.FullName))))
                             .$sb
@@ -440,7 +454,7 @@ class PSProfile {
                                 $this._log(
                                     "'$($s.Name)' Invoking script",
                                     'InvokeScripts',
-                                    'Debug'
+                                    'Verbose'
                                 )
                                 $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($s.FullName))))
                                 .$sb
@@ -460,7 +474,7 @@ class PSProfile {
                     $this._log(
                         "'$p' Unable to resolve path!",
                         'FindProjects',
-                        'Debug'
+                        'Verbose'
                     )
                 }
             }
@@ -469,7 +483,7 @@ class PSProfile {
             $this._log(
                 "No script paths specified to invoke!",
                 'InvokeScripts',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -488,27 +502,36 @@ class PSProfile {
             $null = $this.ModulesToInstall | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
-                    [string]
-                    $ModuleName
+                    [object]
+                    $Module
                 )
+                $params = if ($Module -is [string]) {
+                    @{Name = $Module }
+                }
+                elseif ($Module -is [hashtable]) {
+                    $Module
+                }
+                else {
+                    $null
+                }
                 $this._log(
-                    "'$($ModuleName)' Checking if module is installed already",
+                    "Checking if module is installed already: $($params | ConvertTo-Json -Compress)",
                     'InstallModules',
-                    'Debug'
+                    'Verbose'
                 )
-                if ($null -eq (Get-Module $ModuleName -ListAvailable)) {
+                if ($null -eq (Get-Module $params['Name'] -ListAvailable)) {
                     $this._log(
-                        "'$($ModuleName)' Installing missing module",
+                        "Installing missing module to CurrentUser scope: $($params | ConvertTo-Json -Compress)",
                         'InstallModules',
-                        'Debug'
+                        'Verbose'
                     )
-                    Install-Module -Name $ModuleName -Repository PSGallery -Scope CurrentUser -AllowClobber -SkipPublisherCheck
+                    Install-Module -Name @params -Scope CurrentUser -AllowClobber -SkipPublisherCheck
                 }
                 else {
                     $this._log(
-                        "'$($ModuleName)' Module already installed, skipping",
+                        "Module already installed, skipping: $($params | ConvertTo-Json -Compress)",
                         'InstallModules',
-                        'Debug'
+                        'Verbose'
                     )
                 }
             }
@@ -517,7 +540,7 @@ class PSProfile {
             $this._log(
                 "No modules specified to install!",
                 'InstallModules',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -534,22 +557,40 @@ class PSProfile {
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToImport))) {
             $this.ModulesToImport | ForEach-Object {
-                $this._log(
-                    "'$($_)' Importing module",
-                    'ImportModules',
-                    'Debug'
-                )
                 try {
-                    Import-Module $_ -Global -ErrorAction SilentlyContinue
-                    $this._log(
-                        "'$($_)' Module imported",
-                        'ImportModules',
-                        'Debug'
-                    )
+                    $params = if ($_ -is [string]) {
+                        @{Name = $_ }
+                    }
+                    elseif ($_ -is [hashtable]) {
+                        $_
+                    }
+                    else {
+                        $null
+                    }
+                    if ($null -ne $params) {
+                        @('ErrorAction','Verbose') | ForEach-Object {
+                            if ($params.ContainsKey($_)) {
+                                $params.Remove($_)
+                            }
+                        }
+                        Import-Module @params -ErrorAction SilentlyContinue -Verbose:$false
+                        $this._log(
+                            "Module imported: $($params | ConvertTo-Json -Compress)",
+                            'ImportModules',
+                            'Verbose'
+                        )
+                    }
+                    else {
+                        $this._log(
+                            "Module must be either a string or a hashtable!",
+                            'ImportModules',
+                            'Verbose'
+                        )
+                    }
                 }
                 catch {
                     $this._log(
-                        "'$($_)' Error importing module: $($Error[0].Exception.Message)",
+                        "'$($params['Name'])' Error importing module: $($Error[0].Exception.Message)",
                         "ImportModules",
                         "Warning"
                     )
@@ -560,7 +601,7 @@ class PSProfile {
             $this._log(
                 "No modules specified to import!",
                 'ImportModules',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
@@ -577,72 +618,72 @@ class PSProfile {
         )
         if ($this.Plugins.Count) {
             $this.Plugins.ForEach( {
-                $plugin = $_
-                $this._log(
-                    "'$($plugin.Name)' Searching for plugin",
-                    'LoadPlugins',
-                    'Debug'
-                )
-                try {
-                    $found = $null
-                    $importParams = @{
-                        ErrorAction = 'Stop'
-                    }
-                    if ($plugin.Arguments) {
-                        $importParams['ArgumentList'] = $plugin.Arguments
-                    }
-                    foreach ($plugPath in $this.PluginPaths) {
-                        $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
-                        $this._log(
-                            "'$($plugin.Name)' Checking path: $fullPath",
-                            'LoadPlugins',
-                            'Debug'
-                        )
-                        if (Test-Path $fullPath) {
-                            $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
-                            if ($plugin.Arguments) {
-                                .$sb($plugin.Arguments)
-                            }
-                            else {
-                                .$sb
-                            }
-                            $found = $fullPath
-                            break
+                    $plugin = $_
+                    $this._log(
+                        "'$($plugin.Name)' Searching for plugin",
+                        'LoadPlugins',
+                        'Verbose'
+                    )
+                    try {
+                        $found = $null
+                        $importParams = @{
+                            ErrorAction = 'Stop'
                         }
-                    }
-                    if ($null -ne $found) {
-                        $this._log(
-                            "'$($plugin.Name)' plugin loaded from path: $found",
-                            'LoadPlugins'
-                        )
-                    }
-                    else {
-                        if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                            Import-Module $plugin.Name @importParams
+                        if ($plugin.Arguments) {
+                            $importParams['ArgumentList'] = $plugin.Arguments
+                        }
+                        foreach ($plugPath in $this.PluginPaths) {
+                            $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
                             $this._log(
-                                "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                                "'$($plugin.Name)' Checking path: $fullPath",
+                                'LoadPlugins',
+                                'Verbose'
+                            )
+                            if (Test-Path $fullPath) {
+                                $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
+                                if ($plugin.Arguments) {
+                                    .$sb($plugin.Arguments)
+                                }
+                                else {
+                                    .$sb
+                                }
+                                $found = $fullPath
+                                break
+                            }
+                        }
+                        if ($null -ne $found) {
+                            $this._log(
+                                "'$($plugin.Name)' plugin loaded from path: $found",
                                 'LoadPlugins'
                             )
                         }
                         else {
-                            $this._log(
-                                "'$($plugin.Name)' plugin not found!",
-                                'LoadPlugins',
-                                'Warning'
-                            )
+                            if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                                Import-Module $plugin.Name @importParams
+                                $this._log(
+                                    "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                                    'LoadPlugins'
+                                )
+                            }
+                            else {
+                                $this._log(
+                                    "'$($plugin.Name)' plugin not found!",
+                                    'LoadPlugins',
+                                    'Warning'
+                                )
+                            }
                         }
                     }
-                }
-                catch {
-                    throw
-                }
-            })
+                    catch {
+                        throw
+                    }
+                })
         }
         else {
             $this._log(
                 "No plugins specified to load!",
                 'LoadPlugins',
-                'Debug'
+                'Verbose'
             )
         }
         $this._log(
