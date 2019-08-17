@@ -384,16 +384,18 @@ function Save-Prompt {
             throw "No value set for the Name parameter or resolved from PSProfile!"
         }
         else {
-            if ($Content) {
-                $global:PSProfile.Prompts[$Name] = $Content.ToString()
+            $tempContent = if ($Content) {
+                $Content.ToString()
             }
             else {
-                $global:PSProfile.Prompts[$Name] = Get-Prompt -Raw
+                Get-Prompt -Raw
             }
+            $cleanContent = (($tempContent -split "[\r\n]" | Where-Object {$_}) -join "`n").Trim()
+            $global:PSProfile.Prompts[$Name] = $cleanContent
             if ($SetAsDefault) {
                 $global:PSProfile.Settings.DefaultPrompt = $Name
             }
-            $global:PSProfile.Save()
+            Save-PSProfile
         }
     }
 }
@@ -449,7 +451,7 @@ if (
     $global:PSProfile.Prompts = @{
         Default = $function:prompt.ToString()
     }
-    $global:PSProfile.Save()
+    Save-PSProfile
 }
 
 if ($null -ne (Get-Command Get-PSProfileArguments*)) {
