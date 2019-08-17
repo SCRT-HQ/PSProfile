@@ -7,8 +7,6 @@ Param(
     [Parameter()]
     [hashtable]
     $Dependencies = @{
-        PoshRSJob         = '1.7.4.4'
-        Configuration     = '1.3.1'
         PackageManagement = '1.3.1'
         PowerShellGet     = '2.1.2'
         InvokeBuild       = '5.5.2'
@@ -29,7 +27,7 @@ Param(
     $Summary
     #endregion: Invoke-Build parameters
 )
-
+Write-Host -ForegroundColor Cyan "##[section] IMPORTING AZURE PIPELINE HELPERS FROM GIST"
 #region: Import Azure Pipeline Helper functions from Gist
 $helperUri = @(
     'https://gist.githubusercontent.com'
@@ -57,23 +55,36 @@ $PSDefaultParameterValues = @{
     'Install-Module:SkipPublisherCheck' = $true
 }
 Add-Heading "Resolving module dependencies"
+$moduleDependencies = @()
 foreach ($module in $Dependencies.Keys) {
-    $parameters = @{
+    $moduleDependencies += @{
         Name           = $module
         MinimumVersion = $Dependencies[$module]
     }
-    Write-BuildLog "[$module] Resolving"
+}
+(Import-PowerShellDataFile ([System.IO.Path]::Combine($PSScriptRoot,$ModuleName,"$ModuleName.psd1"))).RequiredModules | ForEach-Object {
+    if ($_ -is [hashtable]) {
+        $moduleDependencies += $_
+    }
+    else {
+        $moduleDependencies += @{
+            Name = $_
+        }
+    }
+}
+foreach ($item in $moduleDependencies) {
+    Write-BuildLog "[$($item['Name'])] Resolving"
     try {
-        if ($imported = Get-Module $module) {
-            Write-BuildLog "[$module] Removing imported module"
+        if ($imported = Get-Module $item['Name']) {
+            Write-BuildLog "[$($item['Name'])] Removing imported module"
             $imported | Remove-Module
         }
-        Import-Module @parameters
+        Import-Module @item
     }
     catch {
-        Write-BuildLog "[$module] Installing missing module"
-        Install-Module @parameters
-        Import-Module @parameters
+        Write-BuildLog "[$($item['Name'])] Installing missing module"
+        Install-Module @item
+        Import-Module @item
     }
 }
 try {
