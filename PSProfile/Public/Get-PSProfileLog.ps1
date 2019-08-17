@@ -48,35 +48,39 @@ function Get-PSProfileLog {
         [Switch]
         $Raw
     )
-    if ($Summary) {
-        $Global:PSProfile.Log | Group-Object Section | ForEach-Object {
-            $sectName = $_.Name
-            $Group = $_.Group
-            $sectCaps = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
-            [PSCustomObject]@{
-                Name = $sectName
-                Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
-                SectionDuration = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
-                FullDuration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
-                RunningJobs = Get-RSJob -State Running | Where-Object {$_.Name -match $sectName} | Select-Object -ExpandProperty Name
+    Process {
+        if ($Summary) {
+            Write-Verbose "Getting PSProfile Log summary"
+            $Global:PSProfile.Log | Group-Object Section | ForEach-Object {
+                $sectName = $_.Name
+                $Group = $_.Group
+                $sectCaps = $Group | Where-Object {$_.Message -match '^SECTION (START|END)$'}
+                [PSCustomObject]@{
+                    Name = $sectName
+                    Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
+                    SectionDuration = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
+                    FullDuration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
+                    RunningJobs = Get-RSJob -State Running | Where-Object {$_.Name -match $sectName} | Select-Object -ExpandProperty Name
+                }
+            } | Sort-Object Start | Format-Table -AutoSize
+        }
+        else {
+            Write-Verbose "Getting PSProfile Log"
+            $items = if ($Section) {
+                $Global:PSProfile.Log | Where-Object {$_.Section -in $Section}
             }
-        } | Sort-Object Start | Format-Table -AutoSize
-    }
-    else {
-        $items = if ($Section) {
-            $Global:PSProfile.Log | Where-Object {$_.Section -in $Section}
-        }
-        else {
-            $Global:PSProfile.Log
-        }
-        if ($LogLevel) {
-            $items = $items | Where-Object {$_.LogLevel -in $LogLevel}
-        }
-        if (-not $Raw) {
-            $items | Format-Table -AutoSize
-        }
-        else {
-            $items
+            else {
+                $Global:PSProfile.Log
+            }
+            if ($LogLevel) {
+                $items = $items | Where-Object {$_.LogLevel -in $LogLevel}
+            }
+            if (-not $Raw) {
+                $items | Format-Table -AutoSize
+            }
+            else {
+                $items
+            }
         }
     }
 }

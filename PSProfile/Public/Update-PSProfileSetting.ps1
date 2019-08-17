@@ -1,16 +1,16 @@
-function Set-PSProfileSetting {
+function Update-PSProfileSetting {
     <#
     .SYNOPSIS
-    Enables setting a PSProfile key's value by tab-completing the available keys.
+    Update a PSProfile property's value by tab-completing the available keys.
 
     .DESCRIPTION
-    Enables setting a PSProfile key's value by tab-completing the available keys.
+    Update a PSProfile property's value by tab-completing the available keys.
 
     .PARAMETER Path
-    The path of the key you would like to set or update.
+    The property path you would like to update, e.g. Settings.PSVersionStringLength
 
     .PARAMETER Value
-    The value you would like to set for the specified setting path.
+    The value you would like to update for the specified setting path.
 
     .PARAMETER Add
     If $true, adds the value to the specified PSProfile setting value array instead of overwriting the current value.
@@ -19,12 +19,12 @@ function Set-PSProfileSetting {
     If $true, saves the updated PSProfile after updating.
 
     .EXAMPLE
-    Set-PSProfileSetting -Path Settings.PSVersionStringLength -Value 3 -Save
+    Update-PSProfileSetting -Path Settings.PSVersionStringLength -Value 3 -Save
 
     Updates the PSVersionStringLength setting to 3 and saves the configuration.
 
     .EXAMPLE
-    Set-PSProfileSetting -Path ScriptPaths -Value ~\ProfileLoad.ps1 -Add -Save
+    Update-PSProfileSetting -Path ScriptPaths -Value ~\ProfileLoad.ps1 -Add -Save
 
     *Adds* the 'ProfileLoad.ps1' script to the $PSProfile.ScriptPaths array of scripts to invoke during profile load, then saves the configuration.
     #>
@@ -44,6 +44,7 @@ function Set-PSProfileSetting {
         $Save
     )
     Process {
+        Write-Verbose "Updating PSProfile.$Path with value '$Value'"
         $split = $Path.Split('.')
         switch ($split.Count) {
             5 {
@@ -93,7 +94,7 @@ function Set-PSProfileSetting {
     }
 }
 
-Register-ArgumentCompleter -CommandName 'Set-PSProfileSetting' -ParameterName Path -ScriptBlock {
+Register-ArgumentCompleter -CommandName 'Update-PSProfileSetting' -ParameterName Path -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     Get-PSProfileArguments @PSBoundParameters
 }

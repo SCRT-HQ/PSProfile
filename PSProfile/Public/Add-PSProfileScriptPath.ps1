@@ -7,7 +7,13 @@ function Add-PSProfileScriptPath {
     Adds a ScriptPath to your PSProfile to invoke during profile load.
 
     .PARAMETER Path
-    The path of the script to add to your PSProfile.
+    The path of the script to add to your $PSProfile.ScriptPaths.
+
+    .PARAMETER Invoke
+    If $true, invokes the script path after adding to $PSProfile.ScriptPaths to make it immediately available in the current session.
+
+    .PARAMETER Invoke
+    If $true, invokes the script at the path specified to load it into the current session.
 
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
@@ -30,6 +36,9 @@ function Add-PSProfileScriptPath {
         $Path,
         [Parameter()]
         [Switch]
+        $Invoke,
+        [Parameter()]
+        [Switch]
         $Save
     )
     Process {
@@ -42,6 +51,9 @@ function Add-PSProfileScriptPath {
                 }
                 else {
                     Write-Verbose "ScriptPath already in PSProfile: $fP"
+                }
+                if ($Invoke) {
+                    . $fp
                 }
             }
             else {

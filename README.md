@@ -21,4 +21,4 @@ cd PSProfile
 Import-Module .\BuildOutput\PSProfile
 ```
 
-_**More docs coming soon!**_
+***

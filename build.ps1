@@ -34,7 +34,7 @@ $helperUri = @(
     'scrthq'                                    # User
     'a99cc06e75eb31769d01b2adddc6d200'          # Gist Id
     'raw'
-    '1ed720232df2779896c960bf282b54ab73bf63d0'  # Commit Id
+    'd028dba7b97d09bb6793bed9872dd79e3e594f96'  # Commit Id
     'AzurePipelineHelpers.ps1'                  # Filename
 ) -join '/'
 $helperContent = Invoke-RestMethod -Uri $helperUri

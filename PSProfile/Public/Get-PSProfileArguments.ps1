@@ -12,6 +12,18 @@ function Get-PSProfileArguments {
     .PARAMETER WordToComplete
     The word to complete, typically passed in from the scriptblock arguments.
 
+    .PARAMETER CommandName
+    Here to allow passing @PSBoundParameters directly to this function from Register-ArgumentCompleter
+
+    .PARAMETER ParameterName
+    Here to allow passing @PSBoundParameters directly to this function from Register-ArgumentCompleter
+
+    .PARAMETER CommandAst
+    Here to allow passing @PSBoundParameters directly to this function from Register-ArgumentCompleter
+
+    .PARAMETER FakeBoundParameter
+    Here to allow passing @PSBoundParameters directly to this function from Register-ArgumentCompleter
+
     .EXAMPLE
     Get-PSProfileArguments -WordToComplete "Prompts.$wordToComplete" -FinalKeyOnly
 
@@ -25,14 +37,21 @@ function Get-PSProfileArguments {
     [OutputType('System.Management.Automation.CompletionResult')]
     [CmdletBinding()]
     Param(
-        [switch]$FinalKeyOnly,
-        [string]$WordToComplete,
-        [object]$commandName,
-        [object]$parameterName,
-        [object]$commandAst,
-        [object]$fakeBoundParameter
+        [switch]
+        $FinalKeyOnly,
+        [string]
+        $WordToComplete,
+        [object]
+        $CommandName,
+        [object]
+        $ParameterName,
+        [object]
+        $CommandAst,
+        [object]
+        $FakeBoundParameter
     )
     Process {
+        Write-Verbose "Getting PSProfile command argument completions"
         $split = $WordToComplete.Split('.')
         $setting = $null
         switch ($split.Count) {
@@ -61,7 +80,7 @@ function Get-PSProfileArguments {
         else {
             $final = $split | Select-Object -Last 1
         }
-        if ($setting -isnot [System.String]) {
+        if ($setting.GetType() -notin @([string],[int],[long],[version],[timespan],[datetime],[bool])) {
             $props = if ($setting.PSTypeNames -match 'Hashtable') {
                 $setting.Keys | Where-Object {$_ -ne '_internal' -and $_ -like "$final*"} | Sort-Object
             }

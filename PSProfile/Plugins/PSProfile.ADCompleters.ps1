@@ -136,7 +136,7 @@ Register-ArgumentCompleter -CommandName 'Get-ADUser' -ParameterName 'Properties'
         'whenChanged'
         'whenCreated'
         'wWWHomePage'
-    ) | Where-Object {$_ -like "*$wordToComplete*"} | ForEach-Object {
+    ) | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
@@ -237,7 +237,7 @@ Register-ArgumentCompleter -CommandName 'Get-ADComputer' -ParameterName 'Propert
         'uSNCreated'
         'whenChanged'
         'whenCreated'
-    ) | Where-Object {$_ -like "*$wordToComplete*"} | ForEach-Object {
+    ) | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
@@ -287,7 +287,7 @@ Register-ArgumentCompleter -CommandName 'Get-ADGroup' -ParameterName 'Properties
         'uSNCreated'
         'whenChanged'
         'whenCreated'
-    ) | Where-Object {$_ -like "*$wordToComplete*"} | ForEach-Object {
+    ) | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }

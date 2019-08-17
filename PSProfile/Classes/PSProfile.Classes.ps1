@@ -99,11 +99,10 @@ class PSProfile {
     [string] $RefreshFrequency
     [hashtable] $GitPathMap
     [hashtable] $PSBuildPathMap
-    #[string[]] $ModulesToImport
-    #[string[]] $ModulesToInstall
     [object[]] $ModulesToImport
     [object[]] $ModulesToInstall
     [hashtable] $PathAliases
+    [hashtable] $CommandAliases
     [hashtable[]] $Plugins
     [string[]] $PluginPaths
     [string[]] $ProjectPaths
@@ -148,6 +147,7 @@ class PSProfile {
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
         }
+        $this.CommandAliases = @{}
     }
     [void] Load() {
         $this._internal['ProfileLoadStart'] = [datetime]::Now
@@ -185,6 +185,7 @@ class PSProfile {
         $this._loadPlugins()
         $this._invokeScripts()
         $this._setVariables()
+        $this._setCommandAliases()
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         $this._log(
@@ -275,29 +276,58 @@ class PSProfile {
             "Debug"
         )
     }
+    hidden [void] _setCommandAliases() {
+        $this._log(
+            "SECTION START",
+            'SetCommandAliases',
+            'Debug'
+        )
+        $this.CommandAliases.GetEnumerator() | ForEach-Object {
+            try {
+                New-Alias -Name $_.Key -Value $_.Value -Scope Global -Option AllScope -ErrorAction Stop
+                $this._log(
+                    "Set command alias: $($_.Key) > $($_.Value)",
+                    'SetCommandAliases',
+                    'Verbose'
+                )
+            }
+            catch {
+                $this._log(
+                    "Failed to set command alias: $($_.Key) > $($_.Value)",
+                    'SetCommandAliases',
+                    'Warning'
+                )
+            }
+        }
+        $this._log(
+            "SECTION END",
+            'SetCommandAliases',
+            'Debug'
+        )
+    }
     hidden [void] _createSymbolicLinks() {
         $this._log(
             "SECTION START",
-            'SymbolicLinks',
+            'CreateSymbolicLinks',
             'Debug'
         )
         if ($null -ne $this.SymbolicLinks.Keys) {
             $null = $this.SymbolicLinks.GetEnumerator() | Start-RSJob -Name { "_PSProfile_SymbolicLinks_" + $_.Key } -ScriptBlock {
-                if (-not (Test-Path $_.Key)) {
-                    New-Item -ItemType SymbolicLink -Path $_.Key -Value $_.Value
+                if (-not (Test-Path $_.Key) -or ((Get-Item $_.Key).LinkType -eq 'SymbolicLink' -and (Get-Item $_.Key).Target -ne $_.Value)) {
+                    New-Item -ItemType SymbolicLink -Path $_.Key -Value $_.Value -Force
                 }
             }
         }
         else {
             $this._log(
                 "No symbolic links specified!",
-                'SymbolicLinks',
+                'CreateSymbolicLinks',
                 'Verbose'
             )
         }
         $this._log(
             "SECTION END",
-            'SymbolicLinks',
+            'CreateSymbolicLinks',
             'Debug'
         )
     }
@@ -573,7 +603,7 @@ class PSProfile {
                                 $params.Remove($_)
                             }
                         }
-                        Import-Module @params -ErrorAction SilentlyContinue -Verbose:$false
+                        Import-Module @params -Global -ErrorAction SilentlyContinue -Verbose:$false
                         $this._log(
                             "Module imported: $($params | ConvertTo-Json -Compress)",
                             'ImportModules',

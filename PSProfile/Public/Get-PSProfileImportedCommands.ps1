@@ -13,6 +13,7 @@ function Get-PSProfileImportedCommands {
     [CmdletBinding()]
     Param ()
     Process {
+        Write-Verbose "Getting commands imported during PSProfile load that are not part of PSProfile itself"
         Get-Command -Module PSProfile | Where-Object {$_.Name -notin (Get-Module PSProfile).ExportedCommands.Keys}
     }
 }

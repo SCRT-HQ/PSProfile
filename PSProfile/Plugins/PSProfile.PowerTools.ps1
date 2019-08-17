@@ -80,9 +80,9 @@ function Open-Code {
     Gets the current running processes, converts to CSV format and opens it in Code via background job as a CSV. Easy Out-GridView!
 
     .EXAMPLE
-    def Set-PSProfileSetting | code -l ps1
+    def Update-PSProfileSetting | code -l ps1
 
-    Using shorter aliases, gets the current function definition of the Set-PSProfileSetting function and opens it in Code as a PowerShell file to take advantage of immediate syntax highlighting.
+    Using shorter aliases, gets the current function definition of the Update-PSProfileSetting function and opens it in Code as a PowerShell file to take advantage of immediate syntax highlighting.
     #>
     [CmdletBinding(DefaultParameterSetName = 'Path')]
     Param (
@@ -233,8 +233,6 @@ function Open-Code {
         }
     }
 }
-
-New-Alias -Name code -Value 'Open-Code' -Scope Global -Option AllScope -Force
 
 if ($null -ne (Get-Command Get-PSProfileArguments*)) {
     Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Path' -ScriptBlock {

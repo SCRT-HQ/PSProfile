@@ -34,6 +34,7 @@ function Add-PSProfilePlugin {
     )
     Process {
         foreach ($pName in $Name) {
+            Write-Verbose "Adding plugin '$pName' to `$PSProfile.Plugins"
             $plugin = @{
                 Name = $pName
             }

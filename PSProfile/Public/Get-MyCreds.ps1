@@ -46,9 +46,8 @@ function Get-MyCreds {
     Process {
         if ($Item) {
             Write-Verbose "Checking Credential Vault for user '$Item'"
-            if ($global:PSProfile.Vault._secrets.$Item) {
+            if ($creds = $global:PSProfile.Vault.GetSecret($Item)) {
                 Write-Verbose "Found item in CredStore"
-                $creds = $global:PSProfile.Vault._secrets.$Item
                 if (!$env:USERDOMAIN) {
                     $env:USERDOMAIN = [System.Environment]::MachineName
                 }
@@ -60,10 +59,10 @@ function Get-MyCreds {
             else {
                 $PSCmdlet.ThrowTerminatingError(
                     [System.Management.Automation.ErrorRecord]::new(
-                        ([System.Management.Automation.ItemNotFoundException]"Could not find credentials"),
-                        'My.ID',
+                        ([System.Management.Automation.ItemNotFoundException]"Could not find secret item '$Item' in the PSProfileVault"),
+                        'PSProfile.Vault.SecretNotFound',
                         [System.Management.Automation.ErrorCategory]::InvalidArgument,
-                        $MyObject
+                        $global:PSProfile
                     )
                 )
             }
