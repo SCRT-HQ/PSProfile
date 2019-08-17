@@ -21,6 +21,28 @@ Describe "Function contents" -Tag 'Module' {
             $removeFunctions.BaseName | Should -Contain $RemName
         }
     }
+    Context "All 'Add' functions should include a Save switch parameter" {
+        $testCase = $addFunctions | Foreach-Object {@{file = $_;Name = $_.BaseName}}
+        It "Function <Name> should include a Save parameter" -TestCases $testCase {
+            param($file,$Name)
+            {(Get-Command $Name -Module $ModuleName).Parameters.GetEnumerator() | Where-Object {$_.Key -eq 'Save'}} | Should -Not -BeNullOrEmpty
+        }
+        It "The Save parameter of function <Name> should be a switch parameter" -TestCases $testCase {
+            param($file,$Name)
+            {((Get-Command $Name -Module $ModuleName).Parameters.GetEnumerator() | Where-Object {$_.Key -eq 'Save'}).Value.SwitchParameter} | Should -BeTrue
+        }
+    }
+    Context "All 'Remove' functions should include a Save switch parameter" {
+        $testCase = $removeFunctions | Foreach-Object {@{file = $_;Name = $_.BaseName}}
+        It "Function <Name> should include a Save parameter" -TestCases $testCase {
+            param($file,$Name)
+            {(Get-Command $Name -Module $ModuleName).Parameters.GetEnumerator() | Where-Object {$_.Key -eq 'Save'}} | Should -Not -BeNullOrEmpty
+        }
+        It "The Save parameter of function <Name> should be a switch parameter" -TestCases $testCase {
+            param($file,$Name)
+            {((Get-Command $Name -Module $ModuleName).Parameters.GetEnumerator() | Where-Object {$_.Key -eq 'Save'}).Value.SwitchParameter} | Should -BeTrue
+        }
+    }
     Context "All 'Remove' functions should SupportsShouldProcess" {
         $testCase = $removeFunctions | Foreach-Object {@{file = $_;Name = $_.BaseName}}
         It "Function <Name> should contain SupportsShouldProcess" -TestCases $testCase {
