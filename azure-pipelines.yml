@@ -132,30 +132,30 @@ phases:
       testResultsFiles: '**/Test*.xml'
     condition: succeededOrFailed()
 
-- phase: Phase_6
-  displayName: Deploy Module
-  dependsOn:
-  - Phase_2
-  - Phase_3
-  - Phase_4
-  - Phase_5
-  condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  queue:
-    name: Hosted VS2017
-
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
-
-  - powershell: |
-      $Env:GitHubPAT = '$(GitHub.PAT)'
-      $Env:NuGetApiKey = '$(NuGetApiKey)'
-      $Env:TwitterAccessSecret = '$(Twitter.AccessSecret)'
-      $Env:TwitterAccessToken = '$(Twitter.AccessToken)'
-      $Env:TwitterConsumerKey = '$(Twitter.ConsumerKey)'
-      $Env:TwitterConsumerSecret = '$(Twitter.ConsumerSecret)'
-      . ./build.ps1 -Task Deploy
-    displayName: Deploy to PowerShell Gallery
+#- phase: Phase_6
+#  displayName: Deploy Module
+#  dependsOn:
+#  - Phase_2
+#  - Phase_3
+#  - Phase_4
+#  - Phase_5
+#  condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables#['Build.SourceBranch'], 'refs/heads/master'))
+#  queue:
+#    name: Hosted VS2017
+#
+#  steps:
+#  - task: DownloadBuildArtifacts@0
+#    displayName: 'Download Build Artifacts'
+#    inputs:
+#      artifactName: BuildOutput
+#      downloadPath: '$(Build.SourcesDirectory)'
+#
+#  - powershell: |
+#      $Env:GitHubPAT = '$(GitHub.PAT)'
+#      $Env:NuGetApiKey = '$(NuGetApiKey)'
+#      $Env:TwitterAccessSecret = '$(Twitter.AccessSecret)'
+#      $Env:TwitterAccessToken = '$(Twitter.AccessToken)'
+#      $Env:TwitterConsumerKey = '$(Twitter.ConsumerKey)'
+#      $Env:TwitterConsumerSecret = '$(Twitter.ConsumerSecret)'
+#      . ./build.ps1 -Task Deploy
+#    displayName: Deploy to PowerShell Gallery
