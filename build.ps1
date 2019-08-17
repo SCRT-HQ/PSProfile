@@ -7,6 +7,7 @@ Param(
     [Parameter()]
     [hashtable]
     $Dependencies = @{
+        PoshRSJob         = '1.7.4.4'
         Configuration     = '1.3.1'
         PackageManagement = '1.3.1'
         PowerShellGet     = '2.1.2'
