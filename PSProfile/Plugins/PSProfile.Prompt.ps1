@@ -346,7 +346,7 @@ function Set-Prompt {
                     $function:prompt = $global:PSProfile.Prompts[$Name]
                     if (-not $Temporary) {
                         $global:PSProfile.Settings.DefaultPrompt = $Name
-                        $global:PSProfile.Save()
+                        Save-PSProfile
                     }
                 }
                 else {

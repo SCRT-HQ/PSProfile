@@ -284,16 +284,27 @@ class PSProfile {
         )
         $this.CommandAliases.GetEnumerator() | ForEach-Object {
             try {
-                New-Alias -Name $_.Key -Value $_.Value -Scope Global -Option AllScope -ErrorAction Stop
-                $this._log(
-                    "Set command alias: $($_.Key) > $($_.Value)",
-                    'SetCommandAliases',
-                    'Verbose'
-                )
+                $Name = $_.Key
+                $Value = $_.Value
+                if ($null -eq (Get-Alias "$Name*")) {
+                    New-Alias -Name $Name -Value $Value -Scope Global -Option AllScope -ErrorAction Stop
+                    $this._log(
+                        "Set command alias: $Name > $Value",
+                        'SetCommandAliases',
+                        'Verbose'
+                    )
+                }
+                else {
+                    $this._log(
+                        "Alias already in use, skipping: $Name",
+                        'SetCommandAliases',
+                        'Verbose'
+                    )
+                }
             }
             catch {
                 $this._log(
-                    "Failed to set command alias: $($_.Key) > $($_.Value)",
+                    "Failed to set command alias: $Name > $Value :: $($_)",
                     'SetCommandAliases',
                     'Warning'
                 )
@@ -659,8 +670,8 @@ class PSProfile {
                         $importParams = @{
                             ErrorAction = 'Stop'
                         }
-                        if ($plugin.Arguments) {
-                            $importParams['ArgumentList'] = $plugin.Arguments
+                        if ($plugin.ArgumentList) {
+                            $importParams['ArgumentList'] = $plugin.ArgumentList
                         }
                         foreach ($plugPath in $this.PluginPaths) {
                             $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
@@ -671,8 +682,8 @@ class PSProfile {
                             )
                             if (Test-Path $fullPath) {
                                 $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
-                                if ($plugin.Arguments) {
-                                    .$sb($plugin.Arguments)
+                                if ($plugin.ArgumentList) {
+                                    .$sb($plugin.ArgumentList)
                                 }
                                 else {
                                     .$sb
