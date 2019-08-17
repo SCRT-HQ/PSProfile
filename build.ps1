@@ -7,6 +7,7 @@ Param(
     [Parameter()]
     [hashtable]
     $Dependencies = @{
+        Configuration     = '1.3.1'
         PackageManagement = '1.3.1'
         PowerShellGet     = '2.1.2'
         InvokeBuild       = '5.5.2'
