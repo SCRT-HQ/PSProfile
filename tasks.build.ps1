@@ -100,9 +100,10 @@ task Build Clean,{
     Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -notin @('Classes','Private','Public')} | ForEach-Object {
         Copy-Item $_.FullName -Destination $TargetVersionDirectory -Container -Recurse
     }
-    $sourceManifestPath = Join-Path $SourceModuleDirectory 'Configuration.psd1'
+    <# $sourceManifestPath = Join-Path $SourceModuleDirectory 'Configuration.psd1'
     if (Test-Path $sourceManifestPath) {
-        $curVer = Import-PowerShellDataFile $sourceManifestPath
+        Import-Module Configuration
+        $curVer = (Import-PowerShellDataFile $sourceManifestPath).ModuleVersion
         if ([Version]$ModuleVersion -ne [Version]$curVer) {
             Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $ModuleVersion
         }
@@ -110,7 +111,7 @@ task Build Clean,{
         if ([Version]$ModuleVersion -ne [Version]$curVer) {
             Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $curVer
         }
-    }
+    } #>
 
     # Copy over manifest
     Copy-Item -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -Destination $TargetVersionDirectory
