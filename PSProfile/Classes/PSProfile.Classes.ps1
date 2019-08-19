@@ -121,7 +121,49 @@ class PSProfile {
         }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
-        $this.Prompts = @{ }
+        $this.Prompts = @{
+            Default = '"PS $($executionContext.SessionState.Path.CurrentLocation)$(">" * ($nestedPromptLevel + 1)) ";
+            # .Link
+            # https://go.microsoft.com/fwlink/?LinkID=225750
+            # .ExternalHelp System.Management.Automation.dll-help.xml'
+            SCRTHQ = '$lastStatus = $?
+            $lastColor = if ($lastStatus -eq $true) {
+                "Green"
+            }
+            else {
+                "Red"
+            }
+            Write-Host "[" -NoNewline
+            Write-Host -ForegroundColor Cyan "#$($MyInvocation.HistoryId)" -NoNewline
+            Write-Host "] " -NoNewline
+            Write-Host "[" -NoNewLine
+            $verColor = @{
+                ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
+                    "Yellow"
+                }
+                elseif ($PSVersionTable.PSVersion.Major -eq 6) {
+                    "Magenta"
+                }
+                else {
+                    "Cyan"
+                }
+            }
+            Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
+            Write-Host "] " -NoNewline
+            Write-Host "[" -NoNewline
+            Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
+            Write-Host "] [" -NoNewline
+            Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
+            Write-Host "]" -NoNewline
+            if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true -and (Test-IfGit)) {
+                Write-VcsStatus
+                $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
+            }
+            else {
+                $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
+            }
+            "`n>> "'
+        }
         $this.Variables = @{
             Environment = @{
                 Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)

@@ -53,9 +53,11 @@ else {
 Set-BuildVariables
 #endregion
 
+Add-Heading "Setting PSGallery InstallationPolicy to 'Trusted'"
 if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne 'Trusted') {
     Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -Verbose:$false
 }
+Add-Heading "Setting `$PSDefaultParameterValues for *-Module functions"
 $PSDefaultParameterValues = @{
     '*-Module:Verbose'                  = $false
     '*-Module:Force'                    = $true

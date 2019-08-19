@@ -15,11 +15,15 @@
   * `Add-PSProfilePathAlias`
   * `Add-PSProfilePlugin`
   * `Add-PSProfileProjectPath`
+  * `Add-PSProfilePrompt`
   * `Add-PSProfileScriptPath`
   * `Add-PSProfileSecret`
   * `Add-PSProfileSymbolicLink`
   * `Add-PSProfileVariable`
+  * `Edit-PSProfilePrompt`
+  * `Get-LastCommandDuration`
   * `Get-MyCreds`
+  * `Get-PathAlias`
   * `Get-PSProfileArguments`
   * `Get-PSProfileCommandAlias`
   * `Get-PSProfileImportedCommand`
@@ -29,10 +33,12 @@
   * `Get-PSProfilePathAlias`
   * `Get-PSProfilePlugin`
   * `Get-PSProfileProjectPath`
+  * `Get-PSProfilePrompt`
   * `Get-PSProfileScriptPath`
   * `Get-PSProfileSecret`
   * `Get-PSProfileSymbolicLink`
   * `Get-PSProfileVariable`
+  * `Get-PSVersion`
   * `Import-PSProfile`
   * `Import-PSProfileConfiguration`
   * `Remove-PSProfileCommandAlias`
@@ -41,16 +47,25 @@
   * `Remove-PSProfilePathAlias`
   * `Remove-PSProfilePlugin`
   * `Remove-PSProfileProjectPath`
+  * `Remove-PSProfilePrompt`
   * `Remove-PSProfileScriptPath`
   * `Remove-PSProfileSecret`
   * `Remove-PSProfileSymbolicLink`
   * `Remove-PSProfileVariable`
   * `Save-PSProfile`
+  * `Switch-PSProfilePrompt`
+  * `Test-IfGit`
   * `Update-PSProfileConfig`
   * `Update-PSProfileRefreshFrequency`
   * `Update-PSProfileSetting`
   * `Write-PSProfileLog`
 * Included aliases:
   * `Creds` >> `Get-MyCreds`
+  * `Edit-Prompt` >> `Edit-PSProfilePrompt`
+  * `Get-Prompt` >> `Get-PSProfilePrompt`
   * `Load-PSProfile` >> `Import-PSProfile`
   * `Refresh-PSProfile` >> `Update-PSProfileConfig`
+  * `Remove-Prompt` >> `Remove-PSProfilePrompt`
+  * `Save-Prompt` >> `Add-PSProfilePrompt`
+  * `Set-Prompt` >> `Switch-PSProfilePrompt`
+  * `Switch-Prompt` >> `Switch-PSProfilePrompt`
