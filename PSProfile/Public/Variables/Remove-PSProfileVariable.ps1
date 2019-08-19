@@ -1,24 +1,24 @@
 function Remove-PSProfileVariable {
     <#
     .SYNOPSIS
-    Removes a Symbolic Link from $PSProfile.Variables.
+    Removes a Variable from $PSProfile.Variables.
 
     .DESCRIPTION
-    Removes a PSProfile Plugin from $PSProfile.Variables.
+    Removes a Variable from $PSProfile.Variables.
 
     .PARAMETER Name
-    The path of the symbolic link to remove from $PSProfile.Variables.
+    The name of the Variable to remove from $PSProfile.Variables.
 
     .PARAMETER Scope
-    The scope of the variable to remove between Environment or Global.
+    The scope of the Variable to remove between Environment or Global.
 
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
     .EXAMPLE
-    Remove-PSProfilePlugin -Name 'PSProfile.PowerTools' -Save
+    Remove-PSProfileVariable -Scope Environment -Name '~' -Save
 
-    Removes the Plugin 'PSProfile.PowerTools' from $PSProfile.Variables then saves the updated configuration.
+    Removes the Environment variable '~' from $PSProfile.Variables then saves the updated configuration.
     #>
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param (

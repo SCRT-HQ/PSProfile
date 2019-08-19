@@ -186,6 +186,7 @@ class PSProfile {
         $this._invokeScripts()
         $this._setVariables()
         $this._setCommandAliases()
+        $this._loadPrompt()
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         $this._log(
@@ -229,6 +230,21 @@ class PSProfile {
         }
         return $content
     }
+    hidden [void] _loadPrompt() {
+        $this._log(
+            "SECTION START",
+            "LoadPrompt",
+            "Debug"
+        )
+        if ($null -ne $global:PSProfile.Settings.DefaultPrompt) {
+            Switch-PSProfilePrompt -Name $global:PSProfile.Settings.DefaultPrompt
+        }
+        $this._log(
+            "SECTION END",
+            "LoadPrompt",
+            "Debug"
+        )
+    }
     hidden [void] _formatPrompts() {
         $this._log(
             "SECTION START",
@@ -263,6 +279,11 @@ class PSProfile {
             $final[$_.Key] = $updated
         }
         $Global:PSProfile.Prompts = $final
+        $this._log(
+            "SECTION END",
+            "FormatPrompts",
+            "Debug"
+        )
     }
     hidden [void] _loadAdditionalConfiguration([string]$configurationPath) {
         $this._log(
