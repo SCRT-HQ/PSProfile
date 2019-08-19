@@ -781,7 +781,7 @@ class PSProfile {
                             )
                         }
                         else {
-                            if ($null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                            if ($null -ne $plugin.Name -and $null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
                                 Import-Module $plugin.Name @importParams
                                 $this._log(
                                     "'$($plugin.Name)' plugin loaded from PSModulePath!",
