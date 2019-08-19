@@ -21,8 +21,18 @@
   * `Add-PSProfileVariable`
   * `Get-MyCreds`
   * `Get-PSProfileArguments`
-  * `Get-PSProfileImportedCommands`
+  * `Get-PSProfileCommandAlias`
+  * `Get-PSProfileImportedCommand`
   * `Get-PSProfileLog`
+  * `Get-PSProfileModuleToImport`
+  * `Get-PSProfileModuleToInstall`
+  * `Get-PSProfilePathAlias`
+  * `Get-PSProfilePlugin`
+  * `Get-PSProfileProjectPath`
+  * `Get-PSProfileScriptPath`
+  * `Get-PSProfileSecret`
+  * `Get-PSProfileSymbolicLink`
+  * `Get-PSProfileVariable`
   * `Import-PSProfile`
   * `Import-PSProfileConfiguration`
   * `Remove-PSProfileCommandAlias`
@@ -36,7 +46,6 @@
   * `Remove-PSProfileSymbolicLink`
   * `Remove-PSProfileVariable`
   * `Save-PSProfile`
-  * `Set-MyCreds`
   * `Update-PSProfileConfig`
   * `Update-PSProfileRefreshFrequency`
   * `Update-PSProfileSetting`

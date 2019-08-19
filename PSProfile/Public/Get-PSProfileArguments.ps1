@@ -100,7 +100,7 @@ function Get-PSProfileArguments {
     }
 }
 
-Register-ArgumentCompleter -CommandName 'Get-PSProfileArguments' -ParameterName WordToComplete -ScriptBlock {
+Register-ArgumentCompleter -CommandName Get-PSProfileArguments -ParameterName WordToComplete -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     Get-PSProfileArguments @PSBoundParameters
 }

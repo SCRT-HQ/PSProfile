@@ -204,6 +204,7 @@ class PSProfile {
         $this._findProjects()
         $this._installModules()
         $this._createSymbolicLinks()
+        $this._formatPrompts()
         $this.LastRefresh = [datetime]::Now
         $this.Save()
     }
@@ -227,6 +228,41 @@ class PSProfile {
             }
         }
         return $content
+    }
+    hidden [void] _formatPrompts() {
+        $this._log(
+            "SECTION START",
+            "FormatPrompts",
+            "Debug"
+        )
+        $pssa = if ($null -eq (Get-Module PSScriptAnalyzer* -ListAvailable)) {
+            $false
+        }
+        else {
+            $true
+            Import-Module PSScriptAnalyzer
+        }
+        $final = @{}
+        $Global:PSProfile.Prompts.GetEnumerator() | ForEach-Object {
+            $updated = if ($pssa) {
+                $this._log(
+                    "Formatting prompt '$($_.Key)' via Invoke-Formatter",
+                    "FormatPrompts",
+                    "Verbose"
+                )
+                (Invoke-Formatter $_.Value -Verbose:$false) -join "`n"
+            }
+            else {
+                $this._log(
+                    "Formatting prompt '$($_.Key)' via Trim() (PSScriptAnalyzer not found)",
+                    "FormatPrompts",
+                    "Verbose"
+                )
+                ($_.Value -split "[\r\n]" | Where-Object {$_}).Trim() -join "`n"
+            }
+            $final[$_.Key] = $updated
+        }
+        $Global:PSProfile.Prompts = $final
     }
     hidden [void] _loadAdditionalConfiguration([string]$configurationPath) {
         $this._log(

@@ -25,7 +25,7 @@ Param(
     $TargetVersionDirectory
 )
 
-task . Init,Clean,Build
+task . Build
 
 $sb = {
     "Task: $($Task.Name)"

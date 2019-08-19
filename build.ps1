@@ -27,21 +27,35 @@ Param(
     $Summary
     #endregion: Invoke-Build parameters
 )
-Write-Host -ForegroundColor Cyan "##[section] IMPORTING AZURE PIPELINE HELPERS FROM GIST"
-#region: Import Azure Pipeline Helper functions from Gist
+#region: Import Azure Pipeline Helper functions from Gist or cached version if already pulled.
+# Gist is specified via Commit SHA so future Gist updates cannot introduce breaking changes to
+# scripts pinned to the specific commit.
 $helperUri = @(
     'https://gist.githubusercontent.com'
     'scrthq'                                    # User
-    'a99cc06e75eb31769d01b2adddc6d200'          # Gist Id
+    'a99cc06e75eb31769d01b2adddc6d200'          # Gist ID
     'raw'
-    '1aaa51f85b72f783c40de813b3bbd521bcc3b0f2'  # Commit Id
+    '1aaa51f85b72f783c40de813b3bbd521bcc3b0f2'  # Commit SHA
     'AzurePipelineHelpers.ps1'                  # Filename
 ) -join '/'
-$helperContent = Invoke-RestMethod -Uri $helperUri
+$fileUri = $helperUri -replace "[$([RegEx]::Escape("$(([System.IO.Path]::GetInvalidFileNameChars() + [System.IO.Path]::GetInvalidPathChars()) -join '')"))]","_"
+$localGistPath = [System.IO.Path]::Combine($PSScriptRoot,'ci',$fileUri)
+if (Test-Path $localGistPath) {
+    Write-Host -ForegroundColor Cyan "##[section] Importing Azure Pipelines Helper from Cached Gist: $localGistPath"
+    $helperContent = Get-Content $localGistPath -Raw
+}
+else {
+    Write-Host -ForegroundColor Cyan "##[section] Importing Azure Pipelines Helper from Gist: $helperUri"
+    $helperContent = Invoke-RestMethod -Uri $helperUri
+    $helperContent | Set-Content $localGistPath -Force
+}
 .([scriptblock]::Create($helperContent))($ModuleName)
+Set-BuildVariables
 #endregion
 
-Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -Verbose:$false
+if ((Get-PSRepository -Name PSGallery).InstallationPolicy -ne 'Trusted') {
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -Verbose:$false
+}
 $PSDefaultParameterValues = @{
     '*-Module:Verbose'                  = $false
     '*-Module:Force'                    = $true
@@ -72,6 +86,12 @@ foreach ($module in $Dependencies.Keys) {
         }
     }
 }
+try {
+    $null = Get-PackageProvider -Name Nuget -ForceBootstrap -Verbose:$false -ErrorAction Stop
+}
+catch {
+    throw
+}
 foreach ($item in $moduleDependencies) {
     Write-BuildLog "[$($item['Name'])] Resolving"
     try {
@@ -86,12 +106,6 @@ foreach ($item in $moduleDependencies) {
         Install-Module @item
         Import-Module @item
     }
-}
-try {
-    $null = Get-PackageProvider -Name Nuget -ForceBootstrap -Verbose:$false -ErrorAction Stop
-}
-catch {
-    throw
 }
 
 Add-Heading "Executing Invoke-Build"

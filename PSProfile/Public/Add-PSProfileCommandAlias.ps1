@@ -42,7 +42,7 @@ function Add-PSProfileCommandAlias {
     }
 }
 
-Register-ArgumentCompleter -CommandName Add-PSProfileCommandAlias -ParameterName Command -ScriptBlock {
+Register-ArgumentCompleter -CommandName Get-PSProfileCommandAlias -ParameterName Command -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     (Get-Command "$wordToComplete*").Name | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)

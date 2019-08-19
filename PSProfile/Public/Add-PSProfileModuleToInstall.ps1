@@ -24,6 +24,9 @@ function Add-PSProfileModuleToInstall {
     .PARAMETER AllowPrerelease
     If $true, allows installation of prerelease versions of the module.
 
+    .PARAMETER Force
+    If the module already exists in $PSProfile.ModulesToInstall, use -Force to overwrite the existing value.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -54,14 +57,22 @@ function Add-PSProfileModuleToInstall {
         $AllowPrerelease,
         [Parameter()]
         [Switch]
+        $Force,
+        [Parameter()]
+        [Switch]
         $Save
     )
     Process {
-        $moduleParams = $PSBoundParameters
-        foreach ($key in $moduleParams.Keys | Where-Object {$_ -notin @('Verbose','Confirm',((Get-Command Install-Module).Parameters.Keys))}) {
-            $moduleParams.Remove($key)
+        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToInstall | Where-Object {$_ -eq [hashtable] -and $_.Name -eq $Name})) {
+            Write-Error "Unable to add module to `$PSProfile.ModulesToInstall as it already exists. Use -Force to overwrite the existing value if desired."
         }
-        Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToInstall"
-        $Global:PSProfile.ModulesToInstall += $moduleParams
+        else {
+            $moduleParams = $PSBoundParameters
+            foreach ($key in $moduleParams.Keys | Where-Object {$_ -notin @('Verbose','Confirm',((Get-Command Install-Module).Parameters.Keys))}) {
+                $moduleParams.Remove($key)
+            }
+            Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToInstall"
+            $Global:PSProfile.ModulesToInstall += $moduleParams
+        }
     }
 }

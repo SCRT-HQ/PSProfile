@@ -85,7 +85,7 @@ function Get-PSProfileLog {
     }
 }
 
-Register-ArgumentCompleter -CommandName 'Get-PSProfileLog' -ParameterName 'Section' -ScriptBlock {
+Register-ArgumentCompleter -CommandName Get-PSProfileLog -ParameterName 'Section' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     $Global:PSProfile.Log.Section | Sort-Object -Unique | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)

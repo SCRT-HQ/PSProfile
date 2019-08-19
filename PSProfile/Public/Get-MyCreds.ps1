@@ -72,3 +72,10 @@ function Get-MyCreds {
         }
     }
 }
+
+Register-ArgumentCompleter -CommandName Get-MyCreds -ParameterName Item -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    $Global:PSProfile.Vault._secrets.Keys | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}

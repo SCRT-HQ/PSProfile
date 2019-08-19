@@ -21,6 +21,9 @@ function Add-PSProfileModuleToImport {
     .PARAMETER ArgumentList
     Specifies arguments (parameter values) that are passed to a script module during the Import-Module command. Valid only when importing a script module.
 
+    .PARAMETER Force
+    If the module already exists in $PSProfile.ModulesToImport, use -Force to overwrite the existing value.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -48,17 +51,25 @@ function Add-PSProfileModuleToImport {
         $ArgumentList,
         [Parameter()]
         [Switch]
+        $Force,
+        [Parameter()]
+        [Switch]
         $Save
     )
     Process {
-        $moduleParams = $PSBoundParameters
-        foreach ($key in $moduleParams.Keys | Where-Object {$_ -notin @('Verbose','Confirm',(Get-Command Import-Module).Parameters.Keys)}) {
-            $moduleParams.Remove($key)
+        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToImport | Where-Object {$_ -eq [hashtable] -and $_.Name -eq $Name})) {
+            Write-Error "Unable to add module to `$PSProfile.ModulesToImport as it already exists. Use -Force to overwrite the existing value if desired."
         }
-        Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToImport"
-        $Global:PSProfile.ModulesToImport += $moduleParams
-        if ($Save) {
-            Save-PSProfile
+        else {
+            $moduleParams = $PSBoundParameters
+            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm') -or $_ -notin (Get-Command Import-Module).Parameters.Keys}) {
+                $null = $moduleParams.Remove($key)
+            }
+            Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToImport"
+            $Global:PSProfile.ModulesToImport += $moduleParams
+            if ($Save) {
+                Save-PSProfile
+            }
         }
     }
 }

@@ -47,7 +47,13 @@ function Get-Prompt {
         }) + $((Get-Command prompt).Definition -split "`n" | ForEach-Object {
             if (-not [String]::IsNullOrWhiteSpace($_)) {
                 if ($null -eq $leadingWhiteSpace) {
-                    $leadingWhiteSpace = ($_ | Select-String -Pattern '^\s+').Matches[0].Value
+                    $lws = ($_ | Select-String -Pattern '^\s+')
+                    $leadingWhiteSpace = if ($lws) {
+                        $lws.Matches[0].Value + ' '
+                    }
+                    else {
+                        $null
+                    }
                 }
                 $_ -replace "^$leadingWhiteSpace",'    '
                 "`n"
