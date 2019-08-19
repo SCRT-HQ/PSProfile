@@ -44,6 +44,7 @@ function Add-PSProfileGitAlias {
     )
     Process {
         $plugin = $Global:PSProfile.Plugins | Where-Object {$_.Name -eq 'PSProfile.GitAliases'}
+        Write-Verbose "Adding GitAlias '$Alias' with value '$Value' to ArgumentList for PSProfile.GitAliases"
         if (-not $plugin.ContainsKey('ArgumentList')) {
             $plugin['ArgumentList'] = @{
                 $Alias = $Value
@@ -57,7 +58,7 @@ function Add-PSProfileGitAlias {
 }
 
 function Remove-PSProfileGitAlias {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "Medium")]
     Param (
         [Parameter(Mandatory,Position = 0)]
         [String]
@@ -72,8 +73,11 @@ function Remove-PSProfileGitAlias {
             Write-Verbose "There are no GitAliases currently on your PSProfile, unable to remove alias '$Alias'"
         }
         elseif ($plugin['ArgumentList'].ContainsKey($Alias)) {
-            $plugin['ArgumentList'].Remove($Alias)
-            Add-PSProfilePlugin -Name 'PSProfile.GitAliases' -ArgumentList $plugin['ArgumentList'] -Save:$Save
+            if ($PSCmdlet.ShouldProcess("Removing Git alias '$Alias'")) {
+                Write-Verbose "Removing Git alias '$Alias' from the ArgumentList for PSProfile.GitAliases"
+                $plugin['ArgumentList'].Remove($Alias)
+                Add-PSProfilePlugin -Name 'PSProfile.GitAliases' -ArgumentList $plugin['ArgumentList'] -Save:$Save
+            }
         }
     }
 }
