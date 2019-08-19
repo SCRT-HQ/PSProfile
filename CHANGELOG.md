@@ -1,9 +1,15 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.1 - 2019-08-19](#011---2019-08-19)
   * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.1 - 2019-08-19
+
+* [Issue #3](https://github.com/scrthq/PSProfile/issues/3)
+  * Fixed: `$PSProfile.Refresh()` only uses `Trim()` to clean up the Prompts now due to Invoke-Formatter hanging.
 
 ## 0.1.0 - 2019-08-19
 

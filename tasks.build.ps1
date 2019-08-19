@@ -45,6 +45,7 @@ task Init {
         "~~~~~ Summary ~~~~~"
         "In CI?  : $($IsCI -or (Test-Path Env:\TF_BUILD))"
         "Project : $ModuleName"
+        "Version : $ModuleVersion"
         "Engine  : PowerShell $($PSVersionTable.PSVersion.ToString())"
         "Host OS : $(if($PSVersionTable.PSVersion.Major -le 5 -or $IsWindows){"Windows"}elseif($IsLinux){"Linux"}elseif($IsMacOS){"macOS"}else{"[UNKNOWN]"})"
         "PWD     : $PWD"
@@ -99,8 +100,16 @@ task Build Clean,{
     Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -notin @('Classes','Private','Public')} | ForEach-Object {
         Copy-Item $_.FullName -Destination $TargetVersionDirectory -Container -Recurse
     }
-    if (Test-Path (Join-Path $SourceModuleDirectory 'Configuration.psd1')) {
-        Copy-Item (Join-Path $SourceModuleDirectory 'Configuration.psd1') -Destination $TargetVersionDirectory
+    $sourceManifestPath = Join-Path $SourceModuleDirectory 'Configuration.psd1'
+    if (Test-Path $sourceManifestPath) {
+        $curVer = Import-PowerShellDataFile $sourceManifestPath
+        if ([Version]$ModuleVersion -ne [Version]$curVer) {
+            Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $ModuleVersion
+        }
+        Copy-Item $sourceManifestPath -Destination $TargetVersionDirectory
+        if ([Version]$ModuleVersion -ne [Version]$curVer) {
+            Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $curVer
+        }
     }
 
     # Copy over manifest
