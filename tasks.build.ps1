@@ -90,7 +90,7 @@ task Build Clean,{
         $aliasHash = . $aliasPath
         $aliasHash.GetEnumerator() | ForEach-Object {
             $aliasesToExport += $_.Key
-            "New-Alias -Name '$($_.Key)' -Value '$($_.Value)'" | Add-Content -Path $psm1 -Encoding UTF8
+            "New-Alias -Name '$($_.Key)' -Value '$($_.Value)' -Scope Global" | Add-Content -Path $psm1 -Encoding UTF8
             "Export-ModuleMember -Alias '$($_.Key)'" | Add-Content -Path $psm1 -Encoding UTF8
         }
     }
