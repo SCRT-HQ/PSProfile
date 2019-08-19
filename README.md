@@ -45,18 +45,13 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
 
 ## Documentation
 
+1. Add `Import-Module PSProfile` to your PowerShell profile (`$profile`) so that PSProfile is imported whenever you start a new session:
 
+   ```powershell
+   if (-not (Test-Path $profile)) { New-Item -ItemType File $profile -Force }
+   'Import-Module PSProfile' | Add-Content $profile
+   ```
+2. Restart your session or run `Import-Module PSProfile` to start working with it directly.
+3. Explore the new `$PSProfile` variable containing the current PSProfile configuration.
 
-## Building from source
-
-```powershell
-# 1: Clone the repo
-git clone https://github.com/scrthq/PSProfile.git
-cd PSProfile
-
-# 2: Build the module -- this will install any missing module and build dependencies from the PowerShell Gallery
-. .\build.ps1
-
-# 3: Import the compiled module
-Import-Module .\BuildOutput\PSProfile
-```
+More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics.
