@@ -15,7 +15,7 @@ RootModule = 'PSProfile.psm1'
 ModuleVersion = '0.1.0'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop','Core')
 
 # ID used to uniquely identify this module
 GUID = '93918f5c-12cf-4ef8-a871-04c6c8be4812'
@@ -30,10 +30,10 @@ CompanyName = 'SCRT HQ'
 Copyright = '(c) 2017-2019 Nate Ferrell. All rights reserved.'
 
 # Description of the functionality provided by this module
-Description = ''
+Description = "PSProfile is a cross-platform PowerShell module built for profile customization. It uses PoshCode's Configuration module to handle the layered Configuration"
 
 # Minimum version of the Windows PowerShell engine required by this module
-# PowerShellVersion = ''
+PowerShellVersion = '5.1.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -95,19 +95,19 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('Profile','Productivity','Shell','Prompt','Customization','Git','Windows','Mac','Linux')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://raw.githubusercontent.com/scrthq/PSProfile/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/scrthq/PSProfile'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'https://github.com/scrthq/PSProfile/blob/master/CHANGELOG.md'
 
     } # End of PSData hashtable
 
