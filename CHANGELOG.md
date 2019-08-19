@@ -1,11 +1,11 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
-  * [0.1.0 - 2019-08-16](#010---2019-08-16)
+  * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
 
 # PSProfile - ChangeLog
 
-## 0.1.0 - 2019-08-16
+## 0.1.0 - 2019-08-19
 
 * Initial release to the PowerShell Gallery
 * Included functions:
@@ -25,6 +25,7 @@
   * `Get-MyCreds`
   * `Get-PathAlias`
   * `Get-PSProfileArguments`
+  * `Get-PSProfileCommand`
   * `Get-PSProfileCommandAlias`
   * `Get-PSProfileImportedCommand`
   * `Get-PSProfileLog`
