@@ -42,7 +42,7 @@ function Add-PSProfilePrompt {
                 $Content.ToString()
             }
             else {
-                Get-Prompt -Raw
+                Get-PSProfilePrompt -Raw
             }
             $cleanContent = (($tempContent -split "[\r\n]" | Where-Object {$_}) -join "`n").Trim()
             $global:PSProfile.Prompts[$Name] = $cleanContent

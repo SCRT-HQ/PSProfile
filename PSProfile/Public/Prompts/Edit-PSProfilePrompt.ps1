@@ -22,7 +22,7 @@ function Edit-PSProfilePrompt {
     )
     Process {
         $in = @{
-            StdIn   = Get-Prompt -Global
+            StdIn   = Get-PSProfilePrompt -Global
             TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"ps-prompt-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")
         }
         $handler = {
@@ -48,7 +48,7 @@ function Edit-PSProfilePrompt {
         Write-Verbose "Opening prompt in VS Code"
         .$handler($in)
         if (-not $Temporary) {
-            Save-Prompt
+            Save-PSProfilePrompt
         }
     }
 }
