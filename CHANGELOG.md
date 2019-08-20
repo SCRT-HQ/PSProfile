@@ -1,10 +1,22 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.2 - 2019-08-20](#012---2019-08-20)
   * [0.1.1 - 2019-08-19](#011---2019-08-19)
   * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.2 - 2019-08-20
+
+* Added `*-PSProfilePluginPath` functions to manage PluginPaths
+* Cleaned up PluginPath logic to remove old module versions from the search path.
+* Cleaned up `Get-PSProfilePrompt` and added a `-NoPSSA` switch to prevent usage of `Invoke-Formatter` regardless is PSScriptAnalyzer is installed.
+* Updated `PSProfile.PowerTools` included plugin.
+* Fixed issue with `Add-PSProfileModuleToInstall` and `Add-PSProfileModuleToImport` where it wouldn't rebuild the hashtable array correctly when adding modules to the PSProfile.
+* Added additional logic to build script.
+* Made `PSProfile.PowerTools` included in Plugins by default due to utility.
+* Cleaned up docs folder as it belongs in the Wiki, not the main repo.
 
 ## 0.1.1 - 2019-08-19
 

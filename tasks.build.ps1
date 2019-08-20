@@ -27,10 +27,6 @@ Param(
 
 task . Build
 
-$sb = {
-    "Task: $($Task.Name)"
-}
-
 task Init {
     $Script:SourceModuleDirectory = [System.IO.Path]::Combine($BuildRoot,$ModuleName)
     $Script:ModuleVersion = Get-VersionToDeploy -ModuleName $ModuleName -ManifestPath $(Join-Path $SourceModuleDirectory "$($ModuleName).psd1")
@@ -140,6 +136,19 @@ task Import -If {Test-Path $TargetManifestPath} Build,{
 }
 
 task Test Init,{
+    if ($module = Get-Module $ModuleName) {
+        Write-BuildLog "$ModuleName is currently imported. Removing module and cleaning up any leftover aliases"
+        $module | Remove-Module -Force
+        $aliases = @{}
+        $aliasPath = [System.IO.Path]::Combine($BuildRoot,$ModuleName,"$ModuleName.Aliases.ps1")
+        if (Test-Path $aliasPath) {
+            (. $aliasPath).Keys | ForEach-Object {
+                if (Get-Alias "$_*") {
+                    Remove-Alias -Name $_ -Force
+                }
+            }
+        }
+    }
     $parameters = @{
         Name           = 'Pester'
         MinimumVersion = '4.8.1'
@@ -167,9 +176,6 @@ task Test Init,{
         PassThru     = $true
         Path         = Join-Path $BuildRoot "Tests"
     }
-    if ($PSVersionTable.PSVersion.Major -lt 6) {
-        ### $pesterParams['CodeCoverage'] = $TargetPSM1Path
-    }
     if ($global:ExcludeTag) {
         $pesterParams['ExcludeTag'] = $global:ExcludeTag
         Write-BuildLog "Invoking Pester and excluding tag(s) [$($global:ExcludeTag -join ', ')]..."
@@ -177,7 +183,7 @@ task Test Init,{
     else {
         Write-BuildLog 'Invoking Pester...'
     }
-    $testResults = Invoke-Pester @pesterParams
+    Invoke-Pester @pesterParams -OutVariable testResults
     Write-BuildLog 'Pester invocation complete!'
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List

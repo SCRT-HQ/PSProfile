@@ -28,7 +28,7 @@ function Add-PSProfileProjectPath {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory,Position = 0,ValueFromPipeline,ValueFromPipelineByPropertyName)]
-        [ValidateScript({if (-not (Get-Item $_).PSIsContainer){throw "$_ is not a folder! Please add only folders to this PSProfile property. If you would like to add a script, use Add-PSProfileScriptPath instead."}})]
+        [ValidateScript({if ((Get-Item $_).PSIsContainer){$true}else{throw "$_ is not a folder! Please add only folders to this PSProfile property. If you would like to add a script, use Add-PSProfileScriptPath instead."}})]
         [Alias('FullName')]
         [String[]]
         $Path,

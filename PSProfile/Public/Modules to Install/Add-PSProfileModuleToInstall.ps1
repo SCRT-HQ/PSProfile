@@ -63,16 +63,26 @@ function Add-PSProfileModuleToInstall {
         $Save
     )
     Process {
-        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToInstall | Where-Object {$_ -eq [hashtable] -and $_.Name -eq $Name})) {
+        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToInstall | Where-Object {$_.Name -eq $Name})) {
             Write-Error "Unable to add module to `$PSProfile.ModulesToInstall as it already exists. Use -Force to overwrite the existing value if desired."
         }
         else {
             $moduleParams = $PSBoundParameters
-            foreach ($key in $moduleParams.Keys | Where-Object {$_ -notin @('Verbose','Confirm',((Get-Command Install-Module).Parameters.Keys))}) {
+            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm','Force') -or $_ -notin (Get-Command Install-Module).Parameters.Keys}) {
                 $moduleParams.Remove($key)
             }
             Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToInstall"
-            $Global:PSProfile.ModulesToInstall += $moduleParams
+            $Global:PSProfile.ModulesToInstall = @($Global:PSProfile.ModulesToInstall,$moduleParams)
+            if ($Save) {
+                Save-PSProfile
+            }
         }
+    }
+}
+
+Register-ArgumentCompleter -CommandName Add-PSProfileModuleToInstall -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-Module "$wordToComplete*" -ListAvailable | Select-Object -ExpandProperty Name | Sort-Object -Unique | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }

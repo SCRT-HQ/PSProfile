@@ -182,14 +182,13 @@ class PSProfile {
         $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
         $this.ProjectPaths = @()
-        $this.PluginPaths = @(
-            (Join-Path $PSScriptRoot "Plugins")
-        )
+        $this.PluginPaths = @()
         $this.ScriptPaths = @()
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
         }
         $this.CommandAliases = @{}
+        $this.Plugins = @()
     }
     [void] Load() {
         $this._internal['ProfileLoadStart'] = [datetime]::Now
@@ -199,6 +198,24 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
+        $plugPaths = @()
+        $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
+        $this.PluginPaths | Where-Object {$_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+"} | ForEach-Object {
+            $plugPaths += $_
+        }
+        @(
+            $env:PSModulePath.Split([System.IO.Path]::PathSeparator)
+            (Get-Module PSProfile* | Select-Object -ExpandProperty ModuleBase)
+            (Join-Path $PSScriptRoot "Plugins")
+        ) | ForEach-Object {
+            if ($_ -notin $this.PluginPaths) {
+                $plugPaths += $_
+            }
+        }
+        $this.PluginPaths = $plugPaths
+        if (-not ($this.Plugins | Where-Object {$_.Name -eq 'PSProfile.PowerTools'})) {
+            $this.Plugins =  @($this.Plugins,@{Name = 'PSProfile.PowerTools'})
+        }
         if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
             $withRefresh = ' with refresh.'
             $this.Refresh()
@@ -210,18 +227,6 @@ class PSProfile {
                 "MAIN",
                 "Verbose"
             )
-        }
-        if ($Global:PSDefaultParameterValues.Keys.Count) {
-            $Global:PSDefaultParameterValues['Import-Module:Global'] = $true
-            $Global:PSDefaultParameterValues['Import-Module:Force'] = $true
-            $Global:PSDefaultParameterValues['Import-Module:Verbose'] = $false
-        }
-        else {
-            $Global:PSDefaultParameterValues = @{
-                'Import-Module:Global'  = $true
-                'Import-Module:Force'   = $true
-                'Import-Module:Verbose' = $false
-            }
         }
         $this._importModules()
         $this._loadPlugins()
@@ -296,7 +301,7 @@ class PSProfile {
         $final = @{}
         $Global:PSProfile.Prompts.GetEnumerator() | ForEach-Object {
             $this._log(
-                "Formatting prompt '$($_.Key)' via Trim() (PSScriptAnalyzer not found)",
+                "Formatting prompt '$($_.Key)' via Trim()",
                 "FormatPrompts",
                 "Verbose"
             )

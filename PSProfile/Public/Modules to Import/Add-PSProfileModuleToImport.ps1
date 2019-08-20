@@ -57,19 +57,26 @@ function Add-PSProfileModuleToImport {
         $Save
     )
     Process {
-        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToImport | Where-Object {$_ -eq [hashtable] -and $_.Name -eq $Name})) {
+        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToImport | Where-Object {$_.Name -eq $Name})) {
             Write-Error "Unable to add module to `$PSProfile.ModulesToImport as it already exists. Use -Force to overwrite the existing value if desired."
         }
         else {
             $moduleParams = $PSBoundParameters
-            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm') -or $_ -notin (Get-Command Import-Module).Parameters.Keys}) {
+            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm','Force') -or $_ -notin (Get-Command Import-Module).Parameters.Keys}) {
                 $null = $moduleParams.Remove($key)
             }
             Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToImport"
-            $Global:PSProfile.ModulesToImport += $moduleParams
+            $Global:PSProfile.ModulesToImport = @($Global:PSProfile.ModulesToImport,$moduleParams)
             if ($Save) {
                 Save-PSProfile
             }
         }
+    }
+}
+
+Register-ArgumentCompleter -CommandName Add-PSProfileModuleToImport -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-Module "$wordToComplete*" -ListAvailable | Select-Object -ExpandProperty Name | Sort-Object -Unique | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
