@@ -74,6 +74,6 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
     ```powershell
     Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Verbose -Save
     ```
-    * > This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
+      * > This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
 
 More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics.
