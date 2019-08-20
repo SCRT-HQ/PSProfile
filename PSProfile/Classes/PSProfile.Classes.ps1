@@ -214,7 +214,11 @@ class PSProfile {
         }
         $this.PluginPaths = $plugPaths
         if (-not ($this.Plugins | Where-Object {$_.Name -eq 'PSProfile.PowerTools'})) {
-            $this.Plugins =  @($this.Plugins,@{Name = 'PSProfile.PowerTools'})
+            $plugs = @(@{Name = 'PSProfile.PowerTools'})
+            $this.Plugins | ForEach-Object {
+                $plugs += $_
+            }
+            $this.Plugins = $plugs
         }
         if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
             $withRefresh = ' with refresh.'

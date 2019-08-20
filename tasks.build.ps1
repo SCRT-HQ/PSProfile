@@ -183,7 +183,7 @@ task Test Init,{
     else {
         Write-BuildLog 'Invoking Pester...'
     }
-    Invoke-Pester @pesterParams -OutVariable testResults
+    $testResults = Invoke-Pester @pesterParams
     Write-BuildLog 'Pester invocation complete!'
     if ($testResults.FailedCount -gt 0) {
         $testResults | Format-List
