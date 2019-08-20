@@ -641,16 +641,17 @@ function Enter-CleanEnvironment {
         $ImportModule
     )
     Process {
-        $verboseMessage = "Creating clean environment...`n           Engine : $Engine"
-        $command = "$Engine -NoProfile -NoExit -C `"```$global:CleanNumber = 0;if (```$null -ne (Get-Module PSReadline)) {Set-PSReadLineKeyHandler -Chord Tab -Function MenuComplete;Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward;Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward;Set-PSReadLineKeyHandler -Chord 'Ctrl+W' -Function BackwardKillWord;Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function MenuComplete;Set-PSReadLineKeyHandler -Chord 'Ctrl+D' -Function KillWord;};function global:prompt {```$global:CleanNumber++;'[CLN#' + ```$global:CleanNumber + '] [' + [Math]::Round((Get-History -Count 1).Duration.TotalMilliseconds,0) + 'ms] ' + ```$((Get-Location).Path.Replace(```$env:Home,'~')) + '```n[PS ' + ```$PSVersionTable.PSVersion.ToString() + ']>> '};"
+        $verboseMessage = "Creating clean environment...`n           Engine  : $Engine"
+        $command = "$Engine -NoProfile -NoExit -C `"```$global:CleanNumber = 0;if (```$null -ne (Get-Module PSReadline)) {Set-PSReadLineKeyHandler -Chord Tab -Function MenuComplete;Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward;Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward;Set-PSReadLineKeyHandler -Chord 'Ctrl+W' -Function BackwardKillWord;Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function MenuComplete;Set-PSReadLineKeyHandler -Chord 'Ctrl+D' -Function KillWord;};"
         if ($ImportModule) {
             if (($modName = (Get-ChildItem .\BuildOutput -Directory).BaseName)) {
                 $modPath = '.\BuildOutput\' + $modName
-                $verboseMessage += "`n           Module : $modName"
-                $command += "Import-Module '$modPath' -Verbose:```$false;Get-Module $modName"
+                $verboseMessage += "`n           Module  : $modName"
+                $command += "Import-Module '$modPath' -Verbose:```$false;Get-Module $modName;"
             }
         }
-        $command += '"'
+        $command += "function global:prompt {```$global:CleanNumber++;'[CLN#' + ```$global:CleanNumber + '] [' + [Math]::Round((Get-History -Count 1).Duration.TotalMilliseconds,0) + 'ms] ' + ```$((Get-Location).Path.Replace(```$env:Home,'~')) + '```n[PS ' + ```$PSVersionTable.PSVersion.ToString() + ']>> '}`""
+        $verboseMessage += "`n           Command : $command"
         Write-Verbose $verboseMessage
         Invoke-Expression $command
     }

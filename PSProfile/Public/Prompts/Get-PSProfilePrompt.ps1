@@ -12,6 +12,9 @@ function Get-PSProfilePrompt {
     .PARAMETER Global
     If $true, adds the global scope to the returned prompt, e.g. `function global:prompt`
 
+    .PARAMETER NoPSSA
+    If $true, does not use PowerShell Script Analyzer's Invoke-Formatter to format the resulting prompt definition.
+
     .PARAMETER Raw
     If $true, returns only the prompt definition and does not add the `function prompt {...}` enclosure.
 
@@ -28,15 +31,18 @@ function Get-PSProfilePrompt {
         $Global,
         [Parameter()]
         [Switch]
+        $NoPSSA,
+        [Parameter()]
+        [Switch]
         $Raw
     )
     Begin {
-        $pssa = if ($null -eq (Get-Module PSScriptAnalyzer* -ListAvailable)) {
+        $pssa = if ($NoPSSA -or $null -eq (Get-Module PSScriptAnalyzer* -ListAvailable)) {
             $false
         }
         else {
             $true
-            Import-Module PSScriptAnalyzer
+            Import-Module PSScriptAnalyzer -Verbose:$false
         }
         $pContents = if ($PSBoundParameters.ContainsKey('Name')) {
             $Global:PSProfile.Prompts[$Name]
@@ -48,30 +54,30 @@ function Get-PSProfilePrompt {
     Process {
         Write-Verbose "Getting current prompt"
         $i = 0
-        $leadingWhiteSpace = $null
+        $lws = $null
         $g = if ($Global) {
             'global:prompt'
         }
         else {
             'prompt'
         }
-        $p = $(if ($Raw) {
-                ''
-            }
-            else {
-                "function $g {`n"
-            }) + $($pContents -split "`n" | ForEach-Object {
+        $header = if ($Raw) {
+            ''
+        }
+        else {
+            "function $g {`n"
+        }
+        $content = $pContents -split "`n" | ForEach-Object {
             if (-not [String]::IsNullOrWhiteSpace($_)) {
-                if ($null -eq $leadingWhiteSpace) {
-                    $lws = ($_ | Select-String -Pattern '^\s+')
-                    $leadingWhiteSpace = if ($lws) {
-                        $lws.Matches[0].Value + ' '
+                if ($null -eq $lws) {
+                    $lws = if ($_ -match '^\s+') {
+                        $Matches.Values[0].Length
                     }
                     else {
                         $null
                     }
                 }
-                $_ -replace "^$leadingWhiteSpace",'    '
+                $_ -replace "^\s{0,$lws}",'    '
                 "`n"
             }
             elseif ($i) {
@@ -79,13 +85,16 @@ function Get-PSProfilePrompt {
                 "`n"
             }
             $i++
-        }) + $(if ($Raw) {
+        }
+        $footer = if ($Raw) {
             ''
         }
         else {
             "}"
-        })
-        if ($pssa) {
+        }
+        $p = ((@($header,(($content | Where-Object {"$_".Trim()}) -join "`n"),$footer) -split "[\r\n]") | Where-Object {"$_".Trim()}) -join "`n"
+        if (-not $NoPSSA -and $pssa) {
+            Write-Verbose "Formatting prompt with Invoke-Formatter"
             Invoke-Formatter $p -Verbose:$false
         }
         else {
