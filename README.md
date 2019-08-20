@@ -69,11 +69,7 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
     * `Start-BuildScript` (Alias: `bld`) - Use `build.ps1` scripts often for building projects? This function will invoke your build script in a new child process with `-NoProfile` included to prevent any false flags that may happen while your profile is loaded as well as prevent file-locking.
     * `Enter-CleanEnvironment` (Alias: `cln`) - Opens a child process up in the current directory with `-NoProfile` and a custom prompt to let you know you're in a _clean_ environment. Use the `-ImportModule` switch to import a compiled module in the `BuildOutput` folder of your current directly if found.
     * `Get-LongPath` (Alias: `path`) - Want to leverage tab-completion of project folder names for other commands? Use this to expand the long path of a project folder name like so, `Get-ChildItem (path PSProfile)`
-    * Adding ProjectPaths:
-
-    ```powershell
-    Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Verbose -Save
-    ```
+    * Adding ProjectPaths: `Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Verbose -Save`
       * > This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
 
 More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics.
