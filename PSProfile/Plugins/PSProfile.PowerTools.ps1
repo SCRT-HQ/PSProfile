@@ -462,7 +462,7 @@ function Push-Path {
             }
         }
         Write-Verbose "Pushing location to: $($target.Replace($env:HOME,'~'))"
-        Push-Location $target -StackName PSProfile
+        Push-Location $target
     }
 }
 
@@ -482,7 +482,7 @@ function Pop-Path {
     [CmdletBinding()]
     Param ()
     Process {
-        Pop-Location -StackName PSProfile
+        Pop-Location
     }
 }
 
