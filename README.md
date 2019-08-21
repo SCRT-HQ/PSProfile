@@ -43,6 +43,23 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
 </div>
 <br />
 
+## Background
+
+I do a LOT of profile customization, including loading in various custom functions I wrote, setting certain variables, invoking external profile scripts, etc, to make everyday tasks more efficient. I checked out the PowerShell Gallery for other Profile management modules but none seemed to satisfy all of the goals I had:
+
+1. Minimize my profile script to be as small as I can be.
+   * PSProfile only needs one line: `Import-Module PSProfile`.
+2. Enable easy storage and recall of secrets, typically my own PSCredential object, for programmatic use. This would eliminate the use of BetterCredentials (overriding `Get-Credential` sometimes yielded unwanted results) and my own `MyConfig` module that I was using locally.
+   * PSProfile includes a Vault to store PSCredential objects and named SecureStrings, e.g. API keys. Saving personal credentials? `Set-PSProfileSecret (Get-Credential) -Save`. Recalling later? `Invoke-Command -Credential (Get-MyCreds)`
+3. Enable common prompt storage and quick prompt switching.
+   * PSProfile has the ability to store prompts in its configuration with easy-to-remember names. Need to switch to your Demo prompt? `Switch-Prompt Demo`
+4. Be extensible.
+   * PSProfile includes Plugin support. A PSProfile Plugin can be a simple script or a full module. You can also include an `ArgumentList` to pass to the script/module during invocation.
+5. Maintain my PowerShell environment's desired state.
+   * PSProfile includes additional configuration options to specify modules you'd like to ensure are installed or are imported during profile load, scripts to invoke, Symbolic Links to create, etc.
+
+I hope that you enjoy PSProfile as much as I do! It includes a TON of convenience features and is built to run cross-platform and tested in Azure Pipelines with Windows PowerShell, PowerShell 6+ on Windows, PowerShell 6+ on Linux, and PowerShell 6+ on MacOS.
+
 ## Quick Start
 
 1. Install the module and its dependencies from the PowerShell Gallery:
@@ -67,10 +84,10 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
 Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Save
 ```
 
-> This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
+This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
 
-* Add your Git repo folder(s) to `$PSProfile.ProjectPaths`. This provides alias tab completion by project name for the PowerTools plugin, such as...
-    * `Push-Path` (Alias: `push`) - Like Set-Location, but now with tab-completion goodness for your common project paths
+Adding a ProjectPath provides tab completion of project folder names for the included PowerTools plugin functions, such as...
+    * `Push-Path` (Alias: `push`) - Like Set-Location, but now with tab-completion goodness for your project folders.
     * `Open-Item` (Alias: `open`) - Runs `Invoke-Item` underneath but allows tab-completed project folder names as input that is expanded to the full path in the function body.
     * `Open-Code` - Adds convenience wrappers to the `code` CLI tool for Visual Studio Code, allowing you to specify the language of the content you are passing via pipeline to `stdin` to display in VS Code, as well as tab completion of project folder names to open quickly as well.
       * > Pro-tip: `Open-Code` is designed as a replacement for the normal `code` CLI tool. I recommend adding an alias. You can do this directly with PSProfile for persistence by running `Add-PSProfileCommandAlias -Alias code -Command Open-Code -Save`
@@ -84,4 +101,8 @@ Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Save
 Add-PSProfileScriptPath ~\PowerShell\Profile\FunTools.ps1 -Save
 ```
 
-More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics.
+This adds the script specified to `$PSProfile.ScriptPaths`. Any scripts here will be invoked during PSProfile load. Include the `-Invoke` switch to also invoke the script immediately without needing to reload your session or re-import PSProfile.
+
+***
+
+_More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics._
