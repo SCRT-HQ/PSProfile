@@ -10,6 +10,7 @@
 
 ## 0.1.3 - 2019-08-20
 
+* Added `Pop-Path` to fix scope issues with `Push-Path` that effectively turned it into `Set-Location`
 * Added `Confirm-ScriptIsValid` to `PSProfile.PowerTools`
 * Added `Test-RegEx` to `PSProfile.PowerTools`
 * Changed `ErrorAction` on `New-Alias` call in `$PSProfile._setCommandAliases()` method.

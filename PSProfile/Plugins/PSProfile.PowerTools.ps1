@@ -403,10 +403,10 @@ New-Alias -Name open -Value 'Open-Item' -Scope Global -Option AllScope -Force
 function Push-Path {
     <#
     .SYNOPSIS
-    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked. Use Pop-Path to return to the location pushed from, as locations pushed from this function are within the module scope.
 
     .DESCRIPTION
-    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
+    Pushes your current location to the path specified. Allows tab-completion of GitPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked. Use Pop-Path to return to the location pushed from, as locations pushed from this function are within the module scope.
 
     .PARAMETER Path
     The path you would like to push your location to.
@@ -423,9 +423,6 @@ function Push-Path {
     push MyWorkRepo
 
     Same as the first example but using the shorter alias.
-
-    .NOTES
-    Since Push-Location is being called from a function, Pop-Location doesn't have any actual effect after :-(. This is effectively Set-Location, given that caveat.
     #>
 
     [CmdletBinding()]
@@ -465,12 +462,31 @@ function Push-Path {
             }
         }
         Write-Verbose "Pushing location to: $($target.Replace($env:HOME,'~'))"
-        Push-Location $target
+        Push-Location $target -StackName PSProfile
     }
 }
 
 New-Alias -Name push -Value Push-Path -Option AllScope -Scope Global -Force
-New-Alias -Name pop -Value Pop-Location -Option AllScope -Scope Global -Force
+
+function Pop-Path {
+    <#
+    .SYNOPSIS
+    Pops your location back the path you Push-Path'd from.
+
+    .DESCRIPTION
+    Pops your location back the path you Push-Path'd from.
+
+    .EXAMPLE
+    Pop-Path
+    #>
+    [CmdletBinding()]
+    Param ()
+    Process {
+        Pop-Location -StackName PSProfile
+    }
+}
+
+New-Alias -Name pop -Value Pop-Path -Option AllScope -Scope Global -Force
 
 if ($null -ne (Get-Command Get-PSProfileArguments*)) {
     Register-ArgumentCompleter -CommandName 'Push-Path' -ParameterName 'Path' -ScriptBlock {
