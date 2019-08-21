@@ -87,13 +87,14 @@ Add-PSProfileProjectPath C:\WorkProjects,~\PersonalGit -Save
 This adds the two folders to your ProjectPaths and refreshes your PSProfile to import any projects immediately to the internal GitPathMap. If any `build.ps1` files are found, those are added to another special dictionary in PSProfile as well for tab-completion.
 
 Adding a ProjectPath provides tab completion of project folder names for the included PowerTools plugin functions, such as...
-    * `Push-Path` (Alias: `push`) - Like Set-Location, but now with tab-completion goodness for your project folders.
-    * `Open-Item` (Alias: `open`) - Runs `Invoke-Item` underneath but allows tab-completed project folder names as input that is expanded to the full path in the function body.
-    * `Open-Code` - Adds convenience wrappers to the `code` CLI tool for Visual Studio Code, allowing you to specify the language of the content you are passing via pipeline to `stdin` to display in VS Code, as well as tab completion of project folder names to open quickly as well.
-      * > Pro-tip: `Open-Code` is designed as a replacement for the normal `code` CLI tool. I recommend adding an alias. You can do this directly with PSProfile for persistence by running `Add-PSProfileCommandAlias -Alias code -Command Open-Code -Save`
-    * `Start-BuildScript` (Alias: `bld`) - Use `build.ps1` scripts often for building projects? This function will invoke your build script in a new child process with `-NoProfile` included to prevent any false flags that may happen while your profile is loaded as well as prevent file-locking.
-    * `Enter-CleanEnvironment` (Alias: `cln`) - Opens a child process up in the current directory with `-NoProfile` and a custom prompt to let you know you're in a _clean_ environment. Use the `-ImportModule` switch to import a compiled module in the `BuildOutput` folder of your current directly if found.
-    * `Get-LongPath` (Alias: `path`) - Want to leverage tab-completion of project folder names for other commands? Use this to expand the long path of a project folder name like so, `Get-ChildItem (path PSProfile)`
+
+ * `Push-Path` (Alias: `push`) - Like Set-Location, but now with tab-completion goodness for your project folders.
+ * `Open-Item` (Alias: `open`) - Runs `Invoke-Item` underneath but allows tab-completed project folder names as input that is expanded to the full path in the function body.
+ * `Open-Code` - Adds convenience wrappers to the `code` CLI tool for Visual Studio Code, allowing you to specify the language of the content you are passing via pipeline to `stdin` to display in VS Code, as well as tab completion of project folder names to open quickly as well.
+   * > Pro-tip: `Open-Code` is designed as a replacement for the normal `code` CLI tool. I recommend adding an alias. You can do this directly with PSProfile for persistence by running `Add-PSProfileCommandAlias -Alias code -Command Open-Code -Save`
+ * `Start-BuildScript` (Alias: `bld`) - Use `build.ps1` scripts often for building projects? This function will invoke your build script in a new child process with `-NoProfile` included to prevent any false flags that may happen while your profile is loaded as well as prevent file-locking.
+ * `Enter-CleanEnvironment` (Alias: `cln`) - Opens a child process up in the current directory with `-NoProfile` and a custom prompt to let you know you're in a _clean_ environment. Use the `-ImportModule` switch to import a compiled module in the `BuildOutput` folder of your current directly if found.
+ * `Get-LongPath` (Alias: `path`) - Want to leverage tab-completion of project folder names for other commands? Use this to expand the long path of a project folder name like so, `Get-ChildItem (path PSProfile)`
 
 ### ScriptPaths
 
