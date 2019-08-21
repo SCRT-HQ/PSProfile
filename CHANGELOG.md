@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.3 - 2019-08-20](#013---2019-08-20)
   * [0.1.2 - 2019-08-20](#012---2019-08-20)
   * [0.1.1 - 2019-08-19](#011---2019-08-19)
   * [0.1.0 - 2019-08-19](#010---2019-08-19)
@@ -6,6 +7,14 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.3 - 2019-08-20
+
+* Added `Confirm-ScriptIsValid` to `PSProfile.PowerTools`
+* Added `Test-RegEx` to `PSProfile.PowerTools`
+* Changed `ErrorAction` on `New-Alias` call in `$PSProfile._setCommandAliases()` method.
+* Removed `ForEach-Object` alias from `Open-Code`
+* Added `pwsh-preview` exe resolver to `Enter-CleanEnvironment` as the wrapper cmd file does not handle the arguments correctly (throws non-terminated string error).
 
 ## 0.1.2 - 2019-08-20
 

@@ -378,7 +378,7 @@ class PSProfile {
                 $Name = $_.Key
                 $Value = $_.Value
                 if ($null -eq (Get-Alias "$Name*")) {
-                    New-Alias -Name $Name -Value $Value -Scope Global -Option AllScope -ErrorAction Stop
+                    New-Alias -Name $Name -Value $Value -Scope Global -Option AllScope -ErrorAction SilentlyContinue
                     $this._log(
                         "Set command alias: $Name > $Value",
                         'SetCommandAliases',

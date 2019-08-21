@@ -201,7 +201,7 @@ function Open-Code {
             }
             $in = @{
                 StdIn   = $collection
-                TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"code-stdin-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).$ext")
+                TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"code-stdin-$(-join ((97..(97+25) | ForEach-Object {[char]$_}) | Get-Random -Count 3)).$ext")
             }
             $handler = {
                 Param(
@@ -399,7 +399,6 @@ if ($null -ne (Get-Command Get-PSProfileArguments*)) {
 }
 
 New-Alias -Name open -Value 'Open-Item' -Scope Global -Option AllScope -Force
-
 
 function Push-Path {
     <#
@@ -640,9 +639,17 @@ function Enter-CleanEnvironment {
         [Switch]
         $ImportModule
     )
+    Begin {
+        $parsedEngine = if ($Engine -eq 'pwsh-preview' -and ($PSVersionTable.PSVersion.Major -le 5 -or $IsWindows)) {
+            "& '{0}'" -f (Resolve-Path ([System.IO.Path]::Combine((Split-Path (Get-Command pwsh-preview).Source -Parent),'..','pwsh.exe'))).Path
+        }
+        else {
+            $Engine
+        }
+    }
     Process {
         $verboseMessage = "Creating clean environment...`n           Engine  : $Engine"
-        $command = "$Engine -NoProfile -NoExit -C `"```$global:CleanNumber = 0;if (```$null -ne (Get-Module PSReadline)) {Set-PSReadLineKeyHandler -Chord Tab -Function MenuComplete;Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward;Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward;Set-PSReadLineKeyHandler -Chord 'Ctrl+W' -Function BackwardKillWord;Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function MenuComplete;Set-PSReadLineKeyHandler -Chord 'Ctrl+D' -Function KillWord;};"
+        $command = "$parsedEngine -NoProfile -NoExit -C `"```$global:CleanNumber = 0;if (```$null -ne (Get-Module PSReadline)) {Set-PSReadLineKeyHandler -Chord Tab -Function MenuComplete;Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward;Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward;Set-PSReadLineKeyHandler -Chord 'Ctrl+W' -Function BackwardKillWord;Set-PSReadLineKeyHandler -Chord 'Ctrl+z' -Function MenuComplete;Set-PSReadLineKeyHandler -Chord 'Ctrl+D' -Function KillWord};"
         if ($ImportModule) {
             if (($modName = (Get-ChildItem .\BuildOutput -Directory).BaseName)) {
                 $modPath = '.\BuildOutput\' + $modName
@@ -650,7 +657,8 @@ function Enter-CleanEnvironment {
                 $command += "Import-Module '$modPath' -Verbose:```$false;Get-Module $modName;"
             }
         }
-        $command += "function global:prompt {```$global:CleanNumber++;'[CLN#' + ```$global:CleanNumber + '] [' + [Math]::Round((Get-History -Count 1).Duration.TotalMilliseconds,0) + 'ms] ' + ```$((Get-Location).Path.Replace(```$env:Home,'~')) + '```n[PS ' + ```$PSVersionTable.PSVersion.ToString() + ']>> '}`""
+        $newline = '`n'
+        $command += "function global:prompt {```$global:CleanNumber++;'[CLN#' + ```$global:CleanNumber + '] [' + [Math]::Round((Get-History -Count 1).Duration.TotalMilliseconds,0) + 'ms] ' + (Get-Location).Path.Replace(```$env:Home,'~') + '$newline[PS ' + ```$PSVersionTable.PSVersion.ToString() + ']>> '}`""
         $verboseMessage += "`n           Command : $command"
         Write-Verbose $verboseMessage
         Invoke-Expression $command
@@ -939,3 +947,105 @@ if ($null -ne (Get-Command Get-PSProfileArguments*)) {
 }
 
 New-Alias -Name path -Value 'Get-LongPath' -Scope Global -Option AllScope -Force
+
+function Confirm-ScriptIsValid {
+    <#
+    .SYNOPSIS
+    Uses the PSParser to check for any errors in a script file.
+
+    .DESCRIPTION
+    Uses the PSParser to check for any errors in a script file.
+
+    .PARAMETER Path
+    The path of the script to check for errors.
+
+    .EXAMPLE
+    Confirm-ScriptIsValid MyScript.ps1
+
+    .EXAMPLE
+    Get-ChildItem .\Scripts | Confirm-ScriptIsValid
+    #>
+    [CmdletBinding()]
+    Param (
+        [parameter(Mandatory,Position = 0,ValueFromPipeline,ValueFromPipelineByPropertyName)]
+        [Alias("FullName")]
+        [ValidateScript( { Test-Path $_ })]
+        [String[]]
+        $Path
+    )
+    Begin {
+        $errorColl = @()
+        $analyzed = 0
+        $lenAnalyzed = 0
+    }
+    Process {
+        foreach ($p in $Path | Where-Object { $_ -like '*.ps1' }) {
+            $analyzed++
+            $item = Get-Item $p
+            $lenAnalyzed += $item.Length
+            $contents = Get-Content -Path $item.FullName -ErrorAction Stop
+            $errors = $null
+            $null = [System.Management.Automation.PSParser]::Tokenize($contents, [ref]$errors)
+            $obj = [PSCustomObject][Ordered]@{
+                Name       = $item.Name
+                FullName   = $item.FullName
+                Length     = $item.Length
+                ErrorCount = $errors.Count
+                Errors     = $errors
+            }
+            $obj
+            if ($errors.Count) {
+                $errorColl += $obj
+            }
+        }
+    }
+    End {
+        Write-Verbose "Total files analyzed: $analyzed"
+        Write-Verbose "Total size of files analyzed: $lenAnalyzed ($([Math]::Round(($lenAnalyzed/1MB),2)) MB)"
+        Write-Verbose "Files with errors:`n$($errorColl | Sort-Object FullName | Out-String)"
+    }
+}
+
+function Test-RegEx {
+    <#
+    .SYNOPSIS
+    Tests a RegEx pattern against a string and returns the results.
+
+    .DESCRIPTION
+    Tests a RegEx pattern against a string and returns the results.
+
+    .PARAMETER Pattern
+    The RegEx pattern to test against the string.
+
+    .PARAMETER String
+    The string to test.
+
+    .EXAMPLE
+    Test-RegEx -Pattern '^\w+' -String 'no spaces','  spaces in front'
+
+    Matched Pattern Matches String
+    ------- ------- ------- ------
+       True ^\w+    {no}    no spaces
+      False ^\w+              spaces in front
+    #>
+    [CmdletBinding()]
+    Param (
+        [parameter(Mandatory,Position = 0)]
+        [RegEx]
+        $Pattern,
+        [parameter(Mandatory,Position = 1,ValueFromPipeline)]
+        [String[]]
+        $String
+    )
+    Process {
+        foreach ($S in $String) {
+            $Matches = $null
+            [PSCustomObject][Ordered]@{
+                Matched = $($S -match $Pattern)
+                Pattern = $Pattern
+                Matches = $Matches.Values
+                String  = $S
+            }
+        }
+    }
+}
