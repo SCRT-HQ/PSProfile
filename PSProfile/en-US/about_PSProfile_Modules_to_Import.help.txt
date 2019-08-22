@@ -1,0 +1,27 @@
+TOPIC
+    about_PSProfile_Modules_to_Import
+
+SHORT DESCRIPTION
+    An overview of the Modules to Import concept in PSProfile.
+
+LONG DESCRIPTION
+    Modules to Import are stored as an array of hashtables in the PSProfile
+    object property `$PSProfile.ModulesToImport`.
+
+    Each hashtable in the array will include at least a module name, but
+    also supports other various Import-Module parameters such as RequiredVersion
+    and MinimumVersion.
+
+    Modules found in `$PSProfile.ModulesToImport` will be imported to the current
+    session during PSProfile load.
+
+COMMANDS
+    * `Add-PSProfileModuleToImport`
+        Adds a new ModuleToImport to your PSProfile.
+
+    * `Get-PSProfileModuleToImport`
+        Gets a ModuleToImport or the list of ModulesToImport from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileModuleToImport`
+        Removes a ModuleToImport from your PSProfile.

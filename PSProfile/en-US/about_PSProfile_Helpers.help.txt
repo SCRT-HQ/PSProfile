@@ -1,0 +1,41 @@
+TOPIC
+    about_PSProfile_Helpers
+
+SHORT DESCRIPTION
+    An overview of the Helper functions in PSProfile.
+
+LONG DESCRIPTION
+    PSProfile Helpers are functions that enable easier integration
+    with PSProfile.
+
+    These include functions to make prompt customization easier
+    as well as functions for Plugin developers to leverage to
+    perform tasks like adding to the PSProfile log with
+    `Write-PSProfileLog` or provide argument completers with
+    `Get-PSProfileArguments`.
+
+COMMANDS
+    * `Get-LastCommandDuration`
+        Gets the duration last command as a timestamp string for
+        use in prompts.
+
+    * `Get-PathAlias`
+        Gets the shortened Path Alias for use in prompts.
+
+    * `Get-PSProfileArguments`
+        Gets argument completers from PSProfile, e.g. the list of
+        prompt names for prompt management functions.
+
+    * `Get-PSVersion`
+        Gets the PSVersion as an easy to read string, including the
+        ability to specify the number of decimal places to limit the
+        resulting version string to.
+
+    * `Test-IfGit`
+        Tests if the current path is a Git repo folder and returns
+        contextual information about it if so. Useful for prompts.
+
+    * `Write-PSProfileLog`
+        Writes a PSProfileEvent to the `$PSProfile.Log`. Useful for
+        custom plugins so that logging remains lightweight and
+        centralized.

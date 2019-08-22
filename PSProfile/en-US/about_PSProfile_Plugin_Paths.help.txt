@@ -1,0 +1,24 @@
+TOPIC
+    about_PSProfile_Plugin_Paths
+
+SHORT DESCRIPTION
+    An overview of the Plugin Paths concept in PSProfile.
+
+LONG DESCRIPTION
+    Plugin Paths are stored as an array of strings in the PSProfile
+    object property `$PSProfile.PluginPaths`. The paths in `$env:PSModulePath`
+    are automatically added for you, so the only paths that need to
+    be added here are custom paths unique to your machine.
+
+    These paths are searched for plugins to import during PSProfile load.
+
+COMMANDS
+    * `Add-PSProfilePluginPath`
+        Adds a new Plugin Path to your PSProfile.
+
+    * `Get-PSProfilePluginPath`
+        Gets a Plugin Path or the list of Plugin Paths from
+        your PSProfile configuration.
+
+    * `Remove-PSProfilePluginPath`
+        Removes a Plugin Path from your PSProfile.

@@ -1,0 +1,39 @@
+TOPIC
+    about_PSProfile_Project_Paths
+
+SHORT DESCRIPTION
+    An overview of the Project Paths concept in PSProfile.
+
+LONG DESCRIPTION
+    Project Paths are stored as an array of strings in the PSProfile
+    object property `$PSProfile.ProjectPaths`. This property is
+    intended for any folders which contain Git repo folders underneath
+    them.
+
+    Git repos found within the Project Path directories are added
+    to the hashtable `$PSProfile.GitPathMap` with the folder name as the
+    key and the full path as the value for each. Various functions
+    leverage this dictionary for argument completers, especially in the
+    functions in the included `PSProfile.PowerTools` plugin. Example
+    functions that make use of this dictionary are `Open-Code`,
+    `Push-Path` and `Open-Item`.
+
+    Any `build.ps1` files found in these folders will also be added to
+    a second hashtable `$PSProfile.PSBuildPathMap`. This enables
+    tab-completion of common build script paths when using
+    `Start-BuildScript` from `PSProfile.PowerTools`.
+
+    These paths are searched for projects during the PSProfile refresh
+    only. If you add a new Project Path, it is recommended to run
+    `Update-PSProfileConfig` to immediately refresh your path dictionaries.
+
+COMMANDS
+    * `Add-PSProfileProjectPath`
+        Adds a new Project Path to your PSProfile.
+
+    * `Get-PSProfileProjectPath`
+        Gets a Project Path or the list of Project Paths from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileProjectPath`
+        Removes a Project Path from your PSProfile.

@@ -1,0 +1,23 @@
+TOPIC
+    about_PSProfile_Meta
+
+SHORT DESCRIPTION
+    An overview of the Meta functions in PSProfile.
+
+LONG DESCRIPTION
+    PSProfile Meta functions exist to provide additional information
+    about PSProfile itself.
+
+COMMANDS
+    * `Get-PSProfileCommand`
+        Gets a command or the list of commands directly included with
+        PSProfile, excluding any that may have been added from
+        external scripts or plugins invoked during PSProfile load.
+
+    * `Get-PSProfileImportedCommands`
+        Gets a command or the list of commands loaded into the session
+        by PSProfile that are not directly part of PSProfile itself.
+
+    * `Get-PSProfileLog`
+        Gets the `$PSProfile.Log` for inspection towards what events
+        may be taking longer than expected during your PSProfile load.

@@ -1,0 +1,25 @@
+TOPIC
+    about_PSProfile_Command_Aliases
+
+SHORT DESCRIPTION
+    An overview of the Command Alias concept in PSProfile.
+
+LONG DESCRIPTION
+    Command Aliases are stored as a hashtable in the PSProfile object
+    property `$PSProfile.CommandAliases`.
+
+    Keys stored in this hashtable will be set as aliases via New-Alias
+    targeting the corresponding value.
+
+    Command Aliases will be set during PSProfile import.
+
+COMMANDS
+    * `Add-PSProfileCommandAlias`
+        Adds a new Command Alias to your PSProfile.
+
+    * `Get-PSProfileCommandAlias`
+        Gets a Command Alias or the list of Command Aliases from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileCommandAlias`
+        Removes a Command Alias from your PSProfile.

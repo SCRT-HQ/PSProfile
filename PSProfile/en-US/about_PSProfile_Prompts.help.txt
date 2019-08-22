@@ -1,0 +1,34 @@
+TOPIC
+    about_PSProfile_Prompts
+
+SHORT DESCRIPTION
+    An overview of the Prompts concept in PSProfile.
+
+LONG DESCRIPTION
+    Prompts are stored as a hashtable in the PSProfile
+    object property `$PSProfile.Prompts`. Each prompt is stored with a
+    friendly name as the key and the prompt definition as the value.
+
+    The default prompt name is stored in `$PSProfile.Settings.DefaultPrompt`
+    and is set as the active prompt once PSProfile is loaded.
+
+COMMANDS
+    * `Add-PSProfilePrompt`
+        Adds a new Prompt to your PSProfile.
+
+    * `Edit-PSProfilePrompt`
+        Opens the current Prompt's definition in Visual Studio
+        Code as a temporary file. After updating, save the file
+        and close it and it will be immediately updated in your current
+        session as well as in your PSProfile configuration.
+
+    * `Get-PSProfilePrompt`
+        Gets a Prompt or the list of Prompts from your PSProfile
+        configuration.
+
+    * `Remove-PSProfilePrompt`
+        Removes a Prompt from your PSProfile.
+
+    * `Switch-PSProfilePrompt`
+        Switches to a different Prompt from your PSProfile
+        configuration.

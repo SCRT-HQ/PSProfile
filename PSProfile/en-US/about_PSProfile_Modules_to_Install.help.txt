@@ -1,0 +1,29 @@
+TOPIC
+    about_PSProfile_Modules_to_Install
+
+SHORT DESCRIPTION
+    An overview of the Modules to Install concept in PSProfile.
+
+LONG DESCRIPTION
+    Modules to Install are stored as an array of hashtables in the PSProfile
+    object property `$PSProfile.ModulesToInstall`.
+
+    Each hashtable in the array will include at least a module name, but
+    also supports other various Install-Module parameters such as Repository,
+    RequiredVersion and MinimumVersion.
+
+    Modules found in `$PSProfile.ModulesToInstall` will be installed to the
+    CurrentUser scope if not already installed. This is done during a PSProfile
+    refresh only and handled via background runspace through the PoshRSJob
+    module so as to not extend the current profile load time.
+
+COMMANDS
+    * `Add-PSProfileModuleToInstall`
+        Adds a new ModuleToInstall to your PSProfile.
+
+    * `Get-PSProfileModuleToInstall`
+        Gets a ModuleToInstall or the list of ModulesToInstall from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileModuleToInstall`
+        Removes a ModuleToInstall from your PSProfile.

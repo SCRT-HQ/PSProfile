@@ -1,0 +1,27 @@
+TOPIC
+    about_PSProfile_Variables
+
+SHORT DESCRIPTION
+    An overview of the Variables concept in PSProfile.
+
+LONG DESCRIPTION
+    Variables are stored as a hashtable in the PSProfile object
+    property `$PSProfile.SymbolicLinks`. Variables in PSProfile are
+    scoped to either Environment or Global.
+
+    Each variable scope's value is a hashtable with each key-value
+    pair correlating to a variable name as its key and the variable
+    value as its value.
+
+    Variables are set as the specified scope during PSProfile load.
+
+COMMANDS
+    * `Add-PSProfileVariable`
+        Adds a new Variables to your PSProfile.
+
+    * `Get-PSProfileVariable`
+        Gets a Variables or the list of Variables from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileVariable`
+        Removes a Variables from your PSProfile.

@@ -1,0 +1,42 @@
+TOPIC
+    about_PSProfile_Configuration
+
+SHORT DESCRIPTION
+    An overview of the Configuration functions in PSProfile.
+
+LONG DESCRIPTION
+    PSProfile contains certain functions aimed at managing the PSProfile
+    configuration itself. These are primarily wrapping methods on the PSProfile
+    object directly for convenience.
+
+COMMANDS
+    * `Import-PSProfile`
+        Invokes `$PSProfile.Load()` to run through the actions typically performed
+        during the initial import of PSProfile. Useful when adding new items to
+        PSProfile mid-session.
+
+    * `Import-PSProfileConfiguration`
+        Used when importing a non-standard configuration from a specific path,
+        e.g. one you have migrated from another machine.
+
+    * `Save-PSProfile`
+        Invokes `$PSProfile.Save()` to save your current PSProfile object back
+        to the Configuration file.
+
+    * `Update-PSProfileConfig`
+        Invokes `$PSProfile.Refresh()` which runs PSProfile tasks that are not
+        intended to run often, such as Project Path discovery or module
+        installation. This is normally done on a specified
+        frequency (default is 1 hour), calling this function will refresh your
+        PSProfile on command. Useful if you've just updated your PSProfile and
+        would like to refresh it's configuration to reflect the new addition.
+
+    * `Update-PSProfileRefreshFrequency`
+        Updates the Refresh Frequency for PSProfile. Refreshes are performed
+        during the next PSProfile load after the Refresh Frequency timespan has
+        passed since the last refresh, e.g. if your last refresh was greater than
+        1 hour ago and your Refresh Frequency is set to 01:00:00, a refresh will
+        occur during the next PSProfile load automatically.
+
+    * `Update-PSProfileSetting`
+        Allows updating a specific setting directly on your PSProfile.

@@ -1,0 +1,23 @@
+TOPIC
+    about_PSProfile_Path_Aliases
+
+SHORT DESCRIPTION
+    An overview of the Path Alias concept in PSProfile.
+
+LONG DESCRIPTION
+    Path Aliases are stored as a hashtable in the PSProfile object
+    property `$PSProfile.PathAliases`.
+
+    Keys stored in this hashtable will be used as short aliases for
+    the Helper function `Get-PathAlias` in prompts.
+
+COMMANDS
+    * `Add-PSProfilePathAlias`
+        Adds a new Path Alias to your PSProfile.
+
+    * `Get-PSProfilePathAlias`
+        Gets a Path Alias or the list of Path Aliases from
+        your PSProfile configuration.
+
+    * `Remove-PSProfilePathAlias`
+        Removes a Path Alias from your PSProfile.

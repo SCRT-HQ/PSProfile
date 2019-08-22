@@ -1,0 +1,24 @@
+TOPIC
+    about_PSProfile_Script_Paths
+
+SHORT DESCRIPTION
+    An overview of the Script Paths concept in PSProfile.
+
+LONG DESCRIPTION
+    Script Paths are stored as an array of strings in the PSProfile
+    object property `$PSProfile.ScriptPaths`.
+
+    The Script Paths are invoked during PSProfile load. Any functions
+    in the scripts will be imported at the Global scope so they are
+    available in the current session after PSProfile finishes loading.
+
+COMMANDS
+    * `Add-PSProfileScriptPath`
+        Adds a new Script Path to your PSProfile.
+
+    * `Get-PSProfileScriptPath`
+        Gets a Script Path or the list of Script Paths from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileScriptPath`
+        Removes a Script Path from your PSProfile.

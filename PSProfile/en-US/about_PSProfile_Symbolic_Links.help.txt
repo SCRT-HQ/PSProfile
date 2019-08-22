@@ -1,0 +1,25 @@
+TOPIC
+    about_PSProfile_Symbolic_Links
+
+SHORT DESCRIPTION
+    An overview of the Symbolic Link concept in PSProfile.
+
+LONG DESCRIPTION
+    Symbolic Links are stored as a hashtable in the PSProfile object
+    property `$PSProfile.SymbolicLinks`.
+
+    The link path is stored as the key with the target (actual) path
+    as the value.
+
+    Symbolic Links are created if missing during PSProfile refresh.
+
+COMMANDS
+    * `Add-PSProfilePathAlias`
+        Adds a new Symbolic Link to your PSProfile.
+
+    * `Get-PSProfilePathAlias`
+        Gets a Symbolic Link or the list of Symbolic Links from
+        your PSProfile configuration.
+
+    * `Remove-PSProfilePathAlias`
+        Removes a Symbolic Link from your PSProfile.

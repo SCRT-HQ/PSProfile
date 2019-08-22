@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.4 - 2019-08-22](#014---2019-08-22)
   * [0.1.3 - 2019-08-20](#013---2019-08-20)
   * [0.1.2 - 2019-08-20](#012---2019-08-20)
   * [0.1.1 - 2019-08-19](#011---2019-08-19)
@@ -7,6 +8,12 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.4 - 2019-08-22
+
+* Added conceptual HelpFiles. Run `Get-Help about_PSProfile*` for more info!
+* Added argument completer for `Add-PSProfilePlugin`
+* Updated Wiki content
 
 ## 0.1.3 - 2019-08-20
 

@@ -51,3 +51,10 @@ function Add-PSProfilePlugin {
         Import-PSProfile -Verbose:$false
     }
 }
+
+Register-ArgumentCompleter -CommandName Add-PSProfilePlugin -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    $Global:PSProfile.PluginPaths | Get-ChildItem | Select-Object -ExpandProperty BaseName -Unique | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
+}

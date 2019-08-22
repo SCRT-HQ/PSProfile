@@ -1,0 +1,28 @@
+TOPIC
+    about_PSProfile_Plugins
+
+SHORT DESCRIPTION
+    An overview of the Plugins concept in PSProfile.
+
+LONG DESCRIPTION
+    Plugins are stored as an array of hashtables in the PSProfile
+    object property `$PSProfile.Plugins`. A PSProfile Plugin can
+    be either a script file or a full module. Each plugin hashtable
+    consists of the Plugin *Name* and, if applicable, an ArgumentList
+    to pass to the plugin during invocation or import.
+
+    Plugins can be either a simple script or a full module. The plugins
+    are searched for among the paths specified in `$PSProfile.PluginPaths`.
+
+    Plugins are imported during PSProfile load.
+
+COMMANDS
+    * `Add-PSProfilePluginPath`
+        Adds a new Plugin to your PSProfile.
+
+    * `Get-PSProfilePluginPath`
+        Gets a Plugin or the list of Plugins from
+        your PSProfile configuration.
+
+    * `Remove-PSProfilePluginPath`
+        Removes a Plugin from your PSProfile.

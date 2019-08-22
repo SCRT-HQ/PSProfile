@@ -126,7 +126,7 @@ class PSProfile {
             # .Link
             # https://go.microsoft.com/fwlink/?LinkID=225750
             # .ExternalHelp System.Management.Automation.dll-help.xml'
-            SCRTHQ = '$lastStatus = $?
+            SCRTHQ  = '$lastStatus = $?
             $lastColor = if ($lastStatus -eq $true) {
                 "Green"
             }
@@ -179,7 +179,7 @@ class PSProfile {
             DefaultPrompt         = 'Default'
             PSVersionStringLength = 3
         }
-        $this.RefreshFrequency = (New-Timespan -Hours 1).ToString()
+        $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
         $this.ProjectPaths = @()
         $this.PluginPaths = @()
@@ -187,7 +187,7 @@ class PSProfile {
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
         }
-        $this.CommandAliases = @{}
+        $this.CommandAliases = @{ }
         $this.Plugins = @()
     }
     [void] Load() {
@@ -200,7 +200,7 @@ class PSProfile {
         $this._loadConfiguration()
         $plugPaths = @()
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
-        $this.PluginPaths | Where-Object {$_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+"} | ForEach-Object {
+        $this.PluginPaths | Where-Object { $_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+" } | ForEach-Object {
             $plugPaths += $_
         }
         @(
@@ -213,8 +213,8 @@ class PSProfile {
             }
         }
         $this.PluginPaths = $plugPaths
-        if (-not ($this.Plugins | Where-Object {$_.Name -eq 'PSProfile.PowerTools'})) {
-            $plugs = @(@{Name = 'PSProfile.PowerTools'})
+        if (-not ($this.Plugins | Where-Object { $_.Name -eq 'PSProfile.PowerTools' })) {
+            $plugs = @(@{Name = 'PSProfile.PowerTools' })
             $this.Plugins | ForEach-Object {
                 $plugs += $_
             }
@@ -302,14 +302,14 @@ class PSProfile {
             "FormatPrompts",
             "Debug"
         )
-        $final = @{}
+        $final = @{ }
         $Global:PSProfile.Prompts.GetEnumerator() | ForEach-Object {
             $this._log(
                 "Formatting prompt '$($_.Key)' via Trim()",
                 "FormatPrompts",
                 "Verbose"
             )
-            $updated = ($_.Value -split "[\r\n]" | Where-Object {$_}).Trim() -join "`n"
+            $updated = ($_.Value -split "[\r\n]" | Where-Object { $_ }).Trim() -join "`n"
             $final[$_.Key] = $updated
         }
         $Global:PSProfile.Prompts = $final
@@ -760,6 +760,7 @@ class PSProfile {
                         $found = $null
                         $importParams = @{
                             ErrorAction = 'Stop'
+                            Global      = $true
                         }
                         if ($plugin.ArgumentList) {
                             $importParams['ArgumentList'] = $plugin.ArgumentList
@@ -769,7 +770,7 @@ class PSProfile {
                             $this._log(
                                 "'$($plugin.Name)' Checking path: $fullPath",
                                 'LoadPlugins',
-                                'Verbose'
+                                'Debug'
                             )
                             if (Test-Path $fullPath) {
                                 $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
@@ -786,7 +787,8 @@ class PSProfile {
                         if ($null -ne $found) {
                             $this._log(
                                 "'$($plugin.Name)' plugin loaded from path: $found",
-                                'LoadPlugins'
+                                'LoadPlugins',
+                                'Verbose'
                             )
                         }
                         else {

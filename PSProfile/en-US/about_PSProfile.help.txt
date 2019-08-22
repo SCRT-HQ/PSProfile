@@ -1,0 +1,66 @@
+TOPIC
+    about_PSProfile
+
+SHORT DESCRIPTION
+    An overview of PSProfile module and its various components and concepts.
+
+LONG DESCRIPTION
+    As their journey with PowerShell continues, users will often find themselves
+    adding various items to their PowerShell profile to perform common
+    initialization tasks like importing modules, setting environment variables,
+    adding command aliases, ensuring various settings like PSReadline settings
+    are present, set your PowerShell prompt, etc.
+
+    PSProfile was born from this desire to constantly tinker with your
+    profile and is designed to handle almost anything you would typically
+    have in your PowerShell profile script, all wrapped up in an easily
+    transportable PowerShell data file (PSD1) thanks to PoshCode's
+    Configuration module.
+
+    PSProfile is designed so that the only item in your PowerShell profile
+    script is simply `Import-Module PSProfile`. It supports Windows, Linux and
+    macOS out of the box.
+
+CONCEPTS
+    PSProfile contains various concepts by way of properties on the PSProfile
+    PowerShell class. To view the available help topics for each concept, run:
+
+    Get-Help about_PSProfile*
+
+HISTORY
+    I do a LOT of profile customization, including loading in various custom
+    functions I wrote, setting certain variables, invoking external profile
+    scripts, etc, to make everyday tasks more efficient.
+
+    I checked out the PowerShell Gallery for other Profile management modules,
+    but none seemed to satisfy all of the goals I had:
+
+        1. Minimize my profile script to be as small as I can be.
+            * PSProfile only needs one line: `Import-Module PSProfile`.
+
+        2. Enable easy storage and recall of secrets, typically my own
+        PSCredential object, for programmatic use. This would eliminate the
+        use of BetterCredentials (overriding `Get-Credential` sometimes yielded
+        unwanted results) and my own `MyConfig` module that I was using locally.
+            * PSProfile includes a Vault to store PSCredential objects and named
+            SecureStrings, e.g. API keys.
+
+            Saving personal credentials? `Set-PSProfileSecret (Get-Credential) -Save`.
+
+            Recalling later? `Invoke-Command -Credential (Get-MyCreds)`
+
+        3. Enable common prompt storage and quick prompt switching.
+            * PSProfile has the ability to store prompts in its configuration
+            with easy-to-remember names.
+
+            Need to switch to your Demo prompt? `Switch-Prompt Demo`
+
+        4. Be extensible.
+            * PSProfile includes Plugin support. A PSProfile Plugin can be a
+            simple script or a full module. You can also include an `ArgumentList`
+            to pass to the script/module during invocation.
+
+        5. Maintain my PowerShell environment's desired state.
+            * PSProfile includes additional configuration options to specify
+            modules you'd like to ensure are installed or are imported during
+            profile load, scripts to invoke, Symbolic Links to create, etc.
