@@ -1,8 +1,8 @@
-# Contributing to PEMEncrypt
+# Contributing to PSProfile
 
 <!-- TOC -->
 
-* [Contributing to PEMEncrypt](#contributing-to-pemencrypt)
+* [Contributing to PSProfile](#contributing-to-psprofile)
   * [Git and Pull requests](#git-and-pull-requests)
   * [Overview](#overview)
     * [Step by Step (High-Level)](#step-by-step-high-level)
@@ -11,9 +11,9 @@
 
 <!-- /TOC -->
 
-Thank you for your interest in helping PEMEncrypt grow! Below you'll find some guidelines around developing additional features and squashing bugs, including some how-to's to get started quick, general style guidelines, etc.
+Thank you for your interest in helping PSProfile grow! Below you'll find some guidelines around developing additional features and squashing bugs, including some how-to's to get started quick, general style guidelines, etc.
 
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/scrthq/PEMEncrypt.svg?columns=all)](https://waffle.io/scrthq/PEMEncrypt)
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/scrthq/PSProfile.svg?columns=all)](https://waffle.io/scrthq/PSProfile)
 
 ## Git and Pull requests
 

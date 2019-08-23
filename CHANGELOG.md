@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.5 - 2019-08-22](#015---2019-08-22)
   * [0.1.4 - 2019-08-22](#014---2019-08-22)
   * [0.1.3 - 2019-08-20](#013---2019-08-20)
   * [0.1.2 - 2019-08-20](#012---2019-08-20)
@@ -9,11 +10,21 @@
 
 # PSProfile - ChangeLog
 
+## 0.1.5 - 2019-08-22
+
+* Added `Export-PSProfileConfiguration` to export your configuration to a portable file.
+* Fixed bug with `Edit-PSProfilePrompt` that tried to run a non-existent function after editing was finished.
+* Swapped the `Temporary` switch parameter with `Save` on `Edit-PSProfilePrompt` to align with the rest of the functions.
+* Updated the `_loadPrompt()` method on the `$PSProfile` object to not force load a default prompt if a default prompt name has not been specified yet.
+* Updated README with better details.
+* Updated Wiki content.
+* Updated CONTRIBUTING.md.
+
 ## 0.1.4 - 2019-08-22
 
 * Added conceptual HelpFiles. Run `Get-Help about_PSProfile*` for more info!
-* Added argument completer for `Add-PSProfilePlugin`
-* Updated Wiki content
+* Added argument completer for `Add-PSProfilePlugin`.
+* Updated Wiki content.
 
 ## 0.1.3 - 2019-08-20
 

@@ -1,6 +1,8 @@
 # PSProfile
 
-_PSProfile is a cross-platform PowerShell module built for profile customization. It uses PoshCode's Configuration module to handle the layered Configuration._
+PSProfile is a cross-platform PowerShell module built for profile customization. It uses PoshCode's Configuration module to handle the layered Configuration.
+
+***
 
 <div align="center">
   <!-- Azure Pipelines -->
@@ -43,6 +45,18 @@ _PSProfile is a cross-platform PowerShell module built for profile customization
 </div>
 <br />
 
+* [PSProfile](#psprofile)
+  * [Background](#background)
+  * [Quick Start](#quick-start)
+  * [Getting Help](#getting-help)
+  * [Tips & Tricks](#tips--tricks)
+    * [ProjectPaths](#projectpaths)
+    * [ScriptPaths](#scriptpaths)
+  * [Contributing](#contributing)
+  * [Code of Conduct](#code-of-conduct)
+  * [License](#license)
+  * [Changelog](#changelog)
+
 ## Background
 
 I do a LOT of profile customization, including loading in various custom functions I wrote, setting certain variables, invoking external profile scripts, etc, to make everyday tasks more efficient. I checked out the PowerShell Gallery for other Profile management modules but none seemed to satisfy all of the goals I had:
@@ -74,7 +88,61 @@ I hope that you enjoy PSProfile as much as I do! It includes a TON of convenienc
     'Import-Module PSProfile' | Add-Content $profile
     ```
 3. Restart your session or run `Import-Module PSProfile` to start working with it directly.
-4. Explore the new `$PSProfile` variable containing the current PSProfile configuration.
+
+## Getting Help
+
+PSProfile includes help and examples on every function, e.g.:
+
+```powershell
+>> Get-Help Add-PSProfilePrompt
+
+NAME
+    Add-PSProfilePrompt
+
+SYNOPSIS
+    Saves the Content to $PSProfile.Prompts as the Name provided for recall later.
+
+
+SYNTAX
+    Add-PSProfilePrompt [[-Name] <String>] [-Content <Object>] [-SetAsDefault] [<CommonParameters>]
+
+
+DESCRIPTION
+    Saves the Content to $PSProfile.Prompts as the Name provided for recall later.
+
+
+RELATED LINKS
+
+REMARKS
+    To see the examples, type: "get-help Add-PSProfilePrompt -examples".
+    For more information, type: "get-help Add-PSProfilePrompt -detailed".
+    For technical information, type: "get-help Add-PSProfilePrompt -full"
+```
+
+It also includes handy HelpFiles for each concept:
+
+```powershell
+>> Get-Help about_PSProfile*
+
+Name                               Category Module Synopsis
+----                               -------- ------ --------
+about_PSProfile                    HelpFile        An overview of PSProfile module and its various components and concepts.
+about_PSProfile_Command_Aliases    HelpFile        An overview of the Command Alias concept in PSProfile.
+about_PSProfile_Configuration      HelpFile        An overview of the Configuration functions in PSProfile.
+about_PSProfile_Helpers            HelpFile        An overview of the Helper functions in PSProfile.
+about_PSProfile_Meta               HelpFile        An overview of the Meta functions in PSProfile.
+about_PSProfile_Modules_to_Import  HelpFile        An overview of the Modules to Import concept in PSProfile.
+about_PSProfile_Modules_to_Install HelpFile        An overview of the Modules to Install concept in PSProfile.
+about_PSProfile_Path_Aliases       HelpFile        An overview of the Path Alias concept in PSProfile.
+about_PSProfile_Plugins            HelpFile        An overview of the Plugins concept in PSProfile.
+about_PSProfile_Plugin_Paths       HelpFile        An overview of the Plugin Paths concept in PSProfile.
+about_PSProfile_Project_Paths      HelpFile        An overview of the Project Paths concept in PSProfile.
+about_PSProfile_Prompts            HelpFile        An overview of the Prompts concept in PSProfile.
+about_PSProfile_Script_Paths       HelpFile        An overview of the Script Paths concept in PSProfile.
+about_PSProfile_Secrets            HelpFile        An overview of the Secrets concept in PSProfile.
+about_PSProfile_Symbolic_Links     HelpFile        An overview of the Symbolic Link concept in PSProfile.
+about_PSProfile_Variables          HelpFile        An overview of the Variables concept in PSProfile.
+```
 
 ## Tips & Tricks
 
@@ -106,4 +174,26 @@ This adds the script specified to `$PSProfile.ScriptPaths`. Any scripts here wil
 
 ***
 
-_More info / tips here soon! View the [PSProfile wiki](https://github.com/scrthq/PSProfile/wiki) for full function help and other topics._
+## Contributing
+
+Interested in helping out with PSProfile development? Please check out our [Contribution Guidelines](https://github.com/scrthq/PSProfile/blob/master/CONTRIBUTING.md)!
+
+Building the module locally to test changes is as easy as running the `build.ps1` file in the root of the repo. This will compile the module with your changes and import the newly compiled module at the end by default.
+
+Want to run the Pester tests locally? Pass `Test` as the value to the `Task` script parameter like so:
+
+```powershell
+.\build.ps1 -Task Test
+```
+
+## Code of Conduct
+
+Please adhere to our [Code of Conduct](https://github.com/scrthq/PSProfile/blob/master/CODE_OF_CONDUCT.md) when interacting with this repo.
+
+## License
+
+[Apache 2.0](https://tldrlegal.com/license/apache-license-2.0-(apache-2.0))
+
+## Changelog
+
+[Full CHANGELOG here](https://github.com/scrthq/PSProfile/blob/master/CHANGELOG.md)

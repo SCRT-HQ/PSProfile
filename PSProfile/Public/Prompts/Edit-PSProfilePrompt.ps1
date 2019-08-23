@@ -6,19 +6,19 @@ function Edit-PSProfilePrompt {
     .DESCRIPTION
     Enables editing the prompt from the desired editor. Once temporary file is saved, the prompt is updated in $PSProfile.Prompts.
 
-    .PARAMETER Temporary
-    If $true, does not save the PSProfile after updating the prompt.
+    .PARAMETER Save
+    If $true, saves prompt back to your PSProfile after updating.
 
     .EXAMPLE
     Edit-PSProfilePrompt
 
-    Opens the current prompt as a temporary file in Visual Studio Code to edit. Once the file is saved and closed, the prompt is updated with the changes and saved back to $PSProfile.
+    Opens the current prompt as a temporary file in Visual Studio Code to edit. Once the file is saved and closed, the active prompt is updated with the changes.
     #>
     [CmdletBinding()]
     Param(
         [Parameter()]
         [Switch]
-        $Temporary
+        $Save
     )
     Process {
         $in = @{
@@ -47,8 +47,8 @@ function Edit-PSProfilePrompt {
         }
         Write-Verbose "Opening prompt in VS Code"
         .$handler($in)
-        if (-not $Temporary) {
-            Save-PSProfilePrompt
+        if ($Save) {
+            Add-PSProfilePrompt
         }
     }
 }

@@ -10,6 +10,13 @@ LONG DESCRIPTION
     object directly for convenience.
 
 COMMANDS
+    * `Export-PSProfileConfiguration`
+        Exports the PSProfile configuration to the desired path for portability.
+
+        *Any secrets stored in the `$PSProfile.Vault` will be exported, but
+        will be unable to be decrypted on another machine or by another user on
+        the same machine due to encryption via Data Protection API.*
+
     * `Import-PSProfile`
         Invokes `$PSProfile.Load()` to run through the actions typically performed
         during the initial import of PSProfile. Useful when adding new items to

@@ -116,9 +116,7 @@ class PSProfile {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
         $this.Vault = [PSProfileVault]::new()
         $this._internal = @{ }
-        $this.GitPathMap = @{
-            PSProfileConfiguration = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
-        }
+        $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
         $this.Prompts = @{
@@ -176,8 +174,9 @@ class PSProfile {
             }
         }
         $this.Settings = @{
-            DefaultPrompt         = 'Default'
-            PSVersionStringLength = 3
+            DefaultPrompt          = $null
+            PSVersionStringLength  = 3
+            ConfigurationPath = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
@@ -287,8 +286,20 @@ class PSProfile {
             "LoadPrompt",
             "Debug"
         )
-        if ($null -ne $global:PSProfile.Settings.DefaultPrompt) {
-            Switch-PSProfilePrompt -Name $global:PSProfile.Settings.DefaultPrompt
+        if ($null -ne $this.Settings.DefaultPrompt) {
+            $this._log(
+                "Loading default prompt: $($this.Settings.DefaultPrompt)",
+                "LoadPrompt",
+                "Verbose"
+            )
+            Switch-PSProfilePrompt -Name $this.Settings.DefaultPrompt
+        }
+        else {
+            $this._log(
+                "No default prompt name found on PSProfile. Retaining current prompt.",
+                "LoadPrompt",
+                "Verbose"
+            )
         }
         $this._log(
             "SECTION END",
