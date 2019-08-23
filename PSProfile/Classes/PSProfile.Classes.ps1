@@ -286,7 +286,7 @@ class PSProfile {
             "LoadPrompt",
             "Debug"
         )
-        if ($null -ne $this.Settings.DefaultPrompt) {
+        if (-not [String]::IsNullOrEmpty($this.Settings.DefaultPrompt)) {
             $this._log(
                 "Loading default prompt: $($this.Settings.DefaultPrompt)",
                 "LoadPrompt",
