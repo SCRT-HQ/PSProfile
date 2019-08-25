@@ -719,7 +719,7 @@ function Start-BuildScript {
         $Project,
         [Parameter(Position = 1)]
         [Alias('t')]
-        [String]
+        [String[]]
         $Task,
         [Parameter(Position = 2)]
         [Alias('e')]

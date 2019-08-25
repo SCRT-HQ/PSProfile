@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.7 - 2019-08-25](#017---2019-08-25)
   * [0.1.6 - 2019-08-24](#016---2019-08-24)
   * [0.1.5 - 2019-08-22](#015---2019-08-22)
   * [0.1.4 - 2019-08-22](#014---2019-08-22)
@@ -10,6 +11,10 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.7 - 2019-08-25
+
+* Fixed `Task` parameter type on `Start-BuildScript` to allow an array of strings.
 
 ## 0.1.6 - 2019-08-24
 

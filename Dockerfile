@@ -7,4 +7,3 @@ LABEL description="PSProfile container for Ubuntu 16.04"
 LABEL vendor="scrthq"
 COPY [".", "/tmp/PSProfile/"]
 WORKDIR /tmp/PSProfile
-CMD ["pwsh","-c","./build.ps1","-Task Build,Test"]
