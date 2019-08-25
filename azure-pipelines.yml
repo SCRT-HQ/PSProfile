@@ -147,10 +147,9 @@ phases:
       artifactName: BuildOutput
       downloadPath: '$(Build.SourcesDirectory)'
 
-  - powershell: |
-      choco install powershell-preview -y
-      refreshenv
-      pwsh-preview -command ". ./build.ps1 -Task Test"'
+  - powershell: choco install powershell-preview -y
+    displayName: Install pwsh-preview
+  - powershell: pwsh-preview -command ". ./build.ps1 -Task Test"'
     displayName: Test Module
 
   - task: PublishTestResults@2
