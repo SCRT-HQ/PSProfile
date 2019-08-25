@@ -18,7 +18,7 @@ phases:
   displayName: Compile Module
   condition: succeeded()
   queue:
-    name: Hosted VS2017
+    name: windows-latest
 
   steps:
   - powershell: . ./build.ps1
@@ -36,7 +36,7 @@ phases:
   dependsOn: Phase_1
   condition: succeeded()
   queue:
-    name: Hosted VS2017
+    name: windows-latest
 
   steps:
   - task: DownloadBuildArtifacts@0
@@ -61,7 +61,7 @@ phases:
   dependsOn: Phase_1
   condition: succeeded()
   queue:
-    name: Hosted Ubuntu 1604
+    name: ubuntu-latest
 
   steps:
   - task: DownloadBuildArtifacts@0
@@ -86,7 +86,7 @@ phases:
   dependsOn: Phase_1
   condition: succeeded()
   queue:
-    name: Hosted macOS
+    name: macOS-latest
 
   steps:
   - task: DownloadBuildArtifacts@0
@@ -111,7 +111,7 @@ phases:
   dependsOn: Phase_1
   condition: succeeded()
   queue:
-    name: Hosted VS2017
+    name: windows-latest
 
   steps:
   - task: DownloadBuildArtifacts@0
@@ -141,7 +141,7 @@ phases:
   - Phase_5
   condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   queue:
-    name: Hosted VS2017
+    name: windows-latest
 
   steps:
   - task: DownloadBuildArtifacts@0
