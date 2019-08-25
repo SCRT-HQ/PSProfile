@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.6 - 2019-08-24](#016---2019-08-24)
   * [0.1.5 - 2019-08-22](#015---2019-08-22)
   * [0.1.4 - 2019-08-22](#014---2019-08-22)
   * [0.1.3 - 2019-08-20](#013---2019-08-20)
@@ -9,6 +10,12 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.6 - 2019-08-24
+
+* Added `Copy-DynamicParameters` to clone DynamicParams from another file or function.
+* Updated `Start-BuildScript` in `PSProfile.PowerTools` with better argument completers to enable listing available Tasks and other parameters directly from the build script you are executing.
+* Added `Dockerfile` to enable testing in an Ubuntu container.
 
 ## 0.1.5 - 2019-08-22
 

@@ -234,11 +234,9 @@ function Open-Code {
     }
 }
 
-if ($null -ne (Get-Command Get-PSProfileArguments*)) {
-    Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Path' -ScriptBlock {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
-    }
+Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Path' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
 }
 
 Register-ArgumentCompleter -CommandName 'Open-Code' -ParameterName 'Language' -ScriptBlock {
@@ -391,11 +389,10 @@ function Open-Item {
     }
 }
 
-if ($null -ne (Get-Command Get-PSProfileArguments*)) {
-    Register-ArgumentCompleter -CommandName 'Open-Item' -ParameterName 'Path' -ScriptBlock {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
-    }
+
+Register-ArgumentCompleter -CommandName 'Open-Item' -ParameterName 'Path' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
 }
 
 New-Alias -Name open -Value 'Open-Item' -Scope Global -Option AllScope -Force
@@ -488,11 +485,9 @@ function Pop-Path {
 
 New-Alias -Name pop -Value Pop-Path -Option AllScope -Scope Global -Force
 
-if ($null -ne (Get-Command Get-PSProfileArguments*)) {
-    Register-ArgumentCompleter -CommandName 'Push-Path' -ParameterName 'Path' -ScriptBlock {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
-    }
+Register-ArgumentCompleter -CommandName 'Push-Path' -ParameterName 'Path' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
 }
 
 function Get-Gist {
@@ -718,59 +713,44 @@ function Start-BuildScript {
     #>
     [CmdletBinding(PositionalBinding = $false)]
     Param (
+        [Parameter(Position = 0)]
+        [Alias('p')]
+        [String]
+        $Project,
+        [Parameter(Position = 1)]
+        [Alias('t')]
+        [String]
+        $Task,
+        [Parameter(Position = 2)]
+        [Alias('e')]
+        [String]
+        $Engine,
         [parameter()]
-        [Alias('ne')]
+        [Alias('ne','noe')]
         [Switch]
         $NoExit,
         [parameter()]
-        [Alias('nr')]
+        [Alias('nr','nor')]
         [Switch]
         $NoRestore
     )
     DynamicParam {
-        $RuntimeParamDic = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
-        $AttribColl = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-        $ParamAttrib = New-Object System.Management.Automation.ParameterAttribute
-        $ParamAttrib.Mandatory = $false
-        $ParamAttrib.Position = 0
-        $AttribColl.Add($ParamAttrib)
-        $set = @()
-        $set += $global:PSProfile.PSBuildPathMap.Keys
-        $set += '.'
-        $AttribColl.Add((New-Object System.Management.Automation.ValidateSetAttribute($set)))
-        $AttribColl.Add((New-Object System.Management.Automation.AliasAttribute('p')))
-        $RuntimeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Project',  [string], $AttribColl)
-        $RuntimeParamDic.Add('Project',  $RuntimeParam)
-
-        $AttribColl = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-        $ParamAttrib = New-Object System.Management.Automation.ParameterAttribute
-        $ParamAttrib.Mandatory = $false
-        $ParamAttrib.Position = 1
-        $AttribColl.Add($ParamAttrib)
-        $bldFile = Join-Path $PWD.Path "build.ps1"
-        $set = if (Test-Path $bldFile) {
-            ((([System.Management.Automation.Language.Parser]::ParseFile($bldFile, [ref]$null, [ref]$null)).ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Task' }).Attributes | Where-Object { $_.TypeName.Name -eq 'ValidateSet' }).PositionalArguments.Value
+        $bldFolder = if ([String]::IsNullOrEmpty($PSBoundParameters['Project']) -or $PSBoundParameters['Project'] -eq '.') {
+            $PWD.Path
+        }
+        elseif ($Global:PSProfile.PSBuildPathMap.ContainsKey($PSBoundParameters['Project'])) {
+            Get-LongPath -Path $PSBoundParameters['Project']
         }
         else {
-            @('Clean','Build','Import','Test','Deploy')
+            (Resolve-Path $PSBoundParameters['Project']).Path
         }
-        $AttribColl.Add((New-Object System.Management.Automation.ValidateSetAttribute($set)))
-        $AttribColl.Add((New-Object System.Management.Automation.AliasAttribute('t')))
-        $RuntimeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Task',  [string[]], $AttribColl)
-        $RuntimeParamDic.Add('Task',  $RuntimeParam)
-
-        $AttribColl = New-Object System.Collections.ObjectModel.Collection[System.Attribute]
-        $ParamAttrib = New-Object System.Management.Automation.ParameterAttribute
-        $ParamAttrib.Mandatory = $false
-        $ParamAttrib.Position = 2
-        $AttribColl.Add($ParamAttrib)
-        $set = @('powershell','pwsh','pwsh-preview')
-        $AttribColl.Add((New-Object System.Management.Automation.ValidateSetAttribute($set)))
-        $AttribColl.Add((New-Object System.Management.Automation.AliasAttribute('e')))
-        $RuntimeParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Engine',  [string], $AttribColl)
-        $RuntimeParamDic.Add('Engine',  $RuntimeParam)
-
-        return  $RuntimeParamDic
+        $bldFile = if ($bldFolder -like '*.ps1') {
+            $bldFolder
+        }
+        else {
+            Join-Path $bldFolder "build.ps1"
+        }
+        Copy-DynamicParameters -File $bldFile -ExcludeParameter Project,Task,Engine,NoExit,NoRestore
     }
     Process {
         if (-not $PSBoundParameters.ContainsKey('Project')) {
@@ -807,8 +787,13 @@ function Start-BuildScript {
             $command += "```$false;"
         }
         $command += "Set-Location '$parent'; . .\build.ps1"
-        if ($PSBoundParameters.ContainsKey('Task')) {
-            $command += " -Task '$($PSBoundParameters['Task'] -join "','")'"
+        $PSBoundParameters.Keys | Where-Object {$_ -notin @('Project','Engine','NoExit','NoRestore','Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutBuffer','OutVariable','PipelineVariable','WarningAction','WarningVariable','Verbose','Confirm','WhatIf')} | ForEach-Object {
+            if ($PSBoundParameters[$_].ToString() -in @('True','False')) {
+                $command += " -$($_):```$$($PSBoundParameters[$_].ToString())"
+            }
+            else {
+                $command += " -$($_) '$($PSBoundParameters[$_] -join "','")'"
+            }
         }
         $command += '"'
         Write-Verbose "Invoking expression: $command"
@@ -821,10 +806,38 @@ function Start-BuildScript {
     }
 }
 
-if ($null -ne (Get-Command Get-PSProfileArguments*)) {
-    Register-ArgumentCompleter -CommandName 'Start-BuildScript' -ParameterName 'Project' -ScriptBlock {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments -WordToComplete "PSBuildPathMap.$wordToComplete" -FinalKeyOnly
+Register-ArgumentCompleter -CommandName Start-BuildScript -ParameterName Project -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-PSProfileArguments -WordToComplete "PSBuildPathMap.$wordToComplete" -FinalKeyOnly
+}
+
+Register-ArgumentCompleter -CommandName Start-BuildScript -ParameterName Task -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    $bldFolder = if ([String]::IsNullOrEmpty($fakeBoundParameter.Project) -or $fakeBoundParameter.Project -eq '.') {
+        $PWD.Path
+    }
+    elseif ($Global:PSProfile.PSBuildPathMap.ContainsKey($fakeBoundParameter.Project)) {
+        Get-LongPath -Path $fakeBoundParameter.Project
+    }
+    else {
+        (Resolve-Path $fakeBoundParameter.Project).Path
+    }
+    $bldFile = if ($bldFolder -like '*.ps1') {
+        $bldFolder
+    }
+    else {
+        Join-Path $bldFolder "build.ps1"
+    }
+    $set = if (Test-Path $bldFile) {
+        ((([System.Management.Automation.Language.Parser]::ParseFile(
+            $bldFile, [ref]$null, [ref]$null
+        )).ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'Task' }).Attributes | Where-Object { $_.TypeName.Name -eq 'ValidateSet' }).PositionalArguments.Value
+    }
+    else {
+        @('Clean','Build','Import','Test','Deploy')
+    }
+    $set | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
 
@@ -935,11 +948,11 @@ function Get-LongPath {
                         $global:PSProfile.GitPathMap[$PSBoundParameters['Path']]
                     }
                     else {
-                        $PSBoundParameters['Path']
+                        (Resolve-Path $PSBoundParameters['Path']).Path
                     }
                 }
                 else {
-                    $PSBoundParameters['Path']
+                    (Resolve-Path $PSBoundParameters['Path']).Path
                 }
             }
             Cookbook {
@@ -955,11 +968,9 @@ function Get-LongPath {
     }
 }
 
-if ($null -ne (Get-Command Get-PSProfileArguments*)) {
-    Register-ArgumentCompleter -CommandName 'Get-LongPath' -ParameterName 'Path' -ScriptBlock {
-        param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-        Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
-    }
+Register-ArgumentCompleter -CommandName 'Get-LongPath' -ParameterName 'Path' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    Get-PSProfileArguments -WordToComplete "GitPathMap.$wordToComplete" -FinalKeyOnly
 }
 
 New-Alias -Name path -Value 'Get-LongPath' -Scope Global -Option AllScope -Force
