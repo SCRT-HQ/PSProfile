@@ -149,7 +149,7 @@ phases:
 
   - powershell: |
       choco install powershell-preview
-      pwsh-preview -command ". ./build.ps1 -Task Test"
+      Invoke-Expression '"C:\Program Files\PowerShell\7-preview\pwsh.exe" -command ". ./build.ps1 -Task Test"'
     displayName: Test Module
 
   - task: PublishTestResults@2
