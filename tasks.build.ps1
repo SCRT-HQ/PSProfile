@@ -172,7 +172,7 @@ task Test Init,{
     Import-Module -Name $TargetModuleDirectory -Force -Verbose:$false
     $pesterParams = @{
         OutputFormat = 'NUnitXml'
-        OutputFile   = Join-Path $TargetDirectory "TestResults_PS$PSVersion`_$TimeStamp.xml"
+        OutputFile   = Join-Path $TargetDirectory "TestResults.xml"
         PassThru     = $true
         Path         = Join-Path $BuildRoot "Tests"
     }

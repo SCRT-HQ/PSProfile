@@ -5,5 +5,7 @@ FROM base as src
 LABEL maintainer="nferrell"
 LABEL description="PSProfile container for Ubuntu 16.04"
 LABEL vendor="scrthq"
-COPY [".", "/tmp/PSProfile/"]
-WORKDIR /tmp/PSProfile
+SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $VerbosePreference = 'Continue'; $ProgressPreference = 'SilentlyContinue';"]
+COPY [".", "/PSProfile/"]
+WORKDIR /PSProfile
+ENTRYPOINT [ "pwsh", "-command", ". ./build.ps1 -Task Build,Test" ]
