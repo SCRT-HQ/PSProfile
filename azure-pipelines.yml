@@ -161,7 +161,7 @@ phases:
       testResultsFiles: '**/Test*.xml'
     condition: succeededOrFailed()
 
-- phase: Phase_6
+- phase: Phase_7
   displayName: Deploy Module
   dependsOn:
   - Phase_2
