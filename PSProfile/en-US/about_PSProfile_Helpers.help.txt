@@ -15,6 +15,11 @@ LONG DESCRIPTION
     `Get-PSProfileArguments`.
 
 COMMANDS
+    * `Copy-DynamicParameters`
+        Copies parameters from a file or function and returns a
+        RuntimeDefinedParameterDictionary with the parameters
+        replicated. Used in DynamicParam blocks.
+
     * `Get-LastCommandDuration`
         Gets the duration last command as a timestamp string for
         use in prompts.
