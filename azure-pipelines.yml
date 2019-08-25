@@ -32,7 +32,7 @@ phases:
 
 
 - phase: Phase_2
-  displayName: Test Module on Windows (PSv5)
+  displayName: Test Windows (PSv5)
   dependsOn: Phase_1
   condition: succeeded()
   queue:
@@ -57,7 +57,7 @@ phases:
 
 
 - phase: Phase_3
-  displayName: Test Module on Ubuntu
+  displayName: Test Ubuntu
   dependsOn: Phase_1
   condition: succeeded()
   queue:
@@ -82,7 +82,7 @@ phases:
 
 
 - phase: Phase_4
-  displayName: Test Module on macOS
+  displayName: Test macOS
   dependsOn: Phase_1
   condition: succeeded()
   queue:
@@ -107,7 +107,7 @@ phases:
 
 
 - phase: Phase_5
-  displayName: Test Module on Windows (PSv6)
+  displayName: Test Windows (PSv6)
   dependsOn: Phase_1
   condition: succeeded()
   queue:
@@ -134,7 +134,7 @@ phases:
 
 
 - phase: Phase_6
-  displayName: Test Module on Windows (pwsh-preview)
+  displayName: Test Windows (pwsh-preview)
   dependsOn: Phase_1
   condition: succeeded()
   queue:
