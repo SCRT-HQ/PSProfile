@@ -138,7 +138,7 @@ phases:
   dependsOn: Phase_1
   condition: succeeded()
   queue:
-    name: Hosted VS2017
+    name: Hosted Ubuntu 1604
 
   steps:
   - task: DownloadBuildArtifacts@0
