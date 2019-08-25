@@ -150,7 +150,7 @@ phases:
   - powershell: |
       docker build . -t psprofile-img -f ./Dockerfile
       docker run --name psprofile psprofile-img:latest
-      docker cp psprofile:/PSProfile/BuildOutput/TestResults_PS_.xml BuildOutput/TestResults_Docker.xml
+      docker cp psprofile:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
       docker rm psprofile
     displayName: Test Module in Container
 
