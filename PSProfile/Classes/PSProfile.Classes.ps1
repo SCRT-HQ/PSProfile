@@ -314,16 +314,16 @@ class PSProfile {
             "Debug"
         )
         $final = @{ }
-        $Global:PSProfile.Prompts.GetEnumerator() | ForEach-Object {
+        $this.Prompts.GetEnumerator() | ForEach-Object {
             $this._log(
-                "Formatting prompt '$($_.Key)' via Trim()",
+                "Formatting prompt '$($_.Key)'",
                 "FormatPrompts",
                 "Verbose"
             )
             $updated = ($_.Value -split "[\r\n]" | Where-Object { $_ }).Trim() -join "`n"
             $final[$_.Key] = $updated
         }
-        $Global:PSProfile.Prompts = $final
+        $this.Prompts = $final
         $this._log(
             "SECTION END",
             "FormatPrompts",
@@ -642,7 +642,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $null = $this.ModulesToInstall | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
+            $null = $this.ModulesToInstall | Where-Object {-not [string]::IsNullOrEmpty($_)} | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
                     [object]
@@ -699,7 +699,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToImport))) {
-            $this.ModulesToImport | ForEach-Object {
+            $this.ModulesToImport | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
                 try {
                     $params = if ($_ -is [string]) {
                         @{Name = $_ }

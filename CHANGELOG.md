@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.8 - 2019-08-26](#018---2019-08-26)
   * [0.1.7 - 2019-08-25](#017---2019-08-25)
   * [0.1.6 - 2019-08-24](#016---2019-08-24)
   * [0.1.5 - 2019-08-22](#015---2019-08-22)
@@ -11,6 +12,10 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.8 - 2019-08-26
+
+* Fixed issue with `$PSProfile.ModulesToImport` where an empty string was added to the array, resulting in a Warning during profile load about the module failing to import.
 
 ## 0.1.7 - 2019-08-25
 
