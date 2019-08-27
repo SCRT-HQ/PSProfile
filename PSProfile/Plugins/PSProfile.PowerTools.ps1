@@ -750,7 +750,7 @@ function Start-BuildScript {
         else {
             Join-Path $bldFolder "build.ps1"
         }
-        Copy-DynamicParameters -File $bldFile -ExcludeParameter Project,Task,Engine,NoExit,NoRestore
+        Copy-Parameters -From $bldFile -Exclude Project,Task,Engine,NoExit,NoRestore
     }
     Process {
         if (-not $PSBoundParameters.ContainsKey('Project')) {

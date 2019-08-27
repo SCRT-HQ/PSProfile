@@ -147,12 +147,17 @@ phases:
       artifactName: BuildOutput
       downloadPath: '$(Build.SourcesDirectory)'
 
-  - powershell: |
-      docker build . -t psprofile-img -f ./Dockerfile
-      docker run --name psprofile psprofile-img:latest
-      docker cp psprofile:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
-      docker rm psprofile
+  - powershell: docker build . -t module-img -f ./Dockerfile
+    displayName: Build container image
+
+  - powershell: docker run --name module module-img:latest
     displayName: Test Module in Container
+
+  - powershell: docker cp module:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
+    displayName: Copy container test results
+
+  - powershell: docker rm module
+    displayName: Clean up container
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results **/Test*.xml'

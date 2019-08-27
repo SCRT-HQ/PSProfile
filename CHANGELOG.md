@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.1.9 - 2019-08-26](#019---2019-08-26)
   * [0.1.8 - 2019-08-26](#018---2019-08-26)
   * [0.1.7 - 2019-08-25](#017---2019-08-25)
   * [0.1.6 - 2019-08-24](#016---2019-08-24)
@@ -12,6 +13,12 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.1.9 - 2019-08-26
+
+* Renamed `Copy-DynamicParameters` to `Copy-Parameters` for correctness and cleaned up approach for building the ParameterDictionary.
+* Updated Dockerfile to not run the Build task again since it should only run after module has been built.
+* Updated `azure-pipelines.yml` to break out Docker tasks
 
 ## 0.1.8 - 2019-08-26
 

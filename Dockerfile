@@ -3,9 +3,9 @@ RUN apt-get update && apt-get install -y git
 
 FROM base as src
 LABEL maintainer="nferrell"
-LABEL description="PSProfile container for Ubuntu 16.04"
+LABEL description="Ubuntu 16.04 for PowerShell module testing in CI"
 LABEL vendor="scrthq"
 SHELL ["pwsh", "-Command", "$ErrorActionPreference = 'Stop'; $VerbosePreference = 'Continue'; $ProgressPreference = 'SilentlyContinue';"]
 COPY [".", "/PSProfile/"]
 WORKDIR /PSProfile
-ENTRYPOINT [ "pwsh", "-command", ". ./build.ps1 -Task Build,Test" ]
+ENTRYPOINT [ "pwsh", "-command", ". ./build.ps1 -Task Test" ]
