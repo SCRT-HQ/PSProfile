@@ -27,10 +27,7 @@ function Get-PathAlias {
         }
         else {
             [System.IO.Path]::DirectorySeparatorChar
-        }),
-        [parameter(Position = 2)]
-        [string]
-        $FontType = $global:PSProfile.Settings.FontType
+        })
     )
     Begin {
         try {
