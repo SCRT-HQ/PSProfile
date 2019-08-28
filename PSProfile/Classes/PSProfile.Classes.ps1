@@ -119,49 +119,7 @@ class PSProfile {
         $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
-        $this.Prompts = @{
-            Default = '"PS $($executionContext.SessionState.Path.CurrentLocation)$(">" * ($nestedPromptLevel + 1)) ";
-            # .Link
-            # https://go.microsoft.com/fwlink/?LinkID=225750
-            # .ExternalHelp System.Management.Automation.dll-help.xml'
-            SCRTHQ  = '$lastStatus = $?
-            $lastColor = if ($lastStatus -eq $true) {
-                "Green"
-            }
-            else {
-                "Red"
-            }
-            Write-Host "[" -NoNewline
-            Write-Host -ForegroundColor Cyan "#$($MyInvocation.HistoryId)" -NoNewline
-            Write-Host "] " -NoNewline
-            Write-Host "[" -NoNewLine
-            $verColor = @{
-                ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
-                    "Yellow"
-                }
-                elseif ($PSVersionTable.PSVersion.Major -eq 6) {
-                    "Magenta"
-                }
-                else {
-                    "Cyan"
-                }
-            }
-            Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
-            Write-Host "] " -NoNewline
-            Write-Host "[" -NoNewline
-            Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
-            Write-Host "] [" -NoNewline
-            Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
-            Write-Host "]" -NoNewline
-            if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true -and (Test-IfGit)) {
-                Write-VcsStatus
-                $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
-            }
-            else {
-                $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
-            }
-            "`n>> "'
-        }
+        $this.Prompts = @{ }
         $this.Variables = @{
             Environment = @{
                 Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -174,9 +132,22 @@ class PSProfile {
             }
         }
         $this.Settings = @{
-            DefaultPrompt          = $null
-            PSVersionStringLength  = 3
-            ConfigurationPath = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+            DefaultPrompt         = $null
+            PSVersionStringLength = 3
+            ConfigurationPath     = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+            FontType              = 'Default'
+            PromptCharacters      = @{
+                GitRepo = @{
+                    NerdFonts = "$([char]0xf418)"
+                    PowerLine = "$([char]0xe0a0)"
+                    Default   = "@"
+                }
+                AWS     = @{
+                    NerdFonts = "$([char]0xf270)"
+                    PowerLine = "AWS: "
+                    Default   = "AWS: "
+                }
+            }
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
@@ -197,6 +168,73 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
+        $this.Prompts['SCRTHQ'] = '$lastStatus = $?
+$lastColor = if ($lastStatus -eq $true) {
+    "Green"
+}
+else {
+    "Red"
+}
+$isAdmin = $false
+$isDesktop = ($PSVersionTable.PSVersion.Major -eq 5)
+if ($isDesktop -or $IsWindows) {
+    $windowsIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $windowsPrincipal = New-Object "System.Security.Principal.WindowsPrincipal" $windowsIdentity
+    $isAdmin = $windowsPrincipal.IsInRole("Administrators") -eq 1
+} else {
+    $isAdmin = ((& id -u) -eq 0)
+}
+if ($isAdmin) {
+    $idColor = "Magenta"
+}
+else {
+    $idColor = "Cyan"
+}
+Write-Host "[" -NoNewline
+Write-Host -ForegroundColor $idColor "#$($MyInvocation.HistoryId)" -NoNewline
+Write-Host "] [" -NoNewline
+$verColor = @{
+    ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
+        "Yellow"
+    }
+    elseif ($PSVersionTable.PSVersion.Major -eq 6) {
+        "Magenta"
+    }
+    else {
+        "Cyan"
+    }
+}
+Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
+Write-Host "] [" -NoNewline
+Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
+Write-Host "] [" -NoNewline
+Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
+if ((Get-Location -Stack).Count -gt 0) {
+    Write-Host (("+" * ((Get-Location -Stack).Count))) -NoNewLine -ForegroundColor Cyan
+}
+Write-Host "]" -NoNewline
+if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true) {
+    Write-VcsStatus
+    $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
+}
+else {
+    $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
+}
+if ($env:AWS_PROFILE) {
+    Write-Host "`n" -NoNewline
+    $awsIcon = if ($global:PSProfile.Settings.ContainsKey("FontType")) {
+        $global:PSProfile.Settings.PromptCharacters.AWS[$global:PSProfile.Settings.FontType]
+    }
+    else {
+        "AWS:"
+    }
+    if ([String]::IsNullOrEmpty($awsIcon)) {
+        $awsIcon = "AWS:"
+    }
+    Write-Host -ForegroundColor Black -BackgroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)" -NoNewline
+    Write-Host " " -NoNewline
+}
+"`n>> "'
         $plugPaths = @()
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
         $this.PluginPaths | Where-Object { $_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+" } | ForEach-Object {
@@ -642,7 +680,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $null = $this.ModulesToInstall | Where-Object {-not [string]::IsNullOrEmpty($_)} | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
+            $null = $this.ModulesToInstall | Where-Object { -not [string]::IsNullOrEmpty($_) } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
                     [object]
@@ -699,7 +737,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToImport))) {
-            $this.ModulesToImport | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+            $this.ModulesToImport | Where-Object { -not [string]::IsNullOrEmpty($_) } | ForEach-Object {
                 try {
                     $params = if ($_ -is [string]) {
                         @{Name = $_ }

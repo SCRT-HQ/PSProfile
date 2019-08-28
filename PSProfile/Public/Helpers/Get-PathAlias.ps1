@@ -23,11 +23,14 @@ function Get-PathAlias {
         [parameter(Position = 1)]
         [string]
         $DirectorySeparator = $(if ($null -ne $global:PathAliasDirectorySeparator) {
-                $global:PathAliasDirectorySeparator
-            }
-            else {
-                [System.IO.Path]::DirectorySeparatorChar
-            })
+            $global:PathAliasDirectorySeparator
+        }
+        else {
+            [System.IO.Path]::DirectorySeparatorChar
+        }),
+        [parameter(Position = 2)]
+        [string]
+        $FontType = $global:PSProfile.Settings.FontType
     )
     Begin {
         try {
@@ -55,7 +58,15 @@ function Get-PathAlias {
                 }
             }
             if ($gitRepo = Test-IfGit) {
-                $gitIcon = [char]0xe0a0
+                $gitIcon = if ($global:PSProfile.Settings.ContainsKey('FontType')) {
+                    $global:PSProfile.Settings.PromptCharacters.GitRepo[$global:PSProfile.Settings.FontType]
+                }
+                else {
+                    '@'
+                }
+                if ([String]::IsNullOrEmpty($gitIcon)) {
+                    $gitIcon = '@'
+                }
                 $key = $gitIcon + $gitRepo.Repo
                 if (-not $global:PSProfile._internal.PathAliasMap.ContainsKey($key)) {
                     $global:PSProfile._internal.PathAliasMap[$key] = $gitRepo.TopLevel

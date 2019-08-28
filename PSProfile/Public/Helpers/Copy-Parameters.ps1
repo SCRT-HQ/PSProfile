@@ -34,6 +34,7 @@ function Copy-Parameters {
         [String]
         $From,
         [Parameter()]
+        [Alias('ExcludeParameter')]
         [String[]]
         $Exclude = @()
     )
