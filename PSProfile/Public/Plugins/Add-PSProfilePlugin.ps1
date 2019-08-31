@@ -41,8 +41,7 @@ function Add-PSProfilePlugin {
             if ($PSBoundParameters.ContainsKey('ArgumentList')) {
                 $plugin['ArgumentList'] = $ArgumentList
             }
-            $temp = $Global:PSProfile.Plugins | Where-Object {$_.Name -ne $pName}
-            $temp += $plugin
+            $temp = @(($Global:PSProfile.Plugins | Where-Object {$_.Name -ne $pName}),$plugin)
             $Global:PSProfile.Plugins = $temp
         }
         if ($Save) {
