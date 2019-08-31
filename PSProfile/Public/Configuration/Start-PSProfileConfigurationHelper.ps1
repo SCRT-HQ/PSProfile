@@ -1,5 +1,5 @@
 function Start-PSProfileConfigurationHelper {
-    <#
+<#
     .SYNOPSIS
     Starts the PSProfile Configuration Helper.
 
@@ -28,6 +28,7 @@ function Start-PSProfileConfigurationHelper {
             ) -join "`n"
         }
         $changes = [System.Collections.Generic.List[string]]::new()
+        $changeHash = @{}
         $tip = {
             param([string]$text)
             "TIP: $text" | Write-Host -ForegroundColor $color['Tip']
@@ -113,7 +114,7 @@ function Start-PSProfileConfigurationHelper {
             return
         }
         else {
-            "Concepts chosen:" | Write-Host
+            "`nConcepts chosen:" | Write-Host
             if ($choices -match '\*') {
                 $options | Select-String "^\*\s+\-\s" | Write-Host
                 $resolved = @(1..15)
@@ -142,30 +143,135 @@ function Start-PSProfileConfigurationHelper {
                         }
                         Write-Host "Would you like to add a Command Alias to your PSProfile?"
                         $decision = Read-Host "[Y]es | [N]o"
-                        do {
-                            switch -Regex ($decision) {
-                                "[Yy]" {
-                                    $item1 = Read-Host "Please enter the command you would like to add an alias for (ex: Test-Path)"
-                                    $item2 = Read-Host "Please enter the alias that you would like to set for the command (ex: tp)"
-                                    .$command("Add-PSProfileCommandAlias -Command '$item1' -Alias '$item2'")
-                                    Add-PSProfileCommandAlias -Command $item1 -Alias $item2 -Verbose
-                                    $changes.Add("Command Aliases:")
-                                    $changes.Add("  - Comman")
+                        if ($decision -match "[Yy]") {
+                            do {
+                                switch -Regex ($decision) {
+                                    "[Yy]" {
+                                        $item1 = Read-Host "Please enter the command you would like to add an alias for (ex: Test-Path)"
+                                        $item2 = Read-Host "Please enter the alias that you would like to set for the command (ex: tp)"
+                                        if ($null -eq (Get-PSProfileCommandAlias -Alias $item2)) {
+                                            if (-not $changeHash.ContainsKey('Command Aliases')) {
+                                                $changes.Add("Command Aliases:")
+                                                $changeHash['Command Aliases'] = @{}
+                                            }
+                                            .$command("Add-PSProfileCommandAlias -Command '$item1' -Alias '$item2'")
+                                            Add-PSProfileCommandAlias -Command $item1 -Alias $item2 -Verbose
+                                            $changes.Add("  - Command: $item1")
+                                            $changes.Add("    Alias: $item2")
+                                            $changeHash['Command Aliases'][$item1] = $item2
+                                        }
+                                        else {
+                                            .$warning("Command Alias '$item2' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                            .$command("Add-PSProfileCommandAlias -Command '$item1' -Alias '$item2' -Force")
+                                        }
+                                    }
                                 }
+                                "`nWould you like to add another Command Alias to your PSProfile?" | Write-Host
+                                $decision = Read-Host "[Y]es | [N]o"
                             }
-                            "`nWould you like to add another $topic to your PSProfile?" | Write-Host
-                            $decision = Read-Host "[Y]es | [N]o"
+                            until ($decision -notmatch "[Yy]")
                         }
-                        until ($decision -notmatch "[Yy]")
                     }
                     2 {
-
+                        if ($Global:PSProfile.ModulesToImport.Count) {
+                            .$current((($Global:PSProfile.ModulesToImport | ForEach-Object {if ($_ -is [hashtable]){$_.Name}else{$_}}) -join ", "))
+                        }
+                        Write-Host "Would you like to add a Module to Import to your PSProfile?"
+                        $decision = Read-Host "[Y]es | [N]o"
+                        if ($decision -match "[Yy]") {
+                            do {
+                                switch -Regex ($decision) {
+                                    "[Yy]" {
+                                        $item1 = Read-Host "Please enter the name of the module you would like to import during PSProfile load"
+                                        if ($null -eq (Get-PSProfileModuleToImport -Name $item1)) {
+                                            if (-not $changeHash.ContainsKey('Modules to Import')) {
+                                                $changes.Add("Modules to Import:")
+                                                $changeHash['Modules to Import'] = @()
+                                            }
+                                            .$command("Add-PSProfileModuleToImport -Name '$item1'")
+                                            Add-PSProfileModuleToImport -Name $item1 -Verbose
+                                            $changes.Add("  - Name: $item1")
+                                            $changeHash['Modules to Import'] += $item1
+                                        }
+                                        else {
+                                            .$warning("Module to Import '$item1' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                            .$command("Add-PSProfileModuleToImport -Name '$item1' -Force")
+                                        }
+                                    }
+                                }
+                                "`nWould you like to add another Module to Import to your PSProfile?" | Write-Host
+                                $decision = Read-Host "[Y]es | [N]o"
+                            }
+                            until ($decision -notmatch "[Yy]")
+                        }
                     }
                     3 {
-
+                        if ($Global:PSProfile.ModulesToInstall.Count) {
+                            .$current((($Global:PSProfile.ModulesToInstall | ForEach-Object {if ($_ -is [hashtable]){$_.Name}else{$_}}) -join ", "))
+                        }
+                        Write-Host "Would you like to add a Module to Install to your PSProfile?"
+                        $decision = Read-Host "[Y]es | [N]o"
+                        if ($decision -match "[Yy]") {
+                            do {
+                                switch -Regex ($decision) {
+                                    "[Yy]" {
+                                        $item1 = Read-Host "Please enter the name of the module you would like to install via background job during PSProfile load"
+                                        if ($null -eq (Get-PSProfileModuleToInstall -Name $item1)) {
+                                            if (-not $changeHash.ContainsKey('Modules to Install')) {
+                                                $changes.Add("Modules to Install:")
+                                                $changeHash['Modules to Install'] = @()
+                                            }
+                                            .$command("Add-PSProfileModuleToInstall -Name '$item1'")
+                                            Add-PSProfileModuleToInstall -Name $item1 -Verbose
+                                            $changes.Add("  - Name: $item1")
+                                            $changeHash['Modules to Install'] += $item1
+                                        }
+                                        else {
+                                            .$warning("Module to Install '$item1' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                            .$command("Add-PSProfileModuleToInstall -Name '$item1' -Force")
+                                        }
+                                    }
+                                }
+                                "`nWould you like to add another Module to Install to your PSProfile?" | Write-Host
+                                $decision = Read-Host "[Y]es | [N]o"
+                            }
+                            until ($decision -notmatch "[Yy]")
+                        }
                     }
                     4 {
-
+                        if ($Global:PSProfile.PathAliases.Keys.Count) {
+                            .$current("`n$(([PSCustomObject]$Global:PSProfile.PathAliases | Format-List | Out-String).Trim())")
+                        }
+                        Write-Host "Would you like to add a Path Alias to your PSProfile?"
+                        $decision = Read-Host "[Y]es | [N]o"
+                        if ($decision -match "[Yy]") {
+                            do {
+                                switch -Regex ($decision) {
+                                    "[Yy]" {
+                                        $item1 = Read-Host "Please enter the path you would like to add an alias for (ex: C:\Users\$env:USERNAME)"
+                                        $item2 = Read-Host "Please enter the alias that you would like to set for the path (ex: ~)"
+                                        if ($null -eq (Get-PSProfilePathAlias -Alias $item2)) {
+                                            if (-not $changeHash.ContainsKey('Path Aliases')) {
+                                                $changes.Add("Path Aliases:")
+                                                $changeHash['Path Aliases'] = @{}
+                                            }
+                                            .$command("Add-PSProfilePathAlias -Path '$item1' -Alias '$item2'")
+                                            Add-PSProfilePathAlias -Path $item1 -Alias $item2 -Verbose
+                                            $changes.Add("  - Path: $item1")
+                                            $changes.Add("    Alias: $item2")
+                                            $changeHash['Path Aliases'][$item1] = $item2
+                                        }
+                                        else {
+                                            .$warning("Path Alias '$item2' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                            .$command("Add-PSProfilePathAlias -Path '$item1' -Alias '$item2' -Force")
+                                        }
+                                    }
+                                }
+                                "`nWould you like to add another Path Alias to your PSProfile?" | Write-Host
+                                $decision = Read-Host "[Y]es | [N]o"
+                            }
+                            until ($decision -notmatch "[Yy]")
+                        }
                     }
                     5 {
 
@@ -199,6 +305,9 @@ function Start-PSProfileConfigurationHelper {
                     }
                 }
             }
+            .$header("Changes made to configuration")
+            $changes | Write-Host
+            $changeHash
         }
     }
 }

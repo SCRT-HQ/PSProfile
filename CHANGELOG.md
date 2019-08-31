@@ -19,6 +19,8 @@
 
 * Added `Start-PSProfileConfigurationHelper`.
 * Added support for multiple Aliases to be removed at once on `Remove-PSProfileCommandAlias`.
+* Updated default `SCRTHQ` prompt that comes with the module.
+* Added support for NerdFonts and PowerLine switches on the prompts to switch char sets depending on the FontType.
 
 ## 0.1.9 - 2019-08-26
 
