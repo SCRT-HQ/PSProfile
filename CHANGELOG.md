@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.2.0 - 2019-09-01](#020---2019-09-01)
   * [0.1.9 - 2019-08-26](#019---2019-08-26)
   * [0.1.8 - 2019-08-26](#018---2019-08-26)
   * [0.1.7 - 2019-08-25](#017---2019-08-25)
@@ -13,6 +14,11 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.2.0 - 2019-09-01
+
+* Added `Start-PSProfileConfigurationHelper`.
+* Added support for multiple Aliases to be removed at once on `Remove-PSProfileCommandAlias`.
 
 ## 0.1.9 - 2019-08-26
 

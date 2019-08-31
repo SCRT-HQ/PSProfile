@@ -23,7 +23,7 @@ function Remove-PSProfileCommandAlias {
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param (
         [Parameter(Mandatory,Position = 0,ValueFromPipeline)]
-        [String]
+        [String[]]
         $Alias,
         [Parameter()]
         [Switch]
@@ -33,16 +33,18 @@ function Remove-PSProfileCommandAlias {
         $Save
     )
     Process {
-        if ($PSCmdlet.ShouldProcess("Removing '$Alias' from `$PSProfile.CommandAliases")) {
-            Write-Verbose "Removing '$Alias' from `$PSProfile.CommandAliases"
-            $Global:PSProfile.CommandAliases.Remove($Alias)
-            if ($Force -and $null -ne (Get-Alias "$Alias*")) {
-                Write-Verbose "Removing Alias: $Alias"
-                Remove-Item $LinkPath -Force
+        foreach ($al in $Alias) {
+            if ($PSCmdlet.ShouldProcess("Removing '$al' from `$PSProfile.CommandAliases")) {
+                Write-Verbose "Removing '$al' from `$PSProfile.CommandAliases"
+                $Global:PSProfile.CommandAliases.Remove($al)
+                if ($Force -and $null -ne (Get-Alias "$al*")) {
+                    Write-Verbose "Removing Alias: $al"
+                    Remove-Alias -Name $al -Force
+                }
             }
-            if ($Save) {
-                Save-PSProfile
-            }
+        }
+        if ($Save) {
+            Save-PSProfile
         }
     }
 }

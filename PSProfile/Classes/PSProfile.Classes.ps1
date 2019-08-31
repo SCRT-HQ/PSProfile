@@ -221,7 +221,7 @@ else {
     $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
 }
 if ($env:AWS_PROFILE) {
-    Write-Host "`n" -NoNewline
+    Write-Host "`n[" -NoNewline
     $awsIcon = if ($global:PSProfile.Settings.ContainsKey("FontType")) {
         $global:PSProfile.Settings.PromptCharacters.AWS[$global:PSProfile.Settings.FontType]
     }
@@ -231,8 +231,8 @@ if ($env:AWS_PROFILE) {
     if ([String]::IsNullOrEmpty($awsIcon)) {
         $awsIcon = "AWS:"
     }
-    Write-Host -ForegroundColor Black -BackgroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)" -NoNewline
-    Write-Host " " -NoNewline
+    Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)" -NoNewline
+    Write-Host "]" -NoNewline
 }
 "`n>> "'
         $plugPaths = @()
