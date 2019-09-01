@@ -20,18 +20,20 @@ function Remove-PSProfileModuleToInstall {
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param (
         [Parameter(Mandatory,Position = 0,ValueFromPipeline)]
-        [String]
+        [String[]]
         $Name,
         [Parameter()]
         [Switch]
         $Save
     )
     Process {
-        if ($PSCmdlet.ShouldProcess("Removing '$Name' from `$PSProfile.ModulesToInstall")) {
-            Write-Verbose "Removing '$Name' from `$PSProfile.ModulesToInstall"
-            $Global:PSProfile.ModulesToInstall = $Global:PSProfile.ModulesToInstall | Where-Object {($_ -is [hashtable] -and $_.Name -ne $Name) -or ($_ -is [string] -and $_ -ne $Name)}
-            if ($Save) {
-                Save-PSProfile
+        foreach ($mod in $Name) {
+            if ($PSCmdlet.ShouldProcess("Removing '$mod' from `$PSProfile.ModulesToInstall")) {
+                Write-Verbose "Removing '$mod' from `$PSProfile.ModulesToInstall"
+                $Global:PSProfile.ModulesToInstall = $Global:PSProfile.ModulesToInstall | Where-Object {($_ -is [hashtable] -and $_.Name -ne $mod) -or ($_ -is [string] -and $_ -ne $mod)}
+                if ($Save) {
+                    Save-PSProfile
+                }
             }
         }
     }

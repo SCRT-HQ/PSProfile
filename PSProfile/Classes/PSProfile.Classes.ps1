@@ -144,7 +144,7 @@ class PSProfile {
                 }
                 AWS     = @{
                     NerdFonts = "$([char]0xf270)"
-                    PowerLine = "AWS: "
+                    PowerLine = "$([char]0xf0e7)"
                     Default   = "AWS: "
                 }
             }
@@ -290,6 +290,7 @@ if ($env:AWS_PROFILE) {
             "MAIN",
             "Verbose"
         )
+        $this._cleanModules()
         $this._findProjects()
         $this._installModules()
         $this._createSymbolicLinks()
@@ -317,6 +318,33 @@ if ($env:AWS_PROFILE) {
             }
         }
         return $content
+    }
+    hidden [void] _cleanModules() {
+        $this._log(
+            "SECTION START",
+            "CleanModules",
+            "Debug"
+        )
+        foreach ($section in @('ModulesToImport','ModulesToInstall')) {
+            [hashtable[]]$final = @()
+            $this.$section | Where-Object {$_ -is [hashtable] -and $_.Name} | ForEach-Object {
+                $final += $_
+            }
+            $this.$section | Where-Object {$_ -is [string]} | ForEach-Object {
+                $this._log(
+                    "[$section] Converting module string to hashtable: $_",
+                    "CleanModules",
+                    "Verbose"
+                )
+                $final += @{Name = $_}
+            }
+            $this.$section = $final
+        }
+        $this._log(
+            "SECTION END",
+            "CleanModules",
+            "Debug"
+        )
     }
     hidden [void] _loadPrompt() {
         $this._log(
@@ -680,7 +708,7 @@ if ($env:AWS_PROFILE) {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $null = $this.ModulesToInstall | Where-Object { -not [string]::IsNullOrEmpty($_) } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
+            $null = $this.ModulesToInstall | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
                     [object]
@@ -737,7 +765,7 @@ if ($env:AWS_PROFILE) {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToImport))) {
-            $this.ModulesToImport | Where-Object { -not [string]::IsNullOrEmpty($_) } | ForEach-Object {
+            $this.ModulesToImport | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) } | ForEach-Object {
                 try {
                     $params = if ($_ -is [string]) {
                         @{Name = $_ }
@@ -754,12 +782,25 @@ if ($env:AWS_PROFILE) {
                                 $params.Remove($_)
                             }
                         }
-                        Import-Module @params -Global -ErrorAction SilentlyContinue -Verbose:$false
-                        $this._log(
-                            "Module imported: $($params | ConvertTo-Json -Compress)",
-                            'ImportModules',
-                            'Verbose'
-                        )
+                        if ($params.Name -ne 'EditorServicesCommandSuite') {
+                            Import-Module @params -Global -ErrorAction SilentlyContinue -Verbose:$false
+                            $this._log(
+                                "Module imported: $($params | ConvertTo-Json -Compress)",
+                                'ImportModules',
+                                'Verbose'
+                            )
+                        }
+                        elseif ($params.Name -eq 'EditorServicesCommandSuite' -and $psEditor) {
+                            Import-Module EditorServicesCommandSuite -ErrorAction SilentlyContinue -Global -Force -Verbose:$false
+                            # Twice because: https://github.com/SeeminglyScience/EditorServicesCommandSuite/issues/40
+                            Import-Module EditorServicesCommandSuite -ErrorAction SilentlyContinue -Global -Force -Verbose:$false
+                            Import-EditorCommand -Module EditorServicesCommandSuite -Force -Verbose:$false
+                            $this._log(
+                                "Module imported: $($params | ConvertTo-Json -Compress)",
+                                'ImportModules',
+                                'Verbose'
+                            )
+                        }
                     }
                     else {
                         $this._log(

@@ -108,7 +108,7 @@ function Start-PSProfileConfigurationHelper {
             Read-Host -Prompt "Enter your choice(s)"
         }
         $choices = .$menu
-        if ($choices -match "\[X\]") {
+        if ($choices -match "[Xx]") {
             "`nExiting Configuration Helper!`n" | Write-Host -ForegroundColor Yellow
             return
         }
@@ -373,7 +373,16 @@ function Start-PSProfileConfigurationHelper {
             }
             .$header("Changes made to configuration")
             $changes | Write-Host
-            $changeHash
+            "" | Write-Host
+            "Would you like to save your PSProfile configuration?" | Write-Host
+            $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+            switch -Regex ($decision) {
+                "[Yy]" {
+                    Save-PSProfile -Verbose
+                }
+            }
+            "`nConfiguration Helper complete! Exiting`n" | Write-Host -ForegroundColor Yellow
+            return
         }
     }
 }

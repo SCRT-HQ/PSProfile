@@ -17,10 +17,13 @@
 
 ## 0.2.0 - 2019-09-01
 
-* Added `Start-PSProfileConfigurationHelper`.
+* Added `Start-PSProfileConfigurationHelper` to provide a way
 * Added support for multiple Aliases to be removed at once on `Remove-PSProfileCommandAlias`.
 * Updated default `SCRTHQ` prompt that comes with the module.
 * Added support for NerdFonts and PowerLine switches on the prompts to switch char sets depending on the FontType.
+* Added `IncludeVault` switch parameter to `Export-PSProfileConfiguration` to prevent exporting the Secrets Vault by default when creating portable configurations.
+* Added `_cleanModules()` method to PSProfile class to remove any null or empty values hanging over and convert any string values to the full hashtable value instead.
+* Added special module import process when the `ModuleToImport` is `EditorServicesCommandSuite` so it also automatically registers the available editor commands.
 
 ## 0.1.9 - 2019-08-26
 
