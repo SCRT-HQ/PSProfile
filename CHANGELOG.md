@@ -24,6 +24,12 @@
 * Added `IncludeVault` switch parameter to `Export-PSProfileConfiguration` to prevent exporting the Secrets Vault by default when creating portable configurations.
 * Added `_cleanModules()` method to PSProfile class to remove any null or empty values hanging over and convert any string values to the full hashtable value instead.
 * Added special module import process when the `ModuleToImport` is `EditorServicesCommandSuite` so it also automatically registers the available editor commands.
+* Cleaned up logic and fixed bugs in the following functions:
+  * `Add-PSProfileModuleToImport`
+  * `Remove-PSProfileModuleToImport`
+  * `Add-PSProfileModuleToInstall`
+  * `Remove-PSProfileModuleToInstall`
+  * `Add-PSProfilePlugin`
 
 ## 0.1.9 - 2019-08-26
 

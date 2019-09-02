@@ -343,7 +343,41 @@ function Start-PSProfileConfigurationHelper {
                         until ($decision -notmatch "[Yy]")
                     }
                     6 {
-
+                        if ($Global:PSProfile.Plugins.Count) {
+                            .$current(($Global:PSProfile.Plugins.Name -join ", "))
+                        }
+                        Write-Host "Would you like to add a Plugin to your PSProfile?"
+                        .$tip("Plugins can be either scripts or modules.)")
+                        .$tip("Use AD cmdlets? Try adding the plugin 'PSProfile.ADCompleters' to get tab-completion for the Properties parameter on Get-ADUser, Get-ADGroup, and Get-ADComputer!")
+                        $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                        do {
+                            switch -Regex ($decision) {
+                                "[Yy]" {
+                                    $item1 = Read-Host "Please enter the name of the plugin you would like to add (ex: PSProfile.ADCompleters)"
+                                    if ($null -eq (Get-PSProfilePlugin -Name $item1)) {
+                                        if (-not $changeHash.ContainsKey('Plugins')) {
+                                            $changes.Add("Plugins:")
+                                            $changeHash['Plugins'] = @()
+                                        }
+                                        .$command("Add-PSProfilePlugin -Name '$item1'")
+                                        Add-PSProfilePlugin -Name $item1 -Verbose
+                                        $changes.Add("  - $item1")
+                                        $changeHash['Plugins'] += $item1
+                                    }
+                                    else {
+                                        .$warning("Plugin '$item1' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                        .$command("Add-PSProfilePlugin -Name '$item1' -Force")
+                                    }
+                                    "`nWould you like to add another Plugin to your PSProfile?" | Write-Host
+                                    $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                                }
+                                "[Xx]" {
+                                    "`nExiting Configuration Helper!`n" | Write-Host -ForegroundColor Yellow
+                                    return
+                                }
+                            }
+                        }
+                        until ($decision -notmatch "[Yy]")
                     }
                     7 {
 
