@@ -380,7 +380,39 @@ function Start-PSProfileConfigurationHelper {
                         until ($decision -notmatch "[Yy]")
                     }
                     7 {
-
+                        if ($Global:PSProfile.ProjectPaths.Count) {
+                            .$current(($Global:PSProfile.ProjectPaths -join ", "))
+                        }
+                        Write-Host "Would you like to add an additional Project Path to your PSProfile?"
+                        $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                        do {
+                            switch -Regex ($decision) {
+                                "[Yy]" {
+                                    $item1 = Read-Host "Please enter the path to the additional project folder"
+                                    if ($null -eq (Get-PSProfileProjectPath -Name $item1)) {
+                                        if (-not $changeHash.ContainsKey('Project Paths')) {
+                                            $changes.Add("Project Paths:")
+                                            $changeHash['Project Paths'] = @()
+                                        }
+                                        .$command("Add-PSProfileProjectPath -Name '$item1'")
+                                        Add-PSProfileProjectPath -Name $item1 -Verbose
+                                        $changes.Add("  - $item1")
+                                        $changeHash['Project Paths'] += $item1
+                                    }
+                                    else {
+                                        .$warning("Project Path '$item1' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                        .$command("Add-PSProfileProjectPath -Name '$item1' -Force")
+                                    }
+                                    "`nWould you like to add another Project Path to your PSProfile?" | Write-Host
+                                    $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                                }
+                                "[Xx]" {
+                                    "`nExiting Configuration Helper!`n" | Write-Host -ForegroundColor Yellow
+                                    return
+                                }
+                            }
+                        }
+                        until ($decision -notmatch "[Yy]")
                     }
                     8 {
 
