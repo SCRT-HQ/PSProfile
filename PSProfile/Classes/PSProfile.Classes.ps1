@@ -235,21 +235,12 @@ if ($env:AWS_PROFILE) {
     Write-Host "]" -NoNewline
 }
 "`n>> "'
-        $plugPaths = @()
+        $plugPaths = @((Join-Path $PSScriptRoot "Plugins"))
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
-        $this.PluginPaths | Where-Object { $_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+" } | ForEach-Object {
+        $this.PluginPaths | Where-Object {-not [string]::IsNullOrEmpty($_) -and ($_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+") } | ForEach-Object {
             $plugPaths += $_
         }
-        @(
-            $env:PSModulePath.Split([System.IO.Path]::PathSeparator)
-            (Get-Module PSProfile* | Select-Object -ExpandProperty ModuleBase)
-            (Join-Path $PSScriptRoot "Plugins")
-        ) | ForEach-Object {
-            if ($_ -notin $this.PluginPaths) {
-                $plugPaths += $_
-            }
-        }
-        $this.PluginPaths = $plugPaths
+        $this.PluginPaths = $plugPaths | Select-Object -Unique
         if (-not ($this.Plugins | Where-Object { $_.Name -eq 'PSProfile.PowerTools' })) {
             $plugs = @(@{Name = 'PSProfile.PowerTools' })
             $this.Plugins | ForEach-Object {
@@ -282,7 +273,9 @@ if ($env:AWS_PROFILE) {
             "MAIN",
             "Debug"
         )
-        Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
+        if ($env:ShowPSProfileLoadTime -ne $false) {
+            Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
+        }
     }
     [void] Refresh() {
         $this._log(
@@ -358,7 +351,7 @@ if ($env:AWS_PROFILE) {
                 "LoadPrompt",
                 "Verbose"
             )
-            Switch-PSProfilePrompt -Name $this.Settings.DefaultPrompt
+            $function:prompt = $this.Prompts[$this.Settings.DefaultPrompt]
         }
         else {
             $this._log(
@@ -855,7 +848,11 @@ if ($env:AWS_PROFILE) {
                         if ($plugin.ArgumentList) {
                             $importParams['ArgumentList'] = $plugin.ArgumentList
                         }
-                        foreach ($plugPath in $this.PluginPaths) {
+                        [string[]]$pathsToSearch = @($this.PluginPaths)
+                        $env:PSModulePath.Split([System.IO.Path]::PathSeparator) | ForEach-Object {
+                            $pathsToSearch += $_
+                        }
+                        foreach ($plugPath in $pathsToSearch) {
                             $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
                             $this._log(
                                 "'$($plugin.Name)' Checking path: $fullPath",

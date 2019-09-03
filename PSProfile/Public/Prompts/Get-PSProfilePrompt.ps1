@@ -36,7 +36,18 @@ function Get-PSProfilePrompt {
         [Switch]
         $Raw
     )
-    Begin {
+    Process {
+        $pContents = if ($PSBoundParameters.ContainsKey('Name')) {
+            if ($Global:PSProfile.Prompts.ContainsKey($Name)) {
+                $Global:PSProfile.Prompts[$Name]
+            }
+            else {
+                return
+            }
+        }
+        else {
+            $function:prompt
+        }
         $pssa = if ($NoPSSA -or $null -eq (Get-Module PSScriptAnalyzer* -ListAvailable)) {
             $false
         }
@@ -44,14 +55,6 @@ function Get-PSProfilePrompt {
             $true
             Import-Module PSScriptAnalyzer -Verbose:$false
         }
-        $pContents = if ($PSBoundParameters.ContainsKey('Name')) {
-            $Global:PSProfile.Prompts[$Name]
-        }
-        else {
-            (Get-Command prompt).Definition
-        }
-    }
-    Process {
         Write-Verbose "Getting current prompt"
         $i = 0
         $lws = $null

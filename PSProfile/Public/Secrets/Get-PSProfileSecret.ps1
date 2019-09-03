@@ -9,26 +9,52 @@ function Get-PSProfileSecret {
     .PARAMETER Name
     The name of the Secret you would like to retrieve from the Vault.
 
+    .PARAMETER AsPlainText
+    If $true and Confirm:$true, returns the decrypted password if the secret is a PSCredential object or the plain-text string if a SecureString. Requires confirmation.
+
+    .PARAMETER Force
+    If $true and AsPlainText is $true, bypasses Confirm prompt and returns the plain-text password or decrypted SecureString.
+
     .EXAMPLE
     Get-PSProfileSecret -Name MyApiKey
 
     Gets the Secret named 'MyApiKey' from the $PSProfile.Vault.
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param(
         [parameter(Mandatory,Position = 0)]
         [String]
-        $Name
+        $Name,
+        [parameter()]
+        [Switch]
+        $AsPlainText,
+        [parameter()]
+        [Switch]
+        $Force
     )
     Process {
         Write-Verbose "Getting Secret '$Name' from `$PSProfile.Vault"
-        $global:PSProfile.Vault.GetSecret($Name)
+        $sec = $global:PSProfile.Vault.GetSecret($Name)
+        if ($AsPlainText -and ($Force -or $PSCmdlet.ShouldProcess("Return plain-text value for Secret '$Name'"))) {
+            if ($sec -is [pscredential]) {
+                [PSCustomObject]@{
+                    UserName = $sec.UserName
+                    Password = $sec.GetNetworkCredential().Password
+                }
+            }
+            else {
+                Get-DecryptedValue $sec
+            }
+        }
+        else {
+            $sec
+        }
     }
 }
 
 Register-ArgumentCompleter -CommandName Get-PSProfileSecret -ParameterName Name -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-    $Global:PSProfile.Vault._secrets.Keys | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+    $Global:PSProfile.Vault._secrets.Keys | Where-Object {$_ -notin @('GitCredentials','PSCredentials','SecureStrings') -and $_ -like "$wordToComplete*"} | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }

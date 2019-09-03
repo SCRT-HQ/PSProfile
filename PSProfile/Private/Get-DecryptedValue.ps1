@@ -1,4 +1,4 @@
-function Decrypt {
+function Get-DecryptedValue {
     param($Item)
     if ($Item -is [System.Security.SecureString]) {
         [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(

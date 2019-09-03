@@ -10,7 +10,7 @@ function Add-PSProfileProjectPath {
     The path of the folder to add to your $PSProfile.ProjectPaths. This path should contain Git repo folders underneath it.
 
     .PARAMETER NoRefresh
-    If $true, skips refreshing your PSProfile after updating project paths.
+    If $true, skips refreshing your PSProfile after updating.
 
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
@@ -50,11 +50,11 @@ function Add-PSProfileProjectPath {
                 Write-Verbose "ProjectPath already in PSProfile: $fP"
             }
         }
-        if (-not $NoRefresh) {
-            Update-PSProfileConfig
-        }
         if ($Save) {
             Save-PSProfile
+        }
+        if (-not $NoRefresh) {
+            Update-PSProfileConfig
         }
     }
 }

@@ -10,7 +10,7 @@ function Add-PSProfilePluginPath {
     The path of the folder to add to your $PSProfile.PluginPaths. This path should contain PSProfile.Plugins
 
     .PARAMETER NoRefresh
-    If $true, skips refreshing your PSProfile after updating plugin paths.
+    If $true, skips reloading your PSProfile after updating.
 
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
@@ -42,19 +42,24 @@ function Add-PSProfilePluginPath {
     Process {
         foreach ($p in $Path) {
             $fP = (Resolve-Path $p).Path
+            [string[]]$base = @()
+            $Global:PSProfile.PluginPaths | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+                $base += $_
+            }
             if ($Global:PSProfile.PluginPaths -notcontains $fP) {
                 Write-Verbose "Adding PluginPath to PSProfile: $fP"
-                $Global:PSProfile.PluginPaths += $fP
+                $base += $fP
             }
             else {
                 Write-Verbose "PluginPath already in PSProfile: $fP"
             }
-        }
-        if (-not $NoRefresh) {
-            Import-PSProfile
+            $Global:PSProfile.PluginPaths = $base
         }
         if ($Save) {
             Save-PSProfile
+        }
+        if (-not $NoRefresh) {
+            Import-PSProfile -Verbose:$false
         }
     }
 }

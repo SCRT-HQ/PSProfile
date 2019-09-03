@@ -1,5 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
-  * [0.2.0 - 2019-09-01](#020---2019-09-01)
+  * [0.2.0 - 2019-09-02](#020---2019-09-02)
   * [0.1.9 - 2019-08-26](#019---2019-08-26)
   * [0.1.8 - 2019-08-26](#018---2019-08-26)
   * [0.1.7 - 2019-08-25](#017---2019-08-25)
@@ -15,21 +15,27 @@
 
 # PSProfile - ChangeLog
 
-## 0.2.0 - 2019-09-01
+## 0.2.0 - 2019-09-02
 
-* Added `Start-PSProfileConfigurationHelper` to provide a way
-* Added support for multiple Aliases to be removed at once on `Remove-PSProfileCommandAlias`.
-* Updated default `SCRTHQ` prompt that comes with the module.
-* Added support for NerdFonts and PowerLine switches on the prompts to switch char sets depending on the FontType.
-* Added `IncludeVault` switch parameter to `Export-PSProfileConfiguration` to prevent exporting the Secrets Vault by default when creating portable configurations.
-* Added `_cleanModules()` method to PSProfile class to remove any null or empty values hanging over and convert any string values to the full hashtable value instead.
-* Added special module import process when the `ModuleToImport` is `EditorServicesCommandSuite` so it also automatically registers the available editor commands.
-* Cleaned up logic and fixed bugs in the following functions:
-  * `Add-PSProfileModuleToImport`
-  * `Remove-PSProfileModuleToImport`
-  * `Add-PSProfileModuleToInstall`
-  * `Remove-PSProfileModuleToInstall`
-  * `Add-PSProfilePlugin`
+* [Issue #2](https://github.com/scrthq/PSProfile/issues/2)
+  * Added special module import process when the `ModuleToImport` is `EditorServicesCommandSuite` so it also automatically registers the available editor commands.
+* [Issue #12](https://github.com/scrthq/PSProfile/issues/12)
+  * Added `Start-PSProfileConfigurationHelper` to provide an easy way to get started with configuring your PSProfile.
+* Miscellaneous
+  * Added support for multiple Command Aliases to be removed at once with `Remove-PSProfileCommandAlias`.
+  * Updated default `SCRTHQ` prompt that comes with the module.
+  * Added support for NerdFonts and PowerLine switches on the prompts to switch char sets depending on the FontType.
+  * Added `IncludeVault` switch parameter to `Export-PSProfileConfiguration` to prevent exporting the Secrets Vault by default when creating portable configurations.
+  * Added `_cleanModules()` method to PSProfile class to remove any null or empty values hanging over and convert any string values to the full hashtable value instead.
+  * Cleaned up logic and fixed bugs in the following functions:
+    * `Add-PSProfileModuleToImport`
+    * `Remove-PSProfileModuleToImport`
+    * `Add-PSProfileModuleToInstall`
+    * `Remove-PSProfileModuleToInstall`
+    * `Add-PSProfilePlugin`
+  * Updated CONTRIBUTING.md with snippet to include for PSProfile developers on their PowerShell profile.
+  * Refactored `Get-PSProfilePrompt` to return `$null` if a name is specified but does not exist on the current PSProfile configuration.
+  * Refactored `$PSProfile._loadConfiguration()` to start with the base value of `$Global:PSProfile` if present, otherwise import the existing configuration from file. This is necessary to retain the existing configuration if an action is taken that forces the PSProfile to reload, e.g. adding a new plugin to the configuration.
 
 ## 0.1.9 - 2019-08-26
 

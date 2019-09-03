@@ -12,6 +12,9 @@ function Remove-PSProfileVariable {
     .PARAMETER Scope
     The scope of the Variable to remove between Environment or Global.
 
+    .PARAMETER Force
+    If $true, also removes the variable from the current session at the specified scope.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -27,21 +30,36 @@ function Remove-PSProfileVariable {
         [String]
         $Scope,
         [Parameter(Mandatory,Position = 1)]
-        [String]
+        [String[]]
         $Name,
+        [Parameter()]
+        [Switch]
+        $Force,
         [Parameter()]
         [Switch]
         $Save
     )
     Process {
-        if ($PSCmdlet.ShouldProcess("Removing $Scope variable '$Name' from `$PSProfile.Variables")) {
-            Write-Verbose "Removing $Scope variable '$Name' from `$PSProfile.Variables"
-            if ($Global:PSProfile.Variables[$Scope].ContainsKey($Name)) {
-                $Global:PSProfile.Variables[$Scope].Remove($Name)
+        foreach ($item in $Name) {
+            if ($PSCmdlet.ShouldProcess("Removing $Scope variable '$item' from `$PSProfile.Variables")) {
+                Write-Verbose "Removing $Scope variable '$item' from `$PSProfile.Variables"
+                if ($Global:PSProfile.Variables[$Scope].ContainsKey($item)) {
+                    $Global:PSProfile.Variables[$Scope].Remove($item)
+                }
+                if ($Force) {
+                    switch ($Scope) {
+                        Environment {
+                            Remove-Item "Env:\$item"
+                        }
+                        Global {
+                            Remove-Variable -Name $item -Scope Global
+                        }
+                    }
+                }
             }
-            if ($Save) {
-                Save-PSProfile
-            }
+        }
+        if ($Save) {
+            Save-PSProfile
         }
     }
 }
