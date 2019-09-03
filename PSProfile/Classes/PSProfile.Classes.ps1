@@ -148,6 +148,10 @@ class PSProfile {
                     Default   = "AWS: "
                 }
             }
+            PSReadline = @{
+                Options = @{}
+                KeyHandlers = @{}
+            }
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
@@ -283,7 +287,7 @@ if ($env:AWS_PROFILE) {
             "MAIN",
             "Verbose"
         )
-        $this._cleanModules()
+        $this._cleanConfig()
         $this._findProjects()
         $this._installModules()
         $this._createSymbolicLinks()
@@ -312,13 +316,18 @@ if ($env:AWS_PROFILE) {
         }
         return $content
     }
-    hidden [void] _cleanModules() {
+    hidden [void] _cleanConfig() {
         $this._log(
             "SECTION START",
-            "CleanModules",
+            "CleanConfig",
             "Debug"
         )
         foreach ($section in @('ModulesToImport','ModulesToInstall')) {
+            $this._log(
+                "[$section] Cleaning section",
+                "CleanConfig",
+                "Verbose"
+            )
             [hashtable[]]$final = @()
             $this.$section | Where-Object {$_ -is [hashtable] -and $_.Name} | ForEach-Object {
                 $final += $_
@@ -326,16 +335,28 @@ if ($env:AWS_PROFILE) {
             $this.$section | Where-Object {$_ -is [string]} | ForEach-Object {
                 $this._log(
                     "[$section] Converting module string to hashtable: $_",
-                    "CleanModules",
+                    "CleanConfig",
                     "Verbose"
                 )
                 $final += @{Name = $_}
             }
             $this.$section = $final
         }
+        foreach ($section in @('ScriptPaths','PluginPaths','ProjectPaths')) {
+            $this._log(
+                "[$section] Cleaning section",
+                "CleanConfig",
+                "Verbose"
+            )
+            [string[]]$final = @()
+            $this.$section | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+                $final += $_
+            }
+            $this.$section = $final
+        }
         $this._log(
             "SECTION END",
-            "CleanModules",
+            "CleanConfig",
             "Debug"
         )
     }

@@ -21,6 +21,8 @@
   * Added special module import process when the `ModuleToImport` is `EditorServicesCommandSuite` so it also automatically registers the available editor commands.
 * [Issue #12](https://github.com/scrthq/PSProfile/issues/12)
   * Added `Start-PSProfileConfigurationHelper` to provide an easy way to get started with configuring your PSProfile.
+* [Issue #6](https://github.com/scrthq/PSProfile/issues/6)
+  * Added `PSReadline` key to `$PSProfile.Settings` (Settings management in development still.)
 * Miscellaneous
   * Added support for multiple Command Aliases to be removed at once with `Remove-PSProfileCommandAlias`.
   * Updated default `SCRTHQ` prompt that comes with the module.
@@ -36,6 +38,7 @@
   * Updated CONTRIBUTING.md with snippet to include for PSProfile developers on their PowerShell profile.
   * Refactored `Get-PSProfilePrompt` to return `$null` if a name is specified but does not exist on the current PSProfile configuration.
   * Refactored `$PSProfile._loadConfiguration()` to start with the base value of `$Global:PSProfile` if present, otherwise import the existing configuration from file. This is necessary to retain the existing configuration if an action is taken that forces the PSProfile to reload, e.g. adding a new plugin to the configuration.
+  * Updated `$PSProfile._loadPrompt()` method to set the value of `$function:prompt` directly instead of calling `Switch-PSProfilePrompt` to reduce overhead.
 
 ## 0.1.9 - 2019-08-26
 
