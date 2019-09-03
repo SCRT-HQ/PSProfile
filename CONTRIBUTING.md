@@ -4,6 +4,7 @@
 
 * [Contributing to PSProfile](#contributing-to-psprofile)
   * [Git and Pull requests](#git-and-pull-requests)
+  * [Recommendations](#recommendations)
   * [Overview](#overview)
     * [Step by Step (High-Level)](#step-by-step-high-level)
     * [Contributing Guidelines](#contributing-guidelines)
@@ -19,6 +20,27 @@ Thank you for your interest in helping PSProfile grow! Below you'll find some gu
 
 * Contributions are submitted, reviewed, and accepted using Github pull requests. [Read this article](https://help.github.com/articles/using-pull-requests) for some details. We use the _Fork and Pull_ model, as described there. More info can be found here: [Forking Projects](https://guides.github.com/activities/forking/)
 * Please make sure to leave the `Allow edits from maintainers` box checked when submitting PR's so that any edits can be made by maintainers of the repo directly to the source branch and into the same PR. More info can be found here: [Allowing changes to a pull request branch created from a fork](https://help.github.com/articles/allowing-changes-to-a-pull-request-branch-created-from-a-fork/#enabling-repository-maintainer-permissions-on-existing-pull-requests)
+
+## Recommendations
+
+To provide the easiest PSProfile development experience while ensuring normal consoles remain intact, it is recommended to add the following to your PowerShell profile:
+
+```powershell
+$module = if (Test-Path '.\BuildOutput\PSProfile') {
+    try {
+        Import-Module '.\BuildOutput\PSProfile' -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Error(s) when importing PSProfile from the BuildOutput folder:`n$($Error[0])`nFalling back to installed version"
+        Import-Module PSProfile
+    }
+}
+else {
+    Import-Module PSProfile
+}
+```
+
+This will import the most recently built module from the BuildOutput folder if you start your session in the PSProfile repo root (i.e. if you open the project in your default editor). If any errors are hit during module import, fall back to importing the installed version instead to retain access to PowerTools.
 
 ## Overview
 

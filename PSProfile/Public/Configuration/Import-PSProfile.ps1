@@ -16,6 +16,6 @@ function Import-PSProfile {
     Param()
     Process {
         Write-Verbose "Loading PSProfile configuration!"
-        $global:PSProfile.Load()
+        $global:PSProfile._loadConfiguration()
     }
 }

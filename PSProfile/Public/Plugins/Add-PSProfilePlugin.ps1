@@ -12,6 +12,9 @@ function Add-PSProfilePlugin {
     .PARAMETER ArgumentList
     Any arguments that need to be passed to the plugin on import, such as a hashtable to process.
 
+    .PARAMETER NoRefresh
+    If $true, skips reloading your PSProfile after updating.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -30,6 +33,9 @@ function Add-PSProfilePlugin {
         $ArgumentList,
         [Parameter()]
         [Switch]
+        $NoRefresh,
+        [Parameter()]
+        [Switch]
         $Save
     )
     Process {
@@ -41,14 +47,19 @@ function Add-PSProfilePlugin {
             if ($PSBoundParameters.ContainsKey('ArgumentList')) {
                 $plugin['ArgumentList'] = $ArgumentList
             }
-            $temp = $Global:PSProfile.Plugins | Where-Object {$_.Name -ne $pName}
+            $temp = @()
+            $Global:PSProfile.Plugins | Where-Object {$_.Name -ne $pName} | ForEach-Object {
+                $temp += $_
+            }
             $temp += $plugin
             $Global:PSProfile.Plugins = $temp
         }
         if ($Save) {
             Save-PSProfile
         }
-        Import-PSProfile -Verbose:$false
+        if (-not $NoRefresh) {
+            Import-PSProfile -Verbose:$false
+        }
     }
 }
 

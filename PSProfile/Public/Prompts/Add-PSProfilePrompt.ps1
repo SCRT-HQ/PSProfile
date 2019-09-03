@@ -15,6 +15,9 @@ function Add-PSProfilePrompt {
     .PARAMETER SetAsDefault
     If $true, sets the prompt as default by updated $PSProfile.Settings.DefaultPrompt.
 
+    .PARAMETER Save
+    If $true, saves the updated PSProfile after updating.
+
     .EXAMPLE
     Add-PSProfilePrompt -Name Demo -Content '"PS > "'
 
@@ -30,7 +33,10 @@ function Add-PSProfilePrompt {
         $Content,
         [Parameter()]
         [switch]
-        $SetAsDefault
+        $SetAsDefault,
+        [Parameter()]
+        [switch]
+        $Save
     )
     Process {
         if ($null -eq $Name) {
@@ -49,7 +55,9 @@ function Add-PSProfilePrompt {
             if ($SetAsDefault) {
                 $global:PSProfile.Settings.DefaultPrompt = $Name
             }
-            Save-PSProfile
+            if ($Save) {
+                Save-PSProfile
+            }
         }
     }
 }

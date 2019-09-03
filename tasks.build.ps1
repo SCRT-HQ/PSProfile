@@ -69,6 +69,17 @@ task Build Clean,{
     Write-BuildLog 'Creating psm1...'
     $psm1 = New-Item -Path $TargetPSM1Path -ItemType File -Force
 
+    $psm1Header = @(
+        '[CmdletBinding()]'
+        'Param ('
+        '    [parameter(Position = 0)]'
+        '    [bool]'
+        '    $ShowLoadTime = $true'
+        ')'
+        '$env:ShowPSProfileLoadTime = $ShowLoadTime'
+    ) -join "`n"
+    $psm1Header | Add-Content -Path $psm1 -Encoding UTF8
+
     foreach ($scope in @('Classes','Private','Public')) {
         $gciPath = Join-Path $SourceModuleDirectory $scope
         if (Test-Path $gciPath) {
@@ -96,18 +107,6 @@ task Build Clean,{
     Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -notin @('Classes','Private','Public')} | ForEach-Object {
         Copy-Item $_.FullName -Destination $TargetVersionDirectory -Container -Recurse
     }
-    <# $sourceManifestPath = Join-Path $SourceModuleDirectory 'Configuration.psd1'
-    if (Test-Path $sourceManifestPath) {
-        Import-Module Configuration
-        $curVer = (Import-PowerShellDataFile $sourceManifestPath).ModuleVersion
-        if ([Version]$ModuleVersion -ne [Version]$curVer) {
-            Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $ModuleVersion
-        }
-        Copy-Item $sourceManifestPath -Destination $TargetVersionDirectory
-        if ([Version]$ModuleVersion -ne [Version]$curVer) {
-            Update-ModuleManifest -Path $sourceManifestPath -ModuleVersion $curVer
-        }
-    } #>
 
     # Copy over manifest
     Copy-Item -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -Destination $TargetVersionDirectory

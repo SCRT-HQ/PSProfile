@@ -119,49 +119,7 @@ class PSProfile {
         $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
         $this.SymbolicLinks = @{ }
-        $this.Prompts = @{
-            Default = '"PS $($executionContext.SessionState.Path.CurrentLocation)$(">" * ($nestedPromptLevel + 1)) ";
-            # .Link
-            # https://go.microsoft.com/fwlink/?LinkID=225750
-            # .ExternalHelp System.Management.Automation.dll-help.xml'
-            SCRTHQ  = '$lastStatus = $?
-            $lastColor = if ($lastStatus -eq $true) {
-                "Green"
-            }
-            else {
-                "Red"
-            }
-            Write-Host "[" -NoNewline
-            Write-Host -ForegroundColor Cyan "#$($MyInvocation.HistoryId)" -NoNewline
-            Write-Host "] " -NoNewline
-            Write-Host "[" -NoNewLine
-            $verColor = @{
-                ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
-                    "Yellow"
-                }
-                elseif ($PSVersionTable.PSVersion.Major -eq 6) {
-                    "Magenta"
-                }
-                else {
-                    "Cyan"
-                }
-            }
-            Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
-            Write-Host "] " -NoNewline
-            Write-Host "[" -NoNewline
-            Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
-            Write-Host "] [" -NoNewline
-            Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
-            Write-Host "]" -NoNewline
-            if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true -and (Test-IfGit)) {
-                Write-VcsStatus
-                $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
-            }
-            else {
-                $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
-            }
-            "`n>> "'
-        }
+        $this.Prompts = @{ }
         $this.Variables = @{
             Environment = @{
                 Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -174,9 +132,26 @@ class PSProfile {
             }
         }
         $this.Settings = @{
-            DefaultPrompt          = $null
-            PSVersionStringLength  = 3
-            ConfigurationPath = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+            DefaultPrompt         = $null
+            PSVersionStringLength = 3
+            ConfigurationPath     = (Join-Path (Get-ConfigurationPath -CompanyName 'SCRT HQ' -Name PSProfile) 'Configuration.psd1')
+            FontType              = 'Default'
+            PromptCharacters      = @{
+                GitRepo = @{
+                    NerdFonts = "$([char]0xf418)"
+                    PowerLine = "$([char]0xe0a0)"
+                    Default   = "@"
+                }
+                AWS     = @{
+                    NerdFonts = "$([char]0xf270)"
+                    PowerLine = "$([char]0xf0e7)"
+                    Default   = "AWS: "
+                }
+            }
+            PSReadline = @{
+                Options = @{}
+                KeyHandlers = @{}
+            }
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
@@ -197,21 +172,79 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
-        $plugPaths = @()
+        $this.Prompts['SCRTHQ'] = '$lastStatus = $?
+$lastColor = if ($lastStatus -eq $true) {
+    "Green"
+}
+else {
+    "Red"
+}
+$isAdmin = $false
+$isDesktop = ($PSVersionTable.PSVersion.Major -eq 5)
+if ($isDesktop -or $IsWindows) {
+    $windowsIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+    $windowsPrincipal = New-Object "System.Security.Principal.WindowsPrincipal" $windowsIdentity
+    $isAdmin = $windowsPrincipal.IsInRole("Administrators") -eq 1
+} else {
+    $isAdmin = ((& id -u) -eq 0)
+}
+if ($isAdmin) {
+    $idColor = "Magenta"
+}
+else {
+    $idColor = "Cyan"
+}
+Write-Host "[" -NoNewline
+Write-Host -ForegroundColor $idColor "#$($MyInvocation.HistoryId)" -NoNewline
+Write-Host "] [" -NoNewline
+$verColor = @{
+    ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
+        "Yellow"
+    }
+    elseif ($PSVersionTable.PSVersion.Major -eq 6) {
+        "Magenta"
+    }
+    else {
+        "Cyan"
+    }
+}
+Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
+Write-Host "] [" -NoNewline
+Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
+Write-Host "] [" -NoNewline
+Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
+if ((Get-Location -Stack).Count -gt 0) {
+    Write-Host (("+" * ((Get-Location -Stack).Count))) -NoNewLine -ForegroundColor Cyan
+}
+Write-Host "]" -NoNewline
+if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true) {
+    Write-VcsStatus
+    $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
+}
+else {
+    $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
+}
+if ($env:AWS_PROFILE) {
+    Write-Host "`n[" -NoNewline
+    $awsIcon = if ($global:PSProfile.Settings.ContainsKey("FontType")) {
+        $global:PSProfile.Settings.PromptCharacters.AWS[$global:PSProfile.Settings.FontType]
+    }
+    else {
+        "AWS:"
+    }
+    if ([String]::IsNullOrEmpty($awsIcon)) {
+        $awsIcon = "AWS:"
+    }
+    Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)" -NoNewline
+    Write-Host "]" -NoNewline
+}
+"`n>> "'
+        $plugPaths = @((Join-Path $PSScriptRoot "Plugins"))
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
-        $this.PluginPaths | Where-Object { $_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+" } | ForEach-Object {
+        $this.PluginPaths | Where-Object {-not [string]::IsNullOrEmpty($_) -and ($_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+") } | ForEach-Object {
             $plugPaths += $_
         }
-        @(
-            $env:PSModulePath.Split([System.IO.Path]::PathSeparator)
-            (Get-Module PSProfile* | Select-Object -ExpandProperty ModuleBase)
-            (Join-Path $PSScriptRoot "Plugins")
-        ) | ForEach-Object {
-            if ($_ -notin $this.PluginPaths) {
-                $plugPaths += $_
-            }
-        }
-        $this.PluginPaths = $plugPaths
+        $this.PluginPaths = $plugPaths | Select-Object -Unique
         if (-not ($this.Plugins | Where-Object { $_.Name -eq 'PSProfile.PowerTools' })) {
             $plugs = @(@{Name = 'PSProfile.PowerTools' })
             $this.Plugins | ForEach-Object {
@@ -244,7 +277,9 @@ class PSProfile {
             "MAIN",
             "Debug"
         )
-        Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
+        if ($env:ShowPSProfileLoadTime -ne $false) {
+            Write-Host "Loading PSProfile alone took $([Math]::Round($this._internal.ProfileLoadDuration.TotalMilliseconds))ms$withRefresh"
+        }
     }
     [void] Refresh() {
         $this._log(
@@ -252,6 +287,7 @@ class PSProfile {
             "MAIN",
             "Verbose"
         )
+        $this._cleanConfig()
         $this._findProjects()
         $this._installModules()
         $this._createSymbolicLinks()
@@ -280,6 +316,50 @@ class PSProfile {
         }
         return $content
     }
+    hidden [void] _cleanConfig() {
+        $this._log(
+            "SECTION START",
+            "CleanConfig",
+            "Debug"
+        )
+        foreach ($section in @('ModulesToImport','ModulesToInstall')) {
+            $this._log(
+                "[$section] Cleaning section",
+                "CleanConfig",
+                "Verbose"
+            )
+            [hashtable[]]$final = @()
+            $this.$section | Where-Object {$_ -is [hashtable] -and $_.Name} | ForEach-Object {
+                $final += $_
+            }
+            $this.$section | Where-Object {$_ -is [string]} | ForEach-Object {
+                $this._log(
+                    "[$section] Converting module string to hashtable: $_",
+                    "CleanConfig",
+                    "Verbose"
+                )
+                $final += @{Name = $_}
+            }
+            $this.$section = $final
+        }
+        foreach ($section in @('ScriptPaths','PluginPaths','ProjectPaths')) {
+            $this._log(
+                "[$section] Cleaning section",
+                "CleanConfig",
+                "Verbose"
+            )
+            [string[]]$final = @()
+            $this.$section | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+                $final += $_
+            }
+            $this.$section = $final
+        }
+        $this._log(
+            "SECTION END",
+            "CleanConfig",
+            "Debug"
+        )
+    }
     hidden [void] _loadPrompt() {
         $this._log(
             "SECTION START",
@@ -292,7 +372,7 @@ class PSProfile {
                 "LoadPrompt",
                 "Verbose"
             )
-            Switch-PSProfilePrompt -Name $this.Settings.DefaultPrompt
+            $function:prompt = $this.Prompts[$this.Settings.DefaultPrompt]
         }
         else {
             $this._log(
@@ -642,7 +722,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $null = $this.ModulesToInstall | Where-Object {-not [string]::IsNullOrEmpty($_)} | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
+            $null = $this.ModulesToInstall | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
                 Param (
                     [parameter()]
                     [object]
@@ -699,7 +779,7 @@ class PSProfile {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToImport))) {
-            $this.ModulesToImport | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+            $this.ModulesToImport | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) } | ForEach-Object {
                 try {
                     $params = if ($_ -is [string]) {
                         @{Name = $_ }
@@ -716,12 +796,25 @@ class PSProfile {
                                 $params.Remove($_)
                             }
                         }
-                        Import-Module @params -Global -ErrorAction SilentlyContinue -Verbose:$false
-                        $this._log(
-                            "Module imported: $($params | ConvertTo-Json -Compress)",
-                            'ImportModules',
-                            'Verbose'
-                        )
+                        if ($params.Name -ne 'EditorServicesCommandSuite') {
+                            Import-Module @params -Global -ErrorAction SilentlyContinue -Verbose:$false
+                            $this._log(
+                                "Module imported: $($params | ConvertTo-Json -Compress)",
+                                'ImportModules',
+                                'Verbose'
+                            )
+                        }
+                        elseif ($params.Name -eq 'EditorServicesCommandSuite' -and $psEditor) {
+                            Import-Module EditorServicesCommandSuite -ErrorAction SilentlyContinue -Global -Force -Verbose:$false
+                            # Twice because: https://github.com/SeeminglyScience/EditorServicesCommandSuite/issues/40
+                            Import-Module EditorServicesCommandSuite -ErrorAction SilentlyContinue -Global -Force -Verbose:$false
+                            Import-EditorCommand -Module EditorServicesCommandSuite -Force -Verbose:$false
+                            $this._log(
+                                "Module imported: $($params | ConvertTo-Json -Compress)",
+                                'ImportModules',
+                                'Verbose'
+                            )
+                        }
                     }
                     else {
                         $this._log(
@@ -776,7 +869,11 @@ class PSProfile {
                         if ($plugin.ArgumentList) {
                             $importParams['ArgumentList'] = $plugin.ArgumentList
                         }
-                        foreach ($plugPath in $this.PluginPaths) {
+                        [string[]]$pathsToSearch = @($this.PluginPaths)
+                        $env:PSModulePath.Split([System.IO.Path]::PathSeparator) | ForEach-Object {
+                            $pathsToSearch += $_
+                        }
+                        foreach ($plugPath in $pathsToSearch) {
                             $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
                             $this._log(
                                 "'$($plugin.Name)' Checking path: $fullPath",

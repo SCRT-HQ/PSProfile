@@ -38,7 +38,7 @@ function Add-PSProfileModuleToInstall {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory,Position = 0,ValueFromPipeline)]
-        [String]
+        [String[]]
         $Name,
         [Parameter()]
         [String]
@@ -63,18 +63,26 @@ function Add-PSProfileModuleToInstall {
         $Save
     )
     Process {
-        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToInstall | Where-Object {$_.Name -eq $Name})) {
-            Write-Error "Unable to add module to `$PSProfile.ModulesToInstall as it already exists. Use -Force to overwrite the existing value if desired."
-        }
-        else {
-            $moduleParams = $PSBoundParameters
-            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm','Force') -or $_ -notin (Get-Command Install-Module).Parameters.Keys}) {
-                $moduleParams.Remove($key)
+        foreach ($mod in $Name) {
+            if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToInstall | Where-Object {$_.Name -eq $mod})) {
+                Write-Error "Unable to add module '$mod' to `$PSProfile.ModulesToInstall as it already exists. Use -Force to overwrite the existing value if desired."
             }
-            Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToInstall"
-            $Global:PSProfile.ModulesToInstall = @($Global:PSProfile.ModulesToInstall,$moduleParams)
-            if ($Save) {
-                Save-PSProfile
+            else {
+                $moduleParams = @{
+                    Name = $mod
+                }
+                $PSBoundParameters.GetEnumerator() | Where-Object {$_.Key -in @('Repository','MinimumVersion','RequiredVersion','AcceptLicense','AllowPrerelease','Force')} | ForEach-Object {
+                    $moduleParams[$_.Key] = $_.Value
+                }
+                Write-Verbose "Adding '$mod' to `$PSProfile.ModulesToInstall"
+                [hashtable[]]$final = @($moduleParams)
+                $Global:PSProfile.ModulesToInstall | Where-Object {$_.Name -ne $mod} | ForEach-Object {
+                    $final += $_
+                }
+                $Global:PSProfile.ModulesToInstall = $final
+                if ($Save) {
+                    Save-PSProfile
+                }
             }
         }
     }

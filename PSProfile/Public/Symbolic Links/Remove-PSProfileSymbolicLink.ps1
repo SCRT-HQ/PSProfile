@@ -23,7 +23,7 @@ function Remove-PSProfileSymbolicLink {
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param (
         [Parameter(Mandatory,Position = 0)]
-        [String]
+        [String[]]
         $LinkPath,
         [Parameter()]
         [Switch]
@@ -33,20 +33,26 @@ function Remove-PSProfileSymbolicLink {
         $Save
     )
     Process {
-        if ($PSCmdlet.ShouldProcess("Removing '$LinkPath' from `$PSProfile.SymbolicLinks")) {
-            Write-Verbose "Removing '$LinkPath' from `$PSProfile.SymbolicLinks"
-            @($LinkPath,(Resolve-Path $LinkPath).Path) | Select-Object -Unique | ForEach-Object {
-                if ($Global:PSProfile.SymbolicLinks.ContainsKey($_)) {
-                    $Global:PSProfile.SymbolicLinks.Remove($_)
+        foreach ($path in $LinkPath) {
+            if ($PSCmdlet.ShouldProcess("Removing '$path' from `$PSProfile.SymbolicLinks")) {
+                Write-Verbose "Removing '$path' from `$PSProfile.SymbolicLinks"
+                $paths = @($path)
+                if (Test-Path $path) {
+                    $paths += (Resolve-Path $path).Path
+                }
+                $paths | Select-Object -Unique | ForEach-Object {
+                    if ($Global:PSProfile.SymbolicLinks.ContainsKey($_)) {
+                        $Global:PSProfile.SymbolicLinks.Remove($_)
+                    }
+                }
+                if ($Force -and (Test-Path $path)) {
+                    Write-Verbose "Removing SymbolicLink: $path"
+                    Remove-Item $path -Force
                 }
             }
-            if ($Force -and (Test-Path $LinkPath)) {
-                Write-Verbose "Removing SymbolicLink: $LinkPath"
-                Remove-Item $LinkPath -Force
-            }
-            if ($Save) {
-                Save-PSProfile
-            }
+        }
+        if ($Save) {
+            Save-PSProfile
         }
     }
 }

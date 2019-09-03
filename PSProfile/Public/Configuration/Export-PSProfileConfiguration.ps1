@@ -9,6 +9,9 @@ function Export-PSProfileConfiguration {
     .PARAMETER Path
     The existing folder or file path with PSD1 extension to export the configuration to. If a folder path is provided, the configuration will be exported to the path with the file name 'PSProfile.Configuration.psd1'.
 
+    .PARAMETER IncludeVault
+    If $true, includes the Vault property as well so Secrets are also exported.
+
     .PARAMETER Force
     If $true and the resolved file path exists, overwrite it with the current configuration.
 
@@ -20,10 +23,7 @@ function Export-PSProfileConfiguration {
     .EXAMPLE
     Export-PSProfileConfiguration ~\MyScripts -Force
 
-    Exports the configuration to the resolved path of '~\MyScripts\PSProfile.Configuration.psd1' and overwrites the file if it already exists.
-
-    .NOTES
-    *Any secrets stored in the `$PSProfile.Vault` will be exported, but will be unable to be decrypted on another machine or by another user on the same machine due to encryption via Data Protection API.*
+    Exports the configuration to the resolved path of '~\MyScripts\PSProfile.Configuration.psd1' and overwrites the file if it already exists. The exported configuration does *not* include the Vault to prevent secrets from being migrated with the portable configuration that is exported.
     #>
     [CmdletBinding()]
     Param (
@@ -41,6 +41,9 @@ function Export-PSProfileConfiguration {
         })]
         [String]
         $Path,
+        [Parameter()]
+        [Switch]
+        $IncludeVault,
         [Parameter()]
         [Switch]
         $Force
@@ -74,7 +77,14 @@ function Export-PSProfileConfiguration {
                 }
                 Write-Verbose "Importing metadata from path: $($Global:PSProfile.Settings.ConfigurationPath)"
                 $metadata = Import-Metadata -Path $Global:PSProfile.Settings.ConfigurationPath -ErrorAction Stop
-                Write-Verbose "Exporting cleaned PSProfile configuration to path: $finalPath"
+                if (-not $IncludeVault -and $metadata.ContainsKey('Vault')) {
+                    Write-Warning "Removing the Secrets Vault from the PSProfile configuration for safety. If you would like to export the configuration with the Vault included, use the -IncludeVault parameter with this function"
+                    $metadata.Remove('Vault') | Out-Null
+                    Write-Verbose "Exporting cleaned PSProfile configuration to path: $finalPath"
+                }
+                else {
+                    Write-Verbose "Exporting PSProfile configuration to path: $finalPath"
+                }
                 $metadata | Export-Metadata -Path $finalPath -ErrorAction Stop
             }
             catch {

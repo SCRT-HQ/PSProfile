@@ -689,8 +689,10 @@ function Start-BuildScript {
     .PARAMETER Project
     The path of the project to build. Allows tab-completion of PSBuildPath aliases if ProjectPaths are filled out with PSProfile that expand to the full path when invoked.
 
+    You can also pass the path to a folder containing a build.ps1 script, or a full path to another script entirely.
+
     .PARAMETER Task
-    The list of Tasks to specify to the build.ps1 script.
+    The list of Tasks to specify to the Build script.
 
     .PARAMETER Engine
     The engine to open the clean environment with between powershell, pwsh, and pwsh-preview. Defaults to the current engine the clean environment is opened from.
@@ -722,17 +724,22 @@ function Start-BuildScript {
         [String[]]
         $Task,
         [Parameter(Position = 2)]
+        [ValidateSet('powershell','pwsh','pwsh-preview')]
         [Alias('e')]
         [String]
-        $Engine,
+        $Engine = $(if ($PSVersionTable.PSVersion.ToString() -match 'preview') {
+            'pwsh-preview'
+        }
+        elseif ($PSVersionTable.PSVersion.Major -ge 6) {
+            'pwsh'
+        }
+        else {
+            'powershell'
+        }),
         [parameter()]
         [Alias('ne','noe')]
         [Switch]
-        $NoExit,
-        [parameter()]
-        [Alias('nr','nor')]
-        [Switch]
-        $NoRestore
+        $NoExit
     )
     DynamicParam {
         $bldFolder = if ([String]::IsNullOrEmpty($PSBoundParameters['Project']) -or $PSBoundParameters['Project'] -eq '.') {
@@ -750,26 +757,11 @@ function Start-BuildScript {
         else {
             Join-Path $bldFolder "build.ps1"
         }
-        Copy-Parameters -From $bldFile -Exclude Project,Task,Engine,NoExit,NoRestore
+        Copy-Parameters -From $bldFile -Exclude Project,Task,Engine,NoExit
     }
     Process {
         if (-not $PSBoundParameters.ContainsKey('Project')) {
             $PSBoundParameters['Project'] = '.'
-        }
-        if (-not $PSBoundParameters.ContainsKey('Engine')) {
-            $PSBoundParameters['Engine'] = switch ($PSVersionTable.PSVersion.Major) {
-                5 {
-                    'powershell'
-                }
-                default {
-                    if ($PSVersionTable.PSVersion.PreReleaseLabel) {
-                        'pwsh-preview'
-                    }
-                    else {
-                        'pwsh'
-                    }
-                }
-            }
         }
         $parent = switch ($PSBoundParameters['Project']) {
             '.' {
@@ -779,15 +771,9 @@ function Start-BuildScript {
                 $global:PSProfile.PSBuildPathMap[$PSBoundParameters['Project']]
             }
         }
-        $command = "$($PSBoundParameters['Engine']) -NoProfile -C `"```$env:NoNugetRestore = "
-        if ($NoRestore) {
-            $command += "```$true;"
-        }
-        else {
-            $command += "```$false;"
-        }
+        $command = "$Engine -NoProfile -C `""
         $command += "Set-Location '$parent'; . .\build.ps1"
-        $PSBoundParameters.Keys | Where-Object {$_ -notin @('Project','Engine','NoExit','NoRestore','Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutBuffer','OutVariable','PipelineVariable','WarningAction','WarningVariable','Verbose','Confirm','WhatIf')} | ForEach-Object {
+        $PSBoundParameters.Keys | Where-Object {$_ -notin @('Project','Engine','NoExit','Debug','ErrorAction','ErrorVariable','InformationAction','InformationVariable','OutBuffer','OutVariable','PipelineVariable','WarningAction','WarningVariable','Verbose','Confirm','WhatIf')} | ForEach-Object {
             if ($PSBoundParameters[$_].ToString() -in @('True','False')) {
                 $command += " -$($_):```$$($PSBoundParameters[$_].ToString())"
             }
@@ -800,7 +786,7 @@ function Start-BuildScript {
         Invoke-Expression $command
         if ($NoExit) {
             Push-Location $parent
-            Enter-CleanEnvironment -Engine $PSBoundParameters['Engine'] -ImportModule
+            Enter-CleanEnvironment -Engine $Engine -ImportModule
             Pop-Location
         }
     }

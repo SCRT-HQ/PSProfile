@@ -35,7 +35,7 @@ function Add-PSProfileModuleToImport {
     [CmdletBinding()]
     Param (
         [Parameter(Mandatory,Position = 0,ValueFromPipeline)]
-        [String]
+        [String[]]
         $Name,
         [Parameter()]
         [String]
@@ -57,18 +57,26 @@ function Add-PSProfileModuleToImport {
         $Save
     )
     Process {
-        if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToImport | Where-Object {$_.Name -eq $Name})) {
-            Write-Error "Unable to add module to `$PSProfile.ModulesToImport as it already exists. Use -Force to overwrite the existing value if desired."
-        }
-        else {
-            $moduleParams = $PSBoundParameters
-            foreach ($key in $moduleParams.Keys | Where-Object {$_ -in @('Verbose','Confirm','Force') -or $_ -notin (Get-Command Import-Module).Parameters.Keys}) {
-                $null = $moduleParams.Remove($key)
+        foreach ($mod in $Name) {
+            if (-not $Force -and $null -ne ($Global:PSProfile.ModulesToImport | Where-Object {$_.Name -eq $mod})) {
+                Write-Error "Unable to add module to `$PSProfile.ModulesToImport as it already exists. Use -Force to overwrite the existing value if desired."
             }
-            Write-Verbose "Adding '$Name' to `$PSProfile.ModulesToImport"
-            $Global:PSProfile.ModulesToImport = @($Global:PSProfile.ModulesToImport,$moduleParams)
-            if ($Save) {
-                Save-PSProfile
+            else {
+                $moduleParams = @{
+                    Name = $mod
+                }
+                $PSBoundParameters.GetEnumerator() | Where-Object {$_.Key -in @('Prefix','MinimumVersion','RequiredVersion','ArgumentList')} | ForEach-Object {
+                    $moduleParams[$_.Key] = $_.Value
+                }
+                Write-Verbose "Adding '$mod' to `$PSProfile.ModulesToImport"
+                [hashtable[]]$final = @($moduleParams)
+                $Global:PSProfile.ModulesToImport | Where-Object {$_.Name -ne $mod} | ForEach-Object {
+                    $final += $_
+                }
+                $Global:PSProfile.ModulesToImport = $final
+                if ($Save) {
+                    Save-PSProfile
+                }
             }
         }
     }
