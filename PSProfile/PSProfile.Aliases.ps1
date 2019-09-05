@@ -9,4 +9,12 @@
     'Switch-Prompt'          = 'Switch-PSProfilePrompt'
     'Remove-Prompt'          = 'Remove-PSProfilePrompt'
     'Copy-DynamicParameters' = 'Copy-Parameters'
+    'def'                    = 'Get-Definition'
+    'open'                   = 'Open-Item'
+    'push'                   = 'Push-Path'
+    'pop'                    = 'Pop-Path'
+    'cln'                    = 'Enter-CleanEnvironment'
+    'bld'                    = 'Start-BuildScript'
+    'syntax'                 = 'Format-Syntax'
+    'path'                   = 'Get-LongPath'
 }

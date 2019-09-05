@@ -246,8 +246,8 @@ if ($env:AWS_PROFILE) {
         }
         $this.PluginPaths = $plugPaths | Select-Object -Unique
         if (-not ($this.Plugins | Where-Object { $_.Name -eq 'PSProfile.PowerTools' })) {
-            $plugs = @(@{Name = 'PSProfile.PowerTools' })
-            $this.Plugins | ForEach-Object {
+            $plugs = @()
+            $this.Plugins | Where-Object { $_.Name -ne 'PSProfile.PowerTools' } | ForEach-Object {
                 $plugs += $_
             }
             $this.Plugins = $plugs

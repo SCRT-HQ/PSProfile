@@ -80,12 +80,21 @@ foreach ($module in $Dependencies.Keys) {
     }
 }
 (Import-PowerShellDataFile ([System.IO.Path]::Combine($PSScriptRoot,$ModuleName,"$ModuleName.psd1"))).RequiredModules | ForEach-Object {
-    if ($_ -is [hashtable]) {
-        $moduleDependencies += $_
+    $item = $_
+    if ($item -is [hashtable]) {
+        $hash = @{
+            Name = $item['ModuleName']
+        }
+        if ($_.ContainsKey('ModuleVersion')) {
+            $hash['RequiredVersion'] = $item['ModuleVersion']
+        }
+        $moduleDependencies += $hash
     }
     else {
-        $moduleDependencies += @{
-            Name = $_
+        if ($Dependencies.Keys -notcontains $item) {
+            $moduleDependencies += @{
+                Name = $item
+            }
         }
     }
 }
