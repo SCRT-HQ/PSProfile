@@ -16,6 +16,11 @@ function Add-PSProfileToProfile {
     Add-PSProfileToProfile -Scope CurrentUserAllHosts
 
     Adds `Import-Module PSProfile` to the $profile.CurrentUserAllHosts file. Creates the parent folder if missing.
+
+    .EXAMPLE
+    Add-PSProfileToProfile -DisableLoadTimeMessage
+
+    Adds `Import-Module PSProfile -ArgumentList $false` to the $profile file. Creates the parent folder if missing.
     #>
     [CmdletBinding()]
     Param (
