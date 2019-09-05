@@ -38,7 +38,7 @@ task Init {
     $Script:SourceModuleDirectory = [System.IO.Path]::Combine($BuildRoot,$ModuleName)
     $Script:GalleryVersion = (Get-PSGalleryVersion $ModuleName).Version
     $Script:ManifestVersion = (Import-Metadata -Path $(Join-Path $SourceModuleDirectory "$($ModuleName).psd1")).ModuleVersion
-    $Script:NextModuleVersion = Get-NextModuleVersion -GalleryVersion $Script:GalleryVersion -ManifestVersion $Script:ManifestVersion
+    $Script:NextModuleVersion = Get-NextModuleVersion -GalleryVersion $GalleryVersion -ManifestVersion $ManifestVersion
     $Script:TargetDirectory = [System.IO.Path]::Combine($BuildRoot,'BuildOutput')
     $Script:TargetModuleDirectory = [System.IO.Path]::Combine($TargetDirectory,$ModuleName)
     $Script:TargetVersionDirectory = [System.IO.Path]::Combine($TargetModuleDirectory,$NextModuleVersion)
