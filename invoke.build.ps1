@@ -240,7 +240,6 @@ $tweetConditions = {
 
 task PublishToPSGallery -If $psGalleryConditions {
     Write-BuildLog "Publishing version [$($NextModuleVersion)] to PSGallery"
-    Update-Metadata -Path $TargetManifestPath -PropertyName ModuleVersion -Value $NextModuleVersion
     Publish-Module -Path $TargetVersionDirectory -NuGetApiKey $env:NugetApiKey -Repository PSGallery
     Write-BuildLog "Deployment successful!"
 }
