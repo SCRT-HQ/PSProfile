@@ -1,0 +1,74 @@
+TOPIC
+    about_PSProfile_Power_Tools
+
+SHORT DESCRIPTION
+    An overview of the Power Tools functions in PSProfile.
+
+LONG DESCRIPTION
+    The Power Tools functions in PSProfile are helper functions focused
+    on boosting productivity by taking advantage of PSProfile's mapped
+    project paths for quick tab completion and project management.
+
+COMMANDS
+    * `Confirm-ScriptIsValid`
+        Uses the PSParser to check for any errors in a script file.
+
+    * `Enter-CleanEnvironment`
+        Enters a clean environment with -NoProfile and sets a couple of
+        convenience settings i.e. a prompt to advise you are in a
+        clean environment and some PSReadline helper settings.
+
+    * `Format-Syntax`
+        Formats a command's syntax in an easy-to-read view.
+
+    * `Get-Definition`
+        Convenience function to easily get the defition of a function
+
+    * `Get-Gist`
+        Gets a GitHub Gist's contents using the public API
+
+    * `Get-LongPath`
+        Expands a short-alias from the GitPathMap to the full path
+
+    * `Install-LatestModule`
+        Uninstalls any existing versions of the target module before
+        installing the latest one. Defaults to CurrentUser scope when
+        installing the latest module version from the desired repository.
+
+    * `Open-Code`
+        A drop-in replacement for the Visual Studio Code CLI `code`. Allows
+        tab-completion of GitPath aliases if ProjectPaths are filled out
+        with PSProfile that expand to the full path when invoked.
+
+        Recommendation: Add a Command Alias to override the existing `code`
+        CLI command to point at `Open-Code` instead:
+
+        Add-PSProfileCommandAlias -Alias code -Command Open-Code -Save
+
+    * `Open-Item`
+        Opens the item specified using Invoke-Item. Allows tab-completion of
+        GitPath aliases if ProjectPaths are filled out with PSProfile that
+        expand to the full path when invoked.
+
+    * `Pop-Path`
+        Pops your location back the path you Push-Path'd from.
+
+    * `Push-Path`
+        Pushes your current location to the path specified. Allows
+        tab-completion of GitPath aliases if ProjectPaths are filled out with
+        PSProfile that expand to the full path when invoked. Use Pop-Path to
+        return to the location pushed from, as locations pushed from this
+        function are within the module scope.
+
+    * `Start-BuildScript`
+        For those using the typical build.ps1 build scripts for PowerShell
+        projects, this will allow invoking the build script quickly from
+        wherever folder you are currently in using a child process. Any
+        projects in the ProjectPaths list that were discovered during
+        PSProfile load and have a build.ps1 file will be able to be
+        tab-completed for convenience. Temporarily sets the path to the build
+        folder, invokes the build.ps1 file, then returns to the original
+        path that it was invoked from.
+
+    * `Test-RegEx`
+        Tests a RegEx pattern against a string and returns the results.
