@@ -78,6 +78,7 @@ function Get-LongPath {
             $target = Join-Path $target ($Subpaths -join [System.IO.Path]::DirectorySeparatorChar)
         }
         Write-Verbose "Resolved long path: $target"
+        $target
     }
 }
 
