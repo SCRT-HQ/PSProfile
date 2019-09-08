@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.3.0 - 2019-09-07](#030---2019-09-07)
   * [0.2.0 - 2019-09-02](#020---2019-09-02)
   * [0.1.9 - 2019-08-26](#019---2019-08-26)
   * [0.1.8 - 2019-08-26](#018---2019-08-26)
@@ -14,6 +15,37 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.3.0 - 2019-09-07
+
+* [Issue #15](https://github.com/scrthq/PSProfile/issues/15)
+  * Added `Add-PSProfileToProfile` function to easily add `Import-Module PSProfile` to your PowerShell profile.
+* [Issue #16](https://github.com/scrthq/PSProfile/issues/16)
+  * Added the following functions from the `PSProfile.PowerTools` plugin to PSProfile directly:
+    * `Confirm-ScriptIsValid`
+    * `Enter-CleanEnvironment`
+    * `Format-Syntax`
+    * `Get-Definition`
+    * `Get-Gist`
+    * `Get-LongPath`
+    * `Install-LatestModule`
+    * `Open-Code`
+    * `Open-Item`
+    * `Pop-Path`
+    * `Push-Path`
+    * `Start-BuildScript`
+    * `Test-RegEx`
+  * Added HelpFile for Power Tools functions: `Get-Help about_PSProfile_Power_Tools`
+  * Updated `Start-PSProfileConfigurationHelper` with Power Tools section
+* Miscellaneous
+  * Cleaned up `PSProfile` class.
+  * Updated alias list.
+  * Updated module versioning strategy in build script.
+  * Updated `GitAliases` plugin to only spawn 1 runspace in the background.
+  * Fixed issue with `Copy-Parameters` where it would fail to pull parameters for commands with multiple parameter sets.
+  * Updated Content.Tests.
+  * Updated azure-pipelines YAML.
+  * Renamed the InvokeBuild script from `tasks.build.ps1` to `invoke.build.ps1`.
 
 ## 0.2.0 - 2019-09-02
 
