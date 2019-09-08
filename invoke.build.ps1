@@ -4,7 +4,13 @@ Param(
     $ModuleName,
     [Parameter()]
     [String]
-    $ModuleVersion,
+    $NextModuleVersion,
+    [Parameter()]
+    [String]
+    $GalleryVersion,
+    [Parameter()]
+    [String]
+    $ManifestVersion,
     [Parameter()]
     [String]
     $SourceModuleDirectory,
@@ -28,23 +34,28 @@ Param(
 task . Build
 
 task Init {
+    Import-Module Configuration
     $Script:SourceModuleDirectory = [System.IO.Path]::Combine($BuildRoot,$ModuleName)
-    $Script:ModuleVersion = Get-VersionToDeploy -ModuleName $ModuleName -ManifestPath $(Join-Path $SourceModuleDirectory "$($ModuleName).psd1")
+    $Script:GalleryVersion = (Get-PSGalleryVersion $ModuleName).Version
+    $Script:ManifestVersion = (Import-Metadata -Path $(Join-Path $SourceModuleDirectory "$($ModuleName).psd1")).ModuleVersion
+    $Script:NextModuleVersion = Get-NextModuleVersion -GalleryVersion $GalleryVersion -ManifestVersion $ManifestVersion
     $Script:TargetDirectory = [System.IO.Path]::Combine($BuildRoot,'BuildOutput')
     $Script:TargetModuleDirectory = [System.IO.Path]::Combine($TargetDirectory,$ModuleName)
-    $Script:TargetVersionDirectory = [System.IO.Path]::Combine($TargetModuleDirectory,$ModuleVersion)
+    $Script:TargetVersionDirectory = [System.IO.Path]::Combine($TargetModuleDirectory,$NextModuleVersion)
     $Script:TargetManifestPath = [System.IO.Path]::Combine($TargetVersionDirectory,"$($ModuleName).psd1")
     $Script:TargetPSM1Path = [System.IO.Path]::Combine($TargetVersionDirectory,"$($ModuleName).psm1")
     Write-BuildLog "Build System Details:"
     @(
         ""
         "~~~~~ Summary ~~~~~"
-        "In CI?  : $($IsCI -or (Test-Path Env:\TF_BUILD))"
-        "Project : $ModuleName"
-        "Version : $ModuleVersion"
-        "Engine  : PowerShell $($PSVersionTable.PSVersion.ToString())"
-        "Host OS : $(if($PSVersionTable.PSVersion.Major -le 5 -or $IsWindows){"Windows"}elseif($IsLinux){"Linux"}elseif($IsMacOS){"macOS"}else{"[UNKNOWN]"})"
-        "PWD     : $PWD"
+        "In CI?              : $($IsCI -or (Test-Path Env:\TF_BUILD))"
+        "Project             : $ModuleName"
+        "Manifest Version    : $ManifestVersion"
+        "Gallery Version     : $GalleryVersion"
+        "Next Module Version : $NextModuleVersion"
+        "Engine              : PowerShell $($PSVersionTable.PSVersion.ToString())"
+        "Host OS             : $(if($PSVersionTable.PSVersion.Major -le 5 -or $IsWindows){"Windows"}elseif($IsLinux){"Linux"}elseif($IsMacOS){"macOS"}else{"[UNKNOWN]"})"
+        "PWD                 : $PWD"
         ""
         "~~~~~ Directories ~~~~~"
         "SourceModuleDirectory  : $SourceModuleDirectory"
@@ -81,6 +92,7 @@ task Build Clean,{
     $psm1Header | Add-Content -Path $psm1 -Encoding UTF8
 
     foreach ($scope in @('Classes','Private','Public')) {
+        Write-BuildLog "Copying contents from files in source folder to PSM1: $($scope)"
         $gciPath = Join-Path $SourceModuleDirectory $scope
         if (Test-Path $gciPath) {
             Get-ChildItem -Path $gciPath -Filter "*.ps1" -Recurse -File | ForEach-Object {
@@ -94,6 +106,7 @@ task Build Clean,{
     }
     $aliasPath = [System.IO.Path]::Combine($SourceModuleDirectory,"$($ModuleName).Aliases.ps1")
     if (Test-Path $aliasPath) {
+        Write-BuildLog "Copying aliases to PSM1"
         $aliasHash = . $aliasPath
         $aliasHash.GetEnumerator() | ForEach-Object {
             $aliasesToExport += $_.Key
@@ -101,14 +114,21 @@ task Build Clean,{
             "Export-ModuleMember -Alias '$($_.Key)'" | Add-Content -Path $psm1 -Encoding UTF8
         }
     }
-
+    Write-BuildLog "Adding content from source PSM1 to footer of target PSM1"
     Get-Content (Join-Path $SourceModuleDirectory "$($ModuleName).psm1") -Raw  | Add-Content -Path $psm1 -Encoding UTF8
 
     Get-ChildItem -Path $SourceModuleDirectory -Directory | Where-Object {$_.BaseName -notin @('Classes','Private','Public')} | ForEach-Object {
+        Write-BuildLog "Copying source folder to target: $($_.BaseName)"
         Copy-Item $_.FullName -Destination $TargetVersionDirectory -Container -Recurse
     }
 
+    if ($ManifestVersion -ne $NextModuleVersion) {
+        Write-BuildLog "Bumping source manifest version from '$ManifestVersion' to '$NextModuleVersion' to prevent errors"
+        Update-Metadata -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -PropertyName ModuleVersion -Value $NextModuleVersion
+    }
+
     # Copy over manifest
+    Write-BuildLog "Copying source manifest to target folder"
     Copy-Item -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -Destination $TargetVersionDirectory
 
     # Update FunctionsToExport and AliasesToExport on manifest
@@ -119,12 +139,14 @@ task Build Clean,{
     if ($aliasesToExport.Count) {
         $params['AliasesToExport'] = ($aliasesToExport | Sort-Object)
     }
+    Write-BuildLog "Updating target manifest file with exports"
     Update-ModuleManifest @params
 
-    if ((Get-ChildItem $TargetVersionDirectory | Where-Object {$_.Name -eq "$($ModuleName).psd1"}).BaseName -cne $ModuleName) {
-        Write-BuildLog "Renaming manifest to correct casing"
-        Rename-Item (Join-Path $TargetVersionDirectory "$($ModuleName).psd1") -NewName "$($ModuleName).psd1" -Force
+    if ($ManifestVersion -ne $NextModuleVersion) {
+        Write-BuildLog "Reverting bumped source manifest version from '$NextModuleVersion' to '$ManifestVersion'"
+        Update-Metadata -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -PropertyName ModuleVersion -Value $ManifestVersion
     }
+
     Write-BuildLog "Created compiled module at [$TargetVersionDirectory]"
     Write-BuildLog "Output version directory contents:"
     Get-ChildItem $TargetVersionDirectory | Format-Table -Autosize
@@ -193,14 +215,14 @@ task Test Init,{
 
 $psGalleryConditions = {
     -not [String]::IsNullOrEmpty($env:NugetApiKey) -and
-    -not [String]::IsNullOrEmpty($ModuleVersion) -and
+    -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
     $env:BHBranchName -eq "master"
 }
 $gitHubConditions = {
     -not [String]::IsNullOrEmpty($env:GitHubPAT) -and
-    -not [String]::IsNullOrEmpty($ModuleVersion) -and
+    -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
     $env:BHBranchName -eq "master"
@@ -210,15 +232,14 @@ $tweetConditions = {
     -not [String]::IsNullOrEmpty($env:TwitterAccessToken) -and
     -not [String]::IsNullOrEmpty($env:TwitterConsumerKey) -and
     -not [String]::IsNullOrEmpty($env:TwitterConsumerSecret) -and
-    -not [String]::IsNullOrEmpty($ModuleVersion) -and
+    -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
     $env:BHBranchName -eq "master"
 }
 
 task PublishToPSGallery -If $psGalleryConditions {
-    Write-BuildLog "Publishing version [$($ModuleVersion)] to PSGallery"
-    Update-Metadata -Path $TargetManifestPath -PropertyName ModuleVersion -Value $ModuleVersion
+    Write-BuildLog "Publishing version [$($NextModuleVersion)] to PSGallery"
     Publish-Module -Path $TargetVersionDirectory -NuGetApiKey $env:NugetApiKey -Repository PSGallery
     Write-BuildLog "Deployment successful!"
 }
@@ -231,13 +252,13 @@ task PublishToGitHub -If $gitHubConditions {
     }
     Add-Type -Assembly System.IO.Compression.FileSystem
     [System.IO.Compression.ZipFile]::CreateFromDirectory($TargetModuleDirectory,$zipPath)
-    Write-BuildLog "Publishing Release v$($ModuleVersion) @ commit Id [$($commitId)] to GitHub..."
+    Write-BuildLog "Publishing Release v$($NextModuleVersion) @ commit Id [$($commitId)] to GitHub..."
 
     $commitId = git rev-parse --verify HEAD
     $ReleaseNotes = . .\ci\GitHubReleaseNotes.ps1
 
     $gitHubParams = @{
-        VersionNumber    = $ModuleVersion.ToString()
+        VersionNumber    = $NextModuleVersion.ToString()
         CommitId         = $commitId
         ReleaseNotes     = $ReleaseNotes
         ArtifactPath     = $zipPath
@@ -258,7 +279,7 @@ task PublishToTwitter -If $tweetConditions {
     Import-Module PoshTwit -Verbose:$false
     Write-BuildLog "Publishing tweet about new release..."
     $manifest = Import-PowerShellDataFile -Path $TargetManifestPath
-    $text = "#$($ModuleName) v$($ModuleVersion) is now available on the #PSGallery! https://www.powershellgallery.com/packages/$($ModuleName)/$ModuleVersion #PowerShell"
+    $text = "#$($ModuleName) v$($NextModuleVersion) is now available on the #PSGallery! https://www.powershellgallery.com/packages/$($ModuleName)/$NextModuleVersion #PowerShell"
     $manifest.PrivateData.PSData.Tags | Foreach-Object {
         $text += " #$($_)"
     }

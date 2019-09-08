@@ -12,6 +12,9 @@ function Add-PSProfileCommandAlias {
     .PARAMETER Command
     The name of the command to set the alias for.
 
+    .PARAMETER Force
+    If the alias already exists in $PSProfile.CommandAliases, use -Force to overwrite the existing value.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -30,14 +33,22 @@ function Add-PSProfileCommandAlias {
         $Command,
         [Parameter()]
         [Switch]
+        $Force,
+        [Parameter()]
+        [Switch]
         $Save
     )
     Process {
-        Write-Verbose "Adding alias '$Alias' for command '$Command' to PSProfile"
-        New-Alias -Name $Alias -Value $Command -Option AllScope -Scope Global
-        $Global:PSProfile.CommandAliases[$Alias] = $Command
-        if ($Save) {
-            Save-PSProfile
+        if ($Force -or $Global:PSProfile.CommandAliases.Keys -notcontains $Alias) {
+            New-Alias -Name $Alias -Value $Command -Option AllScope -Scope Global -Force
+            Write-Verbose "Adding alias '$Alias' for command '$Command' to PSProfile"
+            $Global:PSProfile.CommandAliases[$Alias] = $Command
+            if ($Save) {
+                Save-PSProfile
+            }
+        }
+        else {
+            Write-Error "Unable to add alias to `$PSProfile.CommandAliases as it already exists. Use -Force to overwrite the existing value if desired."
         }
     }
 }

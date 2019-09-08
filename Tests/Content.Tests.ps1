@@ -73,7 +73,7 @@ Describe "Function contents" -Tag 'Module' {
         }
     }
     Context "All 'Get' functions should contain valid ArgumentCompleters" {
-        $testCase = $getFunctions | Foreach-Object {@{file = $_;Name = $_.BaseName}}
+        $testCase = $getFunctions | Where-Object {$_.BaseName -notin @('Get-Gist')} | Foreach-Object {@{file = $_;Name = $_.BaseName}}
         It "Function <Name> should contain valid ArgumentCompleters" -TestCases $testCase {
             param($file,$Name)
             $file.fullname | Should -FileContentMatch ([regex]::Escape("Register-ArgumentCompleter -CommandName $Name -ParameterName"))

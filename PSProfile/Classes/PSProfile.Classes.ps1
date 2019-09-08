@@ -245,11 +245,11 @@ if ($env:AWS_PROFILE) {
             $plugPaths += $_
         }
         $this.PluginPaths = $plugPaths | Select-Object -Unique
-        if (-not ($this.Plugins | Where-Object { $_.Name -eq 'PSProfile.PowerTools' })) {
-            $plugs = @(@{Name = 'PSProfile.PowerTools' })
-            $this.Plugins | ForEach-Object {
-                $plugs += $_
-            }
+        $plugs = @()
+        $this.Plugins | Where-Object { $_.Name -ne 'PSProfile.PowerTools' } | ForEach-Object {
+            $plugs += $_
+        }
+        if ($plugs.Count) {
             $this.Plugins = $plugs
         }
         if (([datetime]::Now - $this.LastRefresh) -gt [timespan]$this.RefreshFrequency) {
@@ -854,6 +854,7 @@ if ($env:AWS_PROFILE) {
         )
         if ($this.Plugins.Count) {
             $this.Plugins.ForEach( {
+                if ($_.Name -ne 'PSProfile.PowerTools') {
                     $plugin = $_
                     $this._log(
                         "'$($plugin.Name)' Searching for plugin",
@@ -909,7 +910,7 @@ if ($env:AWS_PROFILE) {
                             }
                             else {
                                 $this._log(
-                                    "'$($plugin.Name)' plugin not found!",
+                                    "'$($plugin.Name)' plugin not found! To remove this plugin from your profile, run 'Remove-PSProfilePlugin $($plugin.Name)'",
                                     'LoadPlugins',
                                     'Warning'
                                 )
@@ -919,7 +920,8 @@ if ($env:AWS_PROFILE) {
                     catch {
                         throw
                     }
-                })
+                }
+            })
         }
         else {
             $this._log(

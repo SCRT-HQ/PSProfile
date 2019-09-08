@@ -7,6 +7,7 @@ Param(
     [Parameter()]
     [hashtable]
     $Dependencies = @{
+        Configuration     = '1.3.1'
         PackageManagement = '1.3.1'
         PowerShellGet     = '2.1.2'
         InvokeBuild       = '5.5.2'
@@ -35,7 +36,7 @@ $helperUri = @(
     'scrthq'                                    # User
     'a99cc06e75eb31769d01b2adddc6d200'          # Gist ID
     'raw'
-    '1aaa51f85b72f783c40de813b3bbd521bcc3b0f2'  # Commit SHA
+    'ca1b0def9321dc5a71b9092d34e91180720eda2d'  # Commit SHA
     'AzurePipelineHelpers.ps1'                  # Filename
 ) -join '/'
 $fileUri = $helperUri -replace "[$([RegEx]::Escape("$(([System.IO.Path]::GetInvalidFileNameChars() + [System.IO.Path]::GetInvalidPathChars()) -join '')"))]","_"
@@ -79,12 +80,21 @@ foreach ($module in $Dependencies.Keys) {
     }
 }
 (Import-PowerShellDataFile ([System.IO.Path]::Combine($PSScriptRoot,$ModuleName,"$ModuleName.psd1"))).RequiredModules | ForEach-Object {
-    if ($_ -is [hashtable]) {
-        $moduleDependencies += $_
+    $item = $_
+    if ($item -is [hashtable]) {
+        $hash = @{
+            Name = $item['ModuleName']
+        }
+        if ($_.ContainsKey('ModuleVersion')) {
+            $hash['RequiredVersion'] = $item['ModuleVersion']
+        }
+        $moduleDependencies += $hash
     }
     else {
-        $moduleDependencies += @{
-            Name = $_
+        if ($Dependencies.Keys -notcontains $item) {
+            $moduleDependencies += @{
+                Name = $item
+            }
         }
     }
 }

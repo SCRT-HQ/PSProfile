@@ -39,20 +39,21 @@ function Copy-Parameters {
         $Exclude = @()
     )
     try {
-        $targetCmd = $ExecutionContext.InvokeCommand.GetCommand($From, (Get-Command $From).CommandType, $PSBoundParameters)
+        $targetCmd = Get-Command $From
         $params = @($targetCmd.Parameters.GetEnumerator() | Where-Object { $_.Key -notin $Exclude })
         if ($params.Length -gt 0) {
             $paramDictionary = [System.Management.Automation.RuntimeDefinedParameterDictionary]::new()
             foreach ($param in $params) {
                 try {
-                    $param = $param.Value
-                    if (-not $MyInvocation.MyCommand.Parameters.ContainsKey($param.Name)) {
+                    if (-not $MyInvocation.MyCommand.Parameters.ContainsKey($param.Key)) {
+                        Write-Verbose "Copying parameter: $($param.Key)"
+                        $paramVal = $param.Value
                         $dynParam = [System.Management.Automation.RuntimeDefinedParameter]::new(
-                            $param.Name,
-                            $param.ParameterType,
-                            $param.Attributes
+                            $paramVal.Name,
+                            $paramVal.ParameterType,
+                            $paramVal.Attributes
                         )
-                        $paramDictionary.Add($param.Name, $dynParam)
+                        $paramDictionary.Add($paramVal.Name, $dynParam)
                     }
                 }
                 catch {

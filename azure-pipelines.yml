@@ -185,12 +185,12 @@ phases:
       artifactName: BuildOutput
       downloadPath: '$(Build.SourcesDirectory)'
 
-  - powershell: |
-      $Env:GitHubPAT = '$(GitHub.PAT)'
-      $Env:NuGetApiKey = '$(NuGetApiKey)'
-      $Env:TwitterAccessSecret = '$(Twitter.AccessSecret)'
-      $Env:TwitterAccessToken = '$(Twitter.AccessToken)'
-      $Env:TwitterConsumerKey = '$(Twitter.ConsumerKey)'
-      $Env:TwitterConsumerSecret = '$(Twitter.ConsumerSecret)'
-      . ./build.ps1 -Task Deploy
+  - powershell: . ./build.ps1 -Task Deploy
+    env:
+      GitHubPAT: $(GitHub.PAT)
+      NuGetApiKey: $(NuGetApiKey)
+      TwitterAccessSecret: $(Twitter.AccessSecret)
+      TwitterAccessToken: $(Twitter.AccessToken)
+      TwitterConsumerKey: $(Twitter.ConsumerKey)
+      TwitterConsumerSecret: $(Twitter.ConsumerSecret)
     displayName: Deploy to PowerShell Gallery
