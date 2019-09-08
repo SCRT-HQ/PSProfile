@@ -12,19 +12,21 @@ function Update-GitAliases {
         [hashtable]
         $AliasHash
     )
-    $null = $AliasHash.GetEnumerator() | Start-RSJob -Name {"_PSProfile_GitAliases_" + $_.Key} -ScriptBlock {
-        Write-Output "Updating git alias '$($_.Key)' with value '$($_.Value)'"
-        $i = 0
-        $passed = $false
-        do {
-            $i++
-            try {
-                Invoke-Expression $("git config --global alias.{0} `"{1}`"" -f $_.Key,$_.Value)
-                $passed = $true
+    $null = Start-RSJob -Name {"_PSProfile_GitAliases"} -ArgumentList $AliasHash -ScriptBlock {
+        Param ([hashtable]$hash)
+        $hash.GetEnumerator() | ForEach-Object {
+            $i = 0
+            $passed = $false
+            do {
+                $i++
+                try {
+                    Invoke-Expression $("git config --global alias.{0} `"{1}`"" -f $_.Key,$_.Value)
+                    $passed = $true
+                }
+                catch {}
             }
-            catch {}
+            until ($i -ge 5 -or $passed)
         }
-        until ($i -ge 5 -or $passed)
     }
 }
 Export-ModuleMember -Function 'Update-GitAliases'

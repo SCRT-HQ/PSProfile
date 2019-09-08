@@ -97,9 +97,10 @@ function Start-PSProfileConfigurationHelper {
                 "[11] Symbolic Links"
                 "[12] Variables"
                 ""
-                "[13] Configuration"
-                "[14] Helpers"
-                "[15] Meta"
+                "[13] Power Tools"
+                "[14] Configuration"
+                "[15] Helpers"
+                "[16] Meta"
                 ""
                 "[*]  All concepts (Default)"
                 "[H]  Hide Help Topics"
@@ -144,7 +145,7 @@ function Start-PSProfileConfigurationHelper {
             "`nChoices:" | Write-Host
             if ($choices -match '\*') {
                 $options | Select-String "^\[\*\]\s+" | Write-Host
-                $resolved = @(1..15)
+                $resolved = @(1..16)
                 if ($hideHelpTopics) {
                     $resolved += 'H'
                 }
@@ -161,8 +162,8 @@ function Start-PSProfileConfigurationHelper {
                 $topic = (($options | Select-String "^\[$choice\]\s+") -replace "^\[$choice\]\s+(.*$)",'$1').Trim()
                 $helpTopic = 'about_PSProfile_' + ($topic -replace ' ','_')
                 .$header($topic)
-                if (-not $hideHelpTopics) {
-                    "Getting the HelpTopic for this concept: $helpTopic" | Write-Host
+                if (-not $hideHelpTopics -or $choice -in 13..16) {
+                    Write-Verbose "Getting the HelpTopic for this concept: $helpTopic"
                     Get-Help $helpTopic -Category HelpFile
                     .$tip("To view this conceptual HelpTopic at any time, run the following command:")
                     .$command("Get-Help $helpTopic")
@@ -656,18 +657,24 @@ function Start-PSProfileConfigurationHelper {
                         until ($decision -notmatch "[Yy]")
                     }
                     13 {
-                        "Configuration functions are meant to interact with the PSProfile configuration directly, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
+                        "Power Tools functions do not alter the PSProfile configuration, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host
                         Read-Host "Press [Enter] to continue"
                     }
                     14 {
-                        "Helper functions are meant to interact for use within prompts or add Log Events to PSProfile, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
+                        "Configuration functions are meant to interact with the PSProfile configuration directly, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host
                         Read-Host "Press [Enter] to continue"
                     }
                     15 {
+                        "Helper functions are meant to interact for use within prompts or add Log Events to PSProfile, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
+                        .$command("Get-Help $helpTopic")
+                        "" | Write-Host
+                        Read-Host "Press [Enter] to continue"
+                    }
+                    16 {
                         "Meta functions are meant to provide information about PSProfile itself, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host

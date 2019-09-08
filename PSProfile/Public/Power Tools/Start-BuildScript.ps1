@@ -20,9 +20,6 @@ function Start-BuildScript {
     .PARAMETER NoExit
     If $true, does not exit the child process once build.ps1 has completed and imports the built module in BuildOutput (if present to allow testing of the built project in a clean environment.
 
-    .PARAMETER NoRestore
-    If $true, sets $env:NoNugetRestore to $false to prevent NuGet package restoration (if applicable).
-
     .EXAMPLE
     Start-BuildScript MyModule -NoExit
 
