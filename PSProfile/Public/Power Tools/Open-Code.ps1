@@ -24,7 +24,7 @@ function Open-Code {
     .PARAMETER Wait
     If $true, waits for the file to be closed in Code before returning to the prompt. If $false, opens the file using a background job to allow immediately returning to the prompt. Defaults to $false.
 
-    .PARAMETER Arguments
+    .PARAMETER ArgumentList
     Any additional arguments to be passed directly to the Code CLI command, e.g. `Open-Code --list-extensions` or `code --list-extensions` will still work the same as expected.
 
     .EXAMPLE
