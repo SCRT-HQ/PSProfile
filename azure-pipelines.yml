@@ -13,7 +13,7 @@ trigger:
 stages:
 - stage: Build
   jobs:
-  - job: Phase_1
+  - job: '1'
     displayName: Compile Module
     condition: succeeded()
     pool:
@@ -31,7 +31,7 @@ stages:
 
 - stage: Test
   jobs:
-  - job: Phase_2
+  - job: '2'
     displayName: Test Windows (PSv5)
     condition: succeeded()
     pool:
@@ -54,7 +54,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: Phase_3
+  - job: '3'
     displayName: Test Ubuntu
     condition: succeeded()
     pool:
@@ -67,7 +67,7 @@ stages:
         artifactName: BuildOutput
         downloadPath: '$(Build.SourcesDirectory)'
 
-    - powershell: . ./build.ps1 -Task Test
+    - pwsh: . ./build.ps1 -Task Test
       displayName: Test Module
 
     - task: PublishTestResults@2
@@ -77,7 +77,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: Phase_4
+  - job: '4'
     displayName: Test macOS
     condition: succeeded()
     pool:
@@ -90,7 +90,7 @@ stages:
         artifactName: BuildOutput
         downloadPath: '$(Build.SourcesDirectory)'
 
-    - powershell: . ./build.ps1 -Task Test
+    - pwsh: . ./build.ps1 -Task Test
       displayName: Test Module
 
     - task: PublishTestResults@2
@@ -100,7 +100,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: Phase_5
+  - job: '5'
     displayName: Test Windows (PSv6)
     condition: succeeded()
     pool:
@@ -113,9 +113,7 @@ stages:
         artifactName: BuildOutput
         downloadPath: '$(Build.SourcesDirectory)'
 
-    - powershell: |
-        $Env:Path = [Environment]::GetEnvironmentVariable('Path',[EnvironmentVariableTarget]::Machine)
-        pwsh -command ". ./build.ps1 -Task Test"
+    - pwsh: . ./build.ps1 -Task Test
       displayName: Test Module
 
     - task: PublishTestResults@2
@@ -125,7 +123,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: Phase_6
+  - job: '6'
     displayName: Test Docker
     condition: succeeded()
     pool:
@@ -138,16 +136,16 @@ stages:
         artifactName: BuildOutput
         downloadPath: '$(Build.SourcesDirectory)'
 
-    - powershell: docker build . -t module-img -f ./Dockerfile
+    - pwsh: docker build . -t module-img -f ./Dockerfile
       displayName: Build container image
 
-    - powershell: docker run --name module module-img:latest
+    - pwsh: docker run --name module module-img:latest
       displayName: Test Module in Container
 
-    - powershell: docker cp module:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
+    - pwsh: docker cp module:/Source/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
       displayName: Copy container test results
 
-    - powershell: docker rm module
+    - pwsh: docker rm module
       displayName: Clean up container
 
     - task: PublishTestResults@2
@@ -159,7 +157,7 @@ stages:
 
 - stage: Deploy
   jobs:
-  - job: Phase_7
+  - job: '7'
     displayName: Deploy Module
     condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     pool:
