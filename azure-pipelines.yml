@@ -13,7 +13,7 @@ trigger:
 stages:
 - stage: Build
   jobs:
-  - job: '1'
+  - job: Job1
     displayName: Compile Module
     condition: succeeded()
     pool:
@@ -31,7 +31,7 @@ stages:
 
 - stage: Test
   jobs:
-  - job: '2'
+  - job: Job2
     displayName: Test Windows (PSv5)
     condition: succeeded()
     pool:
@@ -54,7 +54,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: '3'
+  - job: Job3
     displayName: Test Ubuntu
     condition: succeeded()
     pool:
@@ -77,7 +77,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: '4'
+  - job: Job4
     displayName: Test macOS
     condition: succeeded()
     pool:
@@ -100,7 +100,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: '5'
+  - job: Job5
     displayName: Test Windows (PSv6)
     condition: succeeded()
     pool:
@@ -123,7 +123,7 @@ stages:
         testResultsFiles: '**/Test*.xml'
       condition: succeededOrFailed()
 
-  - job: '6'
+  - job: Job6
     displayName: Test Docker
     condition: succeeded()
     pool:
@@ -157,7 +157,7 @@ stages:
 
 - stage: Deploy
   jobs:
-  - job: '7'
+  - job: Job7
     displayName: Deploy Module
     condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     pool:
