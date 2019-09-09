@@ -10,186 +10,176 @@ trigger:
     include:
     - refs/heads/*
 
-jobs:
-- job: Phase_1
-  displayName: Compile Module
-  condition: succeeded()
-  pool:
-    name: Hosted VS2017
-
-  steps:
-  - powershell: . ./build.ps1
+stages:
+- stage: Build
+  jobs:
+  - job: Phase_1
     displayName: Compile Module
+    condition: succeeded()
+    pool:
+      name: Hosted VS2017
 
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: Compiled Module'
-    inputs:
-      PathtoPublish: BuildOutput
-      ArtifactName: BuildOutput
+    steps:
+    - powershell: . ./build.ps1
+      displayName: Compile Module
 
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: Compiled Module'
+      inputs:
+        PathtoPublish: BuildOutput
+        ArtifactName: BuildOutput
 
-- job: Phase_2
-  displayName: Test Windows (PSv5)
-  dependsOn: Phase_1
-  condition: succeeded()
-  pool:
-    name: Hosted VS2017
+- stage: Test
+  jobs:
+  - job: Phase_2
+    displayName: Test Windows (PSv5)
+    condition: succeeded()
+    pool:
+      name: Hosted VS2017
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
-  - powershell: . ./build.ps1 -Task Test
-    displayName: Test Module
+    - powershell: . ./build.ps1 -Task Test
+      displayName: Test Module
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/Test*.xml'
-    inputs:
-      testRunner: NUnit
-      testResultsFiles: '**/Test*.xml'
-    condition: succeededOrFailed()
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **/Test*.xml'
+      inputs:
+        testRunner: NUnit
+        testResultsFiles: '**/Test*.xml'
+      condition: succeededOrFailed()
 
+  - job: Phase_3
+    displayName: Test Ubuntu
+    condition: succeeded()
+    pool:
+      name: Hosted Ubuntu 1604
 
-- job: Phase_3
-  displayName: Test Ubuntu
-  dependsOn: Phase_1
-  condition: succeeded()
-  pool:
-    name: Hosted Ubuntu 1604
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
+    - powershell: . ./build.ps1 -Task Test
+      displayName: Test Module
 
-  - powershell: . ./build.ps1 -Task Test
-    displayName: Test Module
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **/Test*.xml'
+      inputs:
+        testRunner: NUnit
+        testResultsFiles: '**/Test*.xml'
+      condition: succeededOrFailed()
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/Test*.xml'
-    inputs:
-      testRunner: NUnit
-      testResultsFiles: '**/Test*.xml'
-    condition: succeededOrFailed()
+  - job: Phase_4
+    displayName: Test macOS
+    condition: succeeded()
+    pool:
+      name: Hosted macOS
 
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
-- job: Phase_4
-  displayName: Test macOS
-  dependsOn: Phase_1
-  condition: succeeded()
-  pool:
-    name: Hosted macOS
+    - powershell: . ./build.ps1 -Task Test
+      displayName: Test Module
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **/Test*.xml'
+      inputs:
+        testRunner: NUnit
+        testResultsFiles: '**/Test*.xml'
+      condition: succeededOrFailed()
 
-  - powershell: . ./build.ps1 -Task Test
-    displayName: Test Module
+  - job: Phase_5
+    displayName: Test Windows (PSv6)
+    condition: succeeded()
+    pool:
+      name: Hosted VS2017
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/Test*.xml'
-    inputs:
-      testRunner: NUnit
-      testResultsFiles: '**/Test*.xml'
-    condition: succeededOrFailed()
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
+    - powershell: |
+        $Env:Path = [Environment]::GetEnvironmentVariable('Path',[EnvironmentVariableTarget]::Machine)
+        pwsh -command ". ./build.ps1 -Task Test"
+      displayName: Test Module
 
-- job: Phase_5
-  displayName: Test Windows (PSv6)
-  dependsOn: Phase_1
-  condition: succeeded()
-  pool:
-    name: Hosted VS2017
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **/Test*.xml'
+      inputs:
+        testRunner: NUnit
+        testResultsFiles: '**/Test*.xml'
+      condition: succeededOrFailed()
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
+  - job: Phase_6
+    displayName: Test Docker
+    condition: succeeded()
+    pool:
+      name: Hosted Ubuntu 1604
 
-  - powershell: |
-      $Env:Path = [Environment]::GetEnvironmentVariable('Path',[EnvironmentVariableTarget]::Machine)
-      pwsh -command ". ./build.ps1 -Task Test"
-    displayName: Test Module
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/Test*.xml'
-    inputs:
-      testRunner: NUnit
-      testResultsFiles: '**/Test*.xml'
-    condition: succeededOrFailed()
+    - powershell: docker build . -t module-img -f ./Dockerfile
+      displayName: Build container image
 
+    - powershell: docker run --name module module-img:latest
+      displayName: Test Module in Container
 
-- job: Phase_6
-  displayName: Test Docker
-  dependsOn: Phase_1
-  condition: succeeded()
-  pool:
-    name: Hosted Ubuntu 1604
+    - powershell: docker cp module:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
+      displayName: Copy container test results
 
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
+    - powershell: docker rm module
+      displayName: Clean up container
 
-  - powershell: docker build . -t module-img -f ./Dockerfile
-    displayName: Build container image
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **/Test*.xml'
+      condition: succeededOrFailed()
+      inputs:
+        testRunner: NUnit
+        testResultsFiles: '**/Test*.xml'
 
-  - powershell: docker run --name module module-img:latest
-    displayName: Test Module in Container
+- stage: Deploy
+  jobs:
+  - job: Phase_7
+    displayName: Deploy Module
+    condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+    pool:
+      name: Hosted VS2017
 
-  - powershell: docker cp module:/PSProfile/BuildOutput/TestResults.xml BuildOutput/TestResults_Docker.xml
-    displayName: Copy container test results
+    steps:
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
+      inputs:
+        artifactName: BuildOutput
+        downloadPath: '$(Build.SourcesDirectory)'
 
-  - powershell: docker rm module
-    displayName: Clean up container
-
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **/Test*.xml'
-    condition: succeededOrFailed()
-    inputs:
-      testRunner: NUnit
-      testResultsFiles: '**/Test*.xml'
-
-- job: Phase_7
-  displayName: Deploy Module
-  dependsOn:
-  - Phase_2
-  - Phase_3
-  - Phase_4
-  - Phase_5
-  - Phase_6
-  condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  pool:
-    name: Hosted VS2017
-
-  steps:
-  - task: DownloadBuildArtifacts@0
-    displayName: 'Download Build Artifacts'
-    condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
-    inputs:
-      artifactName: BuildOutput
-      downloadPath: '$(Build.SourcesDirectory)'
-
-  - powershell: . ./build.ps1 -Task Deploy
-    displayName: Deploy to PowerShell Gallery
-    condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
-    env:
-      GitHubPAT: $(GitHub.PAT)
-      NuGetApiKey: $(NuGetApiKey)
-      TwitterAccessSecret: $(Twitter.AccessSecret)
-      TwitterAccessToken: $(Twitter.AccessToken)
-      TwitterConsumerKey: $(Twitter.ConsumerKey)
-      TwitterConsumerSecret: $(Twitter.ConsumerSecret)
+    - powershell: . ./build.ps1 -Task Deploy
+      displayName: Deploy to PowerShell Gallery
+      condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
+      env:
+        GitHubPAT: $(GitHub.PAT)
+        NuGetApiKey: $(NuGetApiKey)
+        TwitterAccessSecret: $(Twitter.AccessSecret)
+        TwitterAccessToken: $(Twitter.AccessToken)
+        TwitterConsumerKey: $(Twitter.ConsumerKey)
+        TwitterConsumerSecret: $(Twitter.ConsumerSecret)
