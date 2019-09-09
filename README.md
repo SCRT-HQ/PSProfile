@@ -81,13 +81,14 @@ I hope that you enjoy PSProfile as much as I do! It includes a TON of convenienc
     ```powershell
     Install-Module PSProfile -Repository PSGallery -Scope CurrentUser
     ```
-2. Add `Import-Module PSProfile` to your PowerShell profile (`$profile`) so that PSProfile is imported whenever you start a new session:
-
+2. Import the module:
     ```powershell
-    if (-not (Test-Path $profile)) { New-Item -ItemType File $profile -Force }
-    'Import-Module PSProfile' | Add-Content $profile
+    Import-Module PSProfile
     ```
-3. Restart your session or run `Import-Module PSProfile` to start working with it directly.
+3. Run the Configuration Helper command and follow the prompts:
+    ```powershell
+    Start-PSProfileConfigurationHelper
+    ```
 
 ## Getting Help
 

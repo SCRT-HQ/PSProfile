@@ -8,16 +8,13 @@ variables:
 trigger:
   branches:
     include:
-    - master
-    - "*"
-    exclude:
-    - refs/tag/*
+    - refs/heads/*
 
-phases:
-- phase: Phase_1
+jobs:
+- job: Phase_1
   displayName: Compile Module
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted VS2017
 
   steps:
@@ -31,11 +28,11 @@ phases:
       ArtifactName: BuildOutput
 
 
-- phase: Phase_2
+- job: Phase_2
   displayName: Test Windows (PSv5)
   dependsOn: Phase_1
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted VS2017
 
   steps:
@@ -56,11 +53,11 @@ phases:
     condition: succeededOrFailed()
 
 
-- phase: Phase_3
+- job: Phase_3
   displayName: Test Ubuntu
   dependsOn: Phase_1
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted Ubuntu 1604
 
   steps:
@@ -81,11 +78,11 @@ phases:
     condition: succeededOrFailed()
 
 
-- phase: Phase_4
+- job: Phase_4
   displayName: Test macOS
   dependsOn: Phase_1
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted macOS
 
   steps:
@@ -106,11 +103,11 @@ phases:
     condition: succeededOrFailed()
 
 
-- phase: Phase_5
+- job: Phase_5
   displayName: Test Windows (PSv6)
   dependsOn: Phase_1
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted VS2017
 
   steps:
@@ -133,11 +130,11 @@ phases:
     condition: succeededOrFailed()
 
 
-- phase: Phase_6
+- job: Phase_6
   displayName: Test Docker
   dependsOn: Phase_1
   condition: succeeded()
-  queue:
+  pool:
     name: Hosted Ubuntu 1604
 
   steps:
@@ -166,7 +163,7 @@ phases:
       testResultsFiles: '**/Test*.xml'
     condition: succeededOrFailed()
 
-- phase: Phase_7
+- job: Phase_7
   displayName: Deploy Module
   dependsOn:
   - Phase_2
@@ -175,7 +172,7 @@ phases:
   - Phase_5
   - Phase_6
   condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
-  queue:
+  pool:
     name: Hosted VS2017
 
   steps:
