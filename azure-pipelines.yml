@@ -158,10 +158,10 @@ jobs:
 
   - task: PublishTestResults@2
     displayName: 'Publish Test Results **/Test*.xml'
+    condition: succeededOrFailed()
     inputs:
       testRunner: NUnit
       testResultsFiles: '**/Test*.xml'
-    condition: succeededOrFailed()
 
 - job: Phase_7
   displayName: Deploy Module
@@ -171,18 +171,21 @@ jobs:
   - Phase_4
   - Phase_5
   - Phase_6
-  condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceVersionMessage'], '!deploy'))
+  condition: and(succeeded(), in(variables['Build.Reason'], 'Manual', 'IndividualCI', 'BatchedCI'), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
   pool:
     name: Hosted VS2017
 
   steps:
   - task: DownloadBuildArtifacts@0
     displayName: 'Download Build Artifacts'
+    condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
     inputs:
       artifactName: BuildOutput
       downloadPath: '$(Build.SourcesDirectory)'
 
   - powershell: . ./build.ps1 -Task Deploy
+    displayName: Deploy to PowerShell Gallery
+    condition: startsWith(variables['Build.SourceVersionMessage'], '!deploy')
     env:
       GitHubPAT: $(GitHub.PAT)
       NuGetApiKey: $(NuGetApiKey)
@@ -190,4 +193,3 @@ jobs:
       TwitterAccessToken: $(Twitter.AccessToken)
       TwitterConsumerKey: $(Twitter.ConsumerKey)
       TwitterConsumerSecret: $(Twitter.ConsumerSecret)
-    displayName: Deploy to PowerShell Gallery
