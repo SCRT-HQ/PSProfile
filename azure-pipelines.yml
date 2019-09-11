@@ -14,4 +14,4 @@ trigger:
     - refs/heads/*
 
 stages:
-- template: BuildTestDeployModule.yml@templates
+- template: BuildTestDeployModule/azure-pipelines.yml@templates
