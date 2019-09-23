@@ -93,14 +93,15 @@ function Start-PSProfileConfigurationHelper {
                 "[7]  Project Paths"
                 "[8]  Prompts"
                 "[9]  Script Paths"
-                "[10] Secrets"
-                "[11] Symbolic Links"
-                "[12] Variables"
+                "[10] Init Scripts"
+                "[11] Secrets"
+                "[12] Symbolic Links"
+                "[13] Variables"
                 ""
-                "[13] Power Tools"
-                "[14] Configuration"
-                "[15] Helpers"
-                "[16] Meta"
+                "[14] Power Tools"
+                "[15] Configuration"
+                "[16] Helpers"
+                "[17] Meta"
                 ""
                 "[*]  All concepts (Default)"
                 "[H]  Hide Help Topics"
@@ -145,7 +146,7 @@ function Start-PSProfileConfigurationHelper {
             "`nChoices:" | Write-Host
             if ($choices -match '\*') {
                 $options | Select-String "^\[\*\]\s+" | Write-Host
-                $resolved = @(1..16)
+                $resolved = @(1..17)
                 if ($hideHelpTopics) {
                     $resolved += 'H'
                 }
@@ -501,6 +502,43 @@ function Start-PSProfileConfigurationHelper {
                         until ($decision -notmatch "[Yy]")
                     }
                     10 {
+                        if ($Global:PSProfile.ScriptPaths.Count) {
+                            .$current("`n- $(($Global:PSProfile.ScriptPaths | Sort-Object) -join "`n- ")")
+                        }
+                        Write-Host "Would you like to add an external script as an Init Script on your PSProfile?"
+                        .$tip("Init Scripts are also invoked during PSProfile load. These differ from Script Paths in that the full script is stored on the PSProfile configuration itself. Init Scripts can also be disabled without being removed from PSProfile.")
+                        .$tip("During this Configuration Helper, you are limited to providing a path to a script file to import as an Init Script. While using Add-PSProfileInitScript, however, you can provide a ScriptBlock or Strings of code directly if preferred.")
+                        $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                        do {
+                            switch -Regex ($decision) {
+                                "[Yy]" {
+                                    $item1 = Read-Host "Please enter the path of the script to import as Init Script"
+                                    if ($null -eq (Get-PSProfileInitScript -Name (Get-Item $item1).BaseName)) {
+                                        if (-not $changeHash.ContainsKey('Init Scripts')) {
+                                            $changes.Add("Init Scripts:")
+                                            $changeHash['Init Scripts'] = @()
+                                        }
+                                        .$command("Add-PSProfileInitScript -Path '$item1'")
+                                        Add-PSProfileInitScript -Path $item1 -Verbose
+                                        $changes.Add("  - $item1")
+                                        $changeHash['Init Scripts'] += $item1
+                                    }
+                                    else {
+                                        .$warning("Init Script '$item1' already exists on your PSProfile configuration! If you would like to overwrite it, run the following command:")
+                                        .$command("Add-PSProfileInitScript -Path '$item1' -Force")
+                                    }
+                                    "`nWould you like to import another Init Script to your PSProfile?" | Write-Host
+                                    $decision = Read-Host "[Y] Yes [N] No [X] Exit"
+                                }
+                                "[Xx]" {
+                                    .$exit
+                                    return
+                                }
+                            }
+                        }
+                        until ($decision -notmatch "[Yy]")
+                    }
+                    11 {
                         if (($Global:PSProfile.Vault._secrets.GetEnumerator() | Where-Object {$_.Key -ne 'GitCredentials'}).Count) {
                             .$current("`n- $((($Global:PSProfile.Vault._secrets.GetEnumerator() | Where-Object {$_.Key -ne 'GitCredentials'}).Key | Sort-Object) -join "`n- ")")
                         }
@@ -568,7 +606,7 @@ function Start-PSProfileConfigurationHelper {
                         }
                         until ($decision -notmatch "[Yy]")
                     }
-                    11 {
+                    12 {
                         if ($Global:PSProfile.SymbolicLinks.Keys.Count) {
                             .$current("`n$(($Global:PSProfile.SymbolicLinks | Out-String).Trim())")
                         }
@@ -605,7 +643,7 @@ function Start-PSProfileConfigurationHelper {
                         }
                         until ($decision -notmatch "[Yy]")
                     }
-                    12 {
+                    13 {
                         if ($Global:PSProfile.Variables.Environment.Keys.Count -or $Global:PSProfile.Variables.Global.Keys.Count) {
                             .$current("`n`n~~ ENVIRONMENT ~~`n$(($Global:PSProfile.Variables.Environment | Out-String).Trim())`n`n~~ GLOBAL ~~`n$(($Global:PSProfile.Variables.Global | Out-String).Trim())")
                         }
@@ -656,25 +694,25 @@ function Start-PSProfileConfigurationHelper {
                         }
                         until ($decision -notmatch "[Yy]")
                     }
-                    13 {
+                    14 {
                         "Power Tools functions do not alter the PSProfile configuration, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host
                         Read-Host "Press [Enter] to continue"
                     }
-                    14 {
+                    15 {
                         "Configuration functions are meant to interact with the PSProfile configuration directly, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host
                         Read-Host "Press [Enter] to continue"
                     }
-                    15 {
+                    16 {
                         "Helper functions are meant to interact for use within prompts or add Log Events to PSProfile, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host
                         Read-Host "Press [Enter] to continue"
                     }
-                    16 {
+                    17 {
                         "Meta functions are meant to provide information about PSProfile itself, so there is nothing to configure with this Helper! Please see the HelpTopic '$helpTopic' for more info:" | Write-Host
                         .$command("Get-Help $helpTopic")
                         "" | Write-Host

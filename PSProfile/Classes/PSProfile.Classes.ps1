@@ -107,6 +107,7 @@ class PSProfile {
     [string[]] $PluginPaths
     [string[]] $ProjectPaths
     [hashtable] $Prompts
+    [hashtable] $InitScripts
     [string[]] $ScriptPaths
     [hashtable] $SymbolicLinks
     [hashtable] $Variables
@@ -157,6 +158,7 @@ class PSProfile {
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
         $this.ProjectPaths = @()
         $this.PluginPaths = @()
+        $this.InitScripts = @{}
         $this.ScriptPaths = @()
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -235,7 +237,7 @@ if ($env:AWS_PROFILE) {
     if ([String]::IsNullOrEmpty($awsIcon)) {
         $awsIcon = "AWS:"
     }
-    Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)" -NoNewline
+    Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)$(if($env:AWS_DEFAULT_REGION){" @ $env:AWS_DEFAULT_REGION"})" -NoNewline
     Write-Host "]" -NoNewline
 }
 "`n>> "'
@@ -264,6 +266,7 @@ if ($env:AWS_PROFILE) {
                 "Verbose"
             )
         }
+        $this._invokeInitScripts()
         $this._importModules()
         $this._loadPlugins()
         $this._invokeScripts()
@@ -292,6 +295,7 @@ if ($env:AWS_PROFILE) {
         $this._installModules()
         $this._createSymbolicLinks()
         $this._formatPrompts()
+        $this._formatInitScripts()
         $this.LastRefresh = [datetime]::Now
         $this.Save()
     }
@@ -407,6 +411,29 @@ if ($env:AWS_PROFILE) {
         $this._log(
             "SECTION END",
             "FormatPrompts",
+            "Debug"
+        )
+    }
+    hidden [void] _formatInitScripts() {
+        $this._log(
+            "SECTION START",
+            "FormatInitScripts",
+            "Debug"
+        )
+        $final = $this.InitScripts
+        $this.InitScripts.GetEnumerator() | ForEach-Object {
+            $this._log(
+                "Formatting InitScript '$($_.Key)'",
+                "FormatInitScripts",
+                "Verbose"
+            )
+            $updated = ($_.Value.ScriptBlock -split "[\r\n]" | Where-Object { $_ }).Trim() -join "`n"
+            $final[$_.Key]['ScriptBlock'] = $updated
+        }
+        $this.InitScripts = $final
+        $this._log(
+            "SECTION END",
+            "FormatInitScripts",
             "Debug"
         )
     }
@@ -713,6 +740,46 @@ if ($env:AWS_PROFILE) {
             "SECTION END",
             'InvokeScripts',
             'Debug'
+        )
+    }
+    hidden [void] _invokeInitScripts() {
+        $this._log(
+            "SECTION START",
+            "InvokeInitScripts",
+            "Debug"
+        )
+        $this.InitScripts.GetEnumerator() | ForEach-Object {
+            $s = $_
+            if ($_.Value.Enabled) {
+                $this._log(
+                    "Invoking Init Script: $($s.Key)",
+                    "InvokeInitScripts",
+                    "Verbose"
+                )
+                try {
+                    $sb = [scriptblock]::Create($this._globalize($s.Value.ScriptBlock))
+                    .$sb
+                }
+                catch {
+                    $this._log(
+                        "Error while invoking InitScript '$($s.Key)': $($_.Exception.Message)",
+                        "InvokeInitScripts",
+                        "Warning"
+                    )
+                }
+            }
+            else {
+                $this._log(
+                    "Skipping disabled Init Script: $($_.Key)",
+                    "InvokeInitScripts",
+                    "Verbose"
+                )
+            }
+        }
+        $this._log(
+            "SECTION END",
+            "InvokeInitScripts",
+            "Debug"
         )
     }
     hidden [void] _installModules() {

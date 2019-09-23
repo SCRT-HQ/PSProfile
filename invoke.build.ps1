@@ -96,6 +96,7 @@ task Build Clean,{
         $gciPath = Join-Path $SourceModuleDirectory $scope
         if (Test-Path $gciPath) {
             Get-ChildItem -Path $gciPath -Filter "*.ps1" -Recurse -File | ForEach-Object {
+                Write-BuildLog "Working on: $($_.FullName.Replace("$gciPath\",''))"
                 "$(Get-Content $_.FullName -Raw)`n" | Add-Content -Path $psm1 -Encoding UTF8
                 if ($scope -eq 'Public') {
                     $functionsToExport += $_.BaseName

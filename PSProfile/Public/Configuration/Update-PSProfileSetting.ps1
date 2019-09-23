@@ -94,7 +94,16 @@ function Update-PSProfileSetting {
     }
 }
 
-Register-ArgumentCompleter -CommandName 'Update-PSProfileSetting' -ParameterName Path -ScriptBlock {
+Register-ArgumentCompleter -CommandName Update-PSProfileSetting -ParameterName Path -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     Get-PSProfileArguments @PSBoundParameters
+}
+
+Register-ArgumentCompleter -CommandName Update-PSProfileSetting -ParameterName Value -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
+    if ($fakeBoundParameter.Path -eq 'Settings.FontType') {
+        @('Default','NerdFonts','PowerLine') | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+    }
 }

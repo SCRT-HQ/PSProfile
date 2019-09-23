@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+  * [0.4.0 - 2019-09-22](#040---2019-09-22)
   * [0.3.0 - 2019-09-07](#030---2019-09-07)
   * [0.2.0 - 2019-09-02](#020---2019-09-02)
   * [0.1.9 - 2019-08-26](#019---2019-08-26)
@@ -15,6 +16,23 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.4.0 - 2019-09-22
+
+* [Issue #18](https://github.com/scrthq/PSProfile/issues/18)
+  * Added the following functions for Init Script management:
+    * `Add-PSProfileInitScript`
+    * `Get-PSProfileInitScript`
+    * `Remove-PSProfileInitScript`
+    * `Enable-PSProfileInitScript`
+    * `Disable-PSProfileInitScript`
+    * `Edit-PSProfileInitScript`
+  * Added contextual help file `about_PSProfile_Init_Scripts`
+  * Added Init Scripts section to `Start-PSProfileConfigurationHelper`
+  * Updated `PSProfile` class to include Init Script support.
+* Miscellaneous
+  * Updated `Edit-PSProfilePrompt` when choosing to Save PSProfile to ensure the updated prompt is written back to disk.
+  * Updated `invoke.build.ps1` for better contextual verbosity when compiling the module during the build process.
 
 ## 0.3.0 - 2019-09-07
 

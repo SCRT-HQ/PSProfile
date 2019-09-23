@@ -1,0 +1,40 @@
+TOPIC
+    about_PSProfile_Init_Scripts
+
+SHORT DESCRIPTION
+    An overview of the Init Scripts concept in PSProfile.
+
+LONG DESCRIPTION
+    Init Scripts are stored as hashtable in the PSProfile
+    object property `$PSProfile.InitScripts`.
+
+    Each Init Script is referenced by a friendly name and can
+    be enabled or disabled individually. Init Scripts are invoked
+    directly from the PSProfile configuration, so no external
+    script paths are required!
+
+COMMANDS
+    * `Add-PSProfileInitScript`
+        Adds a new Init Script to your PSProfile.
+
+    * `Get-PSProfileInitScript`
+        Gets an Init Script or the list of Init Scripts from
+        your PSProfile configuration.
+
+    * `Remove-PSProfileInitScript`
+        Removes an Init Script from your PSProfile.
+
+    * `Enable-PSProfileInitScript`
+        Enables a disabled Init Script on your
+        PSProfile configuration so it is invoked during
+        your next PSProfile import.
+
+    * `Disable-PSProfileInitScript`
+        Disables an enabled Init Script on your
+        PSProfile configuration so it is not invoked
+        during your next PSProfile import.
+
+    * `Edit-PSProfileInitScript`
+        Opens the desired Init Script in Visual Studio
+        Code for editing, then saves the edited file back to
+        your PSProfile configuration once closed in Code.

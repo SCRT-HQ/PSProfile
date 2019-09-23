@@ -48,7 +48,7 @@ function Edit-PSProfilePrompt {
         Write-Verbose "Opening prompt in VS Code"
         .$handler($in)
         if ($Save) {
-            Add-PSProfilePrompt
+            Add-PSProfilePrompt -Save
         }
     }
 }
