@@ -16,6 +16,9 @@ Param(
     $SourceModuleDirectory,
     [Parameter()]
     [String]
+    $SourceManifestPath,
+    [Parameter()]
+    [String]
     $TargetDirectory,
     [Parameter()]
     [String]
@@ -37,7 +40,8 @@ task Init {
     Import-Module Configuration
     $Script:SourceModuleDirectory = [System.IO.Path]::Combine($BuildRoot,$ModuleName)
     $Script:GalleryVersion = (Get-PSGalleryVersion $ModuleName).Version
-    $Script:ManifestVersion = (Import-Metadata -Path $(Join-Path $SourceModuleDirectory "$($ModuleName).psd1")).ModuleVersion
+    $Script:SourceManifestPath = Join-Path $SourceModuleDirectory "$($ModuleName).psd1"
+    $Script:ManifestVersion = (Import-Metadata -Path $SourceManifestPath).ModuleVersion
     $Script:NextModuleVersion = Get-NextModuleVersion -GalleryVersion $GalleryVersion -ManifestVersion $ManifestVersion
     $Script:TargetDirectory = [System.IO.Path]::Combine($BuildRoot,'BuildOutput')
     $Script:TargetModuleDirectory = [System.IO.Path]::Combine($TargetDirectory,$ModuleName)
@@ -125,12 +129,13 @@ task Build Clean,{
 
     if ($ManifestVersion -ne $NextModuleVersion) {
         Write-BuildLog "Bumping source manifest version from '$ManifestVersion' to '$NextModuleVersion' to prevent errors"
-        Update-Metadata -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -PropertyName ModuleVersion -Value $NextModuleVersion
+        Update-Metadata -Path $SourceManifestPath -PropertyName ModuleVersion -Value $NextModuleVersion
+        ([System.IO.File]::ReadAllText($SourceManifestPath)).Trim() | Set-Content $SourceManifestPath
     }
 
     # Copy over manifest
     Write-BuildLog "Copying source manifest to target folder"
-    Copy-Item -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -Destination $TargetVersionDirectory
+    Copy-Item -Path $SourceManifestPath -Destination $TargetVersionDirectory
 
     # Update FunctionsToExport and AliasesToExport on manifest
     $params = @{
@@ -145,7 +150,8 @@ task Build Clean,{
 
     if ($ManifestVersion -ne $NextModuleVersion) {
         Write-BuildLog "Reverting bumped source manifest version from '$NextModuleVersion' to '$ManifestVersion'"
-        Update-Metadata -Path (Join-Path $SourceModuleDirectory "$($ModuleName).psd1") -PropertyName ModuleVersion -Value $ManifestVersion
+        Update-Metadata -Path $SourceManifestPath -PropertyName ModuleVersion -Value $ManifestVersion
+        ([System.IO.File]::ReadAllText($SourceManifestPath)).Trim() | Set-Content $SourceManifestPath
     }
 
     Write-BuildLog "Created compiled module at [$TargetVersionDirectory]"
