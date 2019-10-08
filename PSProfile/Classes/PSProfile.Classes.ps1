@@ -96,6 +96,7 @@ class PSProfile {
     [hashtable] $_internal
     [hashtable] $Settings
     [datetime] $LastRefresh
+    [datetime] $LastSave
     [string] $RefreshFrequency
     [hashtable] $GitPathMap
     [hashtable] $PSBuildPathMap
@@ -156,6 +157,7 @@ class PSProfile {
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
         $this.LastRefresh = [datetime]::Now.AddHours(-2)
+        $this.LastSave = [datetime]::Now
         $this.ProjectPaths = @()
         $this.PluginPaths = @()
         $this.InitScripts = @{}
@@ -298,13 +300,38 @@ if ($env:AWS_PROFILE) {
         $this._formatInitScripts()
         $this.LastRefresh = [datetime]::Now
         $this.Save()
+        $this._log(
+            "Refresh complete",
+            "MAIN",
+            "Verbose"
+        )
     }
     [void] Save() {
+        $this._log(
+            "Saving PSProfile configuration",
+            "MAIN",
+            "Debug"
+        )
+        $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
+        if ($conf.LastSave -gt $this.LastSave) {
+            $this._log(
+                "Configuration has been updated from another session @ $($conf.LastSave). Pulling in updated configuration before saving.",
+                "MAIN",
+                "Verbose"
+            )
+            $this | Update-Object $conf
+        }
         $out = @{ }
+        $this.LastSave = [DateTime]::Now
         $this.PSObject.Properties.Name | Where-Object { $_ -ne '_internal' } | ForEach-Object {
             $out[$_] = $this.$_
         }
         $out | Export-Configuration -Name PSProfile -CompanyName 'SCRT HQ'
+        $this._log(
+            "PSProfile configuration has been saved.",
+            "MAIN",
+            "Verbose"
+        )
     }
     hidden [string] _globalize([string]$content) {
         $noScopePattern = 'function\s+(?<Name>[\w+_-]{1,})\s+\{'
