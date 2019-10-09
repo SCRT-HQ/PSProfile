@@ -11,9 +11,12 @@ if ([Environment]::UserInteractive -or ($null -eq [Environment]::UserInteractive
         $global:PSProfile = $conf
     }
     $PSProfile_OnRemoveScript = {
-        $global:PSProfileConfigurationWatcher.Dispose()
-        Remove-Variable PSProfileConfigurationWatcher -Scope Global -Force
-        Remove-Variable PSProfile -Scope Global -Force
+        try {
+            Remove-Variable PSProfileConfigurationWatcher -Scope Global -Force
+            Remove-Variable PSProfile -Scope Global -Force
+            $global:PSProfileConfigurationWatcher.Dispose()
+        }
+        catch {}
     }
     $ExecutionContext.SessionState.Module.OnRemove += $PSProfile_OnRemoveScript
     Register-EngineEvent -SourceIdentifier ([System.Management.Automation.PsEngineEvent]::Exiting) -Action $PSProfile_OnRemoveScript
