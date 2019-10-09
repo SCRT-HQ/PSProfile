@@ -312,15 +312,6 @@ if ($env:AWS_PROFILE) {
             "MAIN",
             "Debug"
         )
-        $conf = Import-Configuration -Name PSProfile -CompanyName 'SCRT HQ' -DefaultPath (Join-Path $PSScriptRoot "Configuration.psd1")
-        if ($conf.LastSave -gt $this.LastSave) {
-            $this._log(
-                "Configuration has been updated from another session @ $($conf.LastSave). Pulling in updated configuration before saving.",
-                "MAIN",
-                "Verbose"
-            )
-            $this | Update-Object $conf
-        }
         $out = @{ }
         $this.LastSave = [DateTime]::Now
         $this.PSObject.Properties.Name | Where-Object { $_ -ne '_internal' } | ForEach-Object {
@@ -330,7 +321,7 @@ if ($env:AWS_PROFILE) {
         $this._log(
             "PSProfile configuration has been saved.",
             "MAIN",
-            "Verbose"
+            "Debug"
         )
     }
     hidden [string] _globalize([string]$content) {
