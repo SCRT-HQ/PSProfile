@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.5.0 - 2019-10-08](#050---2019-10-08)
     * [0.4.1 - 2019-10-08](#041---2019-10-08)
     * [0.4.0 - 2019-09-22](#040---2019-09-22)
     * [0.3.0 - 2019-09-07](#030---2019-09-07)
@@ -17,6 +18,12 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.5.0 - 2019-10-08
+
+* Miscellaneous
+    * Added FileWatcher event registration to update current `$global:PSProfile` object whenever the Configuration.psd1 file has changed, enabling configuration persistence across sessions. Configuration additions and removals from one PowerShell session will immediately be reflected in other active sessions.
+    * Removed the persistence workaround the `Save()` method in favor of the Configuration.psd1 FileWatcher method.
 
 ## 0.4.1 - 2019-10-08
 

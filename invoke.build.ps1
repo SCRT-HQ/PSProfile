@@ -217,7 +217,6 @@ task Test Init,{
         $testResults | Format-List
         Write-BuildError 'One or more Pester tests failed. Build cannot continue!'
     }
-    Pop-Location
 }
 
 $psGalleryConditions = {
