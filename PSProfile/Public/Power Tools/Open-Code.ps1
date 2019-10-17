@@ -118,12 +118,11 @@ function Open-Code {
         }
     }
     Process {
+        $codeCommand = @('code','code-insiders')
         if($WithInsiders) {
-            $code = (Get-Command code-insiders -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+            $codeCommand = @('code-insiders','code')
         }
-        if($null -eq $code){
-            $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
-        }
+        $code = (Get-Command $codeCommand -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
         if ($PSCmdlet.ParameterSetName -eq 'InputObject') {
             $collection.Add($InputObject)
             if ($PSBoundParameters.ContainsKey('Path')) {
