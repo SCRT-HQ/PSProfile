@@ -24,6 +24,9 @@ function Open-Code {
     .PARAMETER Wait
     If $true, waits for the file to be closed in Code before returning to the prompt. If $false, opens the file using a background job to allow immediately returning to the prompt. Defaults to $false.
 
+    .PARAMETER WithInsiders
+    If $true, looks for VS Code Insiders to load. If $true and code-insiders cannot be found, opens the file using VS Code stable. If $false, opens the file using VS Code stable. Defaults to $false.
+
     .PARAMETER ArgumentList
     Any additional arguments to be passed directly to the Code CLI command, e.g. `Open-Code --list-extensions` or `code --list-extensions` will still work the same as expected.
 
@@ -61,6 +64,10 @@ function Open-Code {
         [Alias('w')]
         [Switch]
         $Wait,
+        [Alias('wi')]
+        [Alias('insiders')]
+        [Switch]
+        $WithInsiders,
         [parameter(ValueFromRemainingArguments)]
         [String[]]
         $ArgumentList
@@ -111,7 +118,12 @@ function Open-Code {
         }
     }
     Process {
-        $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+        if($WithInsiders) {
+            $code = (Get-Command code-insiders -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+        }
+        if($null -eq $code){
+            $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+        }
         if ($PSCmdlet.ParameterSetName -eq 'InputObject') {
             $collection.Add($InputObject)
             if ($PSBoundParameters.ContainsKey('Path')) {
