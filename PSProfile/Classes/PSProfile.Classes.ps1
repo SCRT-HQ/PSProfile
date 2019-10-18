@@ -646,14 +646,13 @@ if ($env:AWS_PROFILE) {
                             'FindProjects',
                             'Verbose'
                         )
-                            $currPath = $_.Parent
+                            $currPath = $_
                             while($this.GitPathMap.ContainsKey($PathName)){
-                                $this._log(
-                                    "Uh oh... $PathName already exists for a git repository...",
-                                    'FindProjects',
-                                    'Warning'
-                                )
-                                $PathName = "$PathName-$($currPath.Parent.BaseName)"
+                                $currPath = $currPath.Parent
+                                $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
+                                $this.GitPathMap["$($doublePath.Parent)\$($doublePath.BaseName)"] = $doublePath.FullName
+                                $this.GitPathMap.Remove($PathName)
+                                $PathName = "$($currPath.Parent.BaseName)\$PathName"
                             }
                         $this.GitPathMap[$PathName] = $FullPathName
                         $bldPath = [System.IO.Path]::Combine($FullPathName,'build.ps1')
