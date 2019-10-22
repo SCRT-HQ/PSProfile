@@ -652,6 +652,11 @@ if ($env:AWS_PROFILE) {
                                 $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
                                 $this.GitPathMap["$($doublePath.Parent)\$($doublePath.BaseName)"] = $doublePath.FullName
                                 $this.GitPathMap.Remove($PathName)
+                                if($this.PSBuildPathMap.ContainsKey($PathName)){
+                                    $PSBuildPath = [System.IO.DirectoryInfo]::new($this.PSBuildPathMap[$PathName])
+                                    $this.PSBuildPathMap["$($PSBuildPath.Parent)\$($PSBuildPath.BaseName)"] = $doublePath.FullName
+                                    $this.PSBuildPathMap.Remove($PathName)
+                                }
                                 $PathName = "$($currPath.Parent.BaseName)\$PathName"
                             }
                         $this.GitPathMap[$PathName] = $FullPathName
