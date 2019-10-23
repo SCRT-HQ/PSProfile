@@ -638,14 +638,29 @@ if ($env:AWS_PROFILE) {
                     $g = 0
                     $b = 0
                     $pInfo.EnumerateDirectories('.git',[System.IO.SearchOption]::AllDirectories) | ForEach-Object {
+                        $PathName = $_.Parent.BaseName
+                        $FullPathName = $_.Parent.FullName
                         $g++
                         $this._log(
-                            "Found git project @ $($_.Parent.FullName)",
+                            "Found git project @ $($FullPathName)",
                             'FindProjects',
                             'Verbose'
                         )
-                        $this.GitPathMap[$_.Parent.BaseName] = $_.Parent.FullName
-                        $bldPath = [System.IO.Path]::Combine($_.Parent.FullName,'build.ps1')
+                            $currPath = $_
+                            while($this.GitPathMap.ContainsKey($PathName)){
+                                $currPath = $currPath.Parent
+                                $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
+                                $this.GitPathMap["$($doublePath.Parent)\$($doublePath.BaseName)"] = $doublePath.FullName
+                                $this.GitPathMap.Remove($PathName)
+                                if($this.PSBuildPathMap.ContainsKey($PathName)){
+                                    $PSBuildPath = [System.IO.DirectoryInfo]::new($this.PSBuildPathMap[$PathName])
+                                    $this.PSBuildPathMap["$($PSBuildPath.Parent)\$($PSBuildPath.BaseName)"] = $doublePath.FullName
+                                    $this.PSBuildPathMap.Remove($PathName)
+                                }
+                                $PathName = "$($currPath.Parent.BaseName)\$PathName"
+                            }
+                        $this.GitPathMap[$PathName] = $FullPathName
+                        $bldPath = [System.IO.Path]::Combine($FullPathName,'build.ps1')
                         if ([System.IO.File]::Exists($bldPath)) {
                             $b++
                             $this._log(
@@ -653,7 +668,7 @@ if ($env:AWS_PROFILE) {
                                 'FindProjects',
                                 'Verbose'
                             )
-                            $this.PSBuildPathMap[$_.Parent.BaseName] = $_.Parent.FullName
+                            $this.PSBuildPathMap[$PathName] = $FullPathName
                         }
                     }
                     $this._log(
