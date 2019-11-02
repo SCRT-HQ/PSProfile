@@ -5,7 +5,6 @@
     'Save-Prompt'            = 'Add-PSProfilePrompt'
     'Get-Prompt'             = 'Get-PSProfilePrompt'
     'Edit-Prompt'            = 'Edit-PSProfilePrompt'
-    'Set-Prompt'             = 'Switch-PSProfilePrompt'
     'Switch-Prompt'          = 'Switch-PSProfilePrompt'
     'Remove-Prompt'          = 'Remove-PSProfilePrompt'
     'Copy-DynamicParameters' = 'Copy-Parameters'

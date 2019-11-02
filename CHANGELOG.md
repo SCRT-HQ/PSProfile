@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.6.0 - 2019-11-02](#060---2019-11-02)
     * [0.5.0 - 2019-10-08](#050---2019-10-08)
     * [0.4.1 - 2019-10-08](#041---2019-10-08)
     * [0.4.0 - 2019-09-22](#040---2019-09-22)
@@ -18,6 +19,25 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.6.0 - 2019-11-02
+
+* [Issue #21](https://github.com/scrthq/PSProfile/issues/21) - _Thank you [@corbob](https://github.com/corbob)!_
+    * Fixed: Project folder discovery logic to ensure that project folders with the same name are added to the dictionary without conflict.
+* [Issue #22](https://github.com/scrthq/PSProfile/issues/22) - _Thank you [@corbob](https://github.com/corbob)!_
+    * Added: `WithInsiders` switch parameter to `Open-Code`, `Edit-PSProfilePrompt`, and `Edit-PSProfileInitScript`.
+* [Issue #23](https://github.com/scrthq/PSProfile/issues/23)
+    * Fixed: `$PSProfile` variable should exist regardless of when you import the module (removed conditional variable setting from PSM1).
+* [Issue #26](https://github.com/scrthq/PSProfile/issues/26)
+    * Fixed: `$PSProfile._globalize()` internal method will now update `$PSDefaultParameterValue` to `$global":PSDefaultParameterValue` on InitScripts / ExternalScripts / etc so `$PSDefaultParameterValue` persists in the main session as intended.
+* [Issue #27](https://github.com/scrthq/PSProfile/issues/27)
+    * Removed: `Set-Prompt` alias to prevent conflict with `oh-my-posh` module.
+* [Issue #29](https://github.com/scrthq/PSProfile/issues/29)
+    * Fixed: Secrets now persist across refreshes and sessions as intended. Details:
+        * Removed `PSProfileVault` class, replaced with pure hashtable.
+        * Updated the Secrets management functions to work directly against the Vault hashtable.
+* [Issue #31](https://github.com/scrthq/PSProfile/issues/31)
+    * Fixed: Same as [Issue #29](https://github.com/scrthq/PSProfile/issues/29).
 
 ## 0.5.0 - 2019-10-08
 

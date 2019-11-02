@@ -52,45 +52,7 @@ class PSProfileSecret {
         $this.SecureString = $secureString
     }
 }
-class PSProfileVault : Hashtable {
-    [hashtable] $_secrets
 
-    PSProfileVault() {
-        $this._secrets = @{ }
-    }
-    [void] SetSecret([string]$name, [string]$userName, [securestring]$password) {
-        $this._secrets[$name] = [PSCredential]::new(
-            $userName,
-            $password
-        )
-    }
-    [void] SetSecret([pscredential]$psCredential) {
-        $this._secrets[$psCredential.UserName] = $psCredential
-    }
-    [void] SetSecret([string]$name, [pscredential]$psCredential) {
-        $this._secrets[$name] = $psCredential
-    }
-    [void] SetSecret([string]$name, [securestring]$secureString) {
-        $this._secrets[$name] = $secureString
-    }
-    [pscredential] GetSecret() {
-        if ($env:USERNAME) {
-            return $this._secrets[$env:USERNAME]
-        }
-        elseif ($env:USER) {
-            return $this._secrets[$env:USER]
-        }
-        else {
-            return $null
-        }
-    }
-    [object] GetSecret([string]$name) {
-        return $this._secrets[$name]
-    }
-    [void] RemoveSecret([string]$name) {
-        $this._secrets.Remove($name)
-    }
-}
 class PSProfile {
     hidden [System.Collections.Generic.List[PSProfileEvent]] $Log
     [hashtable] $_internal
@@ -112,11 +74,11 @@ class PSProfile {
     [string[]] $ScriptPaths
     [hashtable] $SymbolicLinks
     [hashtable] $Variables
-    [PSProfileVault] $Vault
+    [hashtable] $Vault
 
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
-        $this.Vault = [PSProfileVault]::new()
+        $this.Vault = @{_secrets = @{}}
         $this._internal = @{ }
         $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
@@ -150,9 +112,9 @@ class PSProfile {
                     Default   = "AWS: "
                 }
             }
-            PSReadline = @{
-                Options = @{}
-                KeyHandlers = @{}
+            PSReadline            = @{
+                Options     = @{ }
+                KeyHandlers = @{ }
             }
         }
         $this.RefreshFrequency = (New-TimeSpan -Hours 1).ToString()
@@ -160,7 +122,7 @@ class PSProfile {
         $this.LastSave = [datetime]::Now
         $this.ProjectPaths = @()
         $this.PluginPaths = @()
-        $this.InitScripts = @{}
+        $this.InitScripts = @{ }
         $this.ScriptPaths = @()
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
@@ -245,7 +207,7 @@ if ($env:AWS_PROFILE) {
 "`n>> "'
         $plugPaths = @((Join-Path $PSScriptRoot "Plugins"))
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
-        $this.PluginPaths | Where-Object {-not [string]::IsNullOrEmpty($_) -and ($_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+") } | ForEach-Object {
+        $this.PluginPaths | Where-Object { -not [string]::IsNullOrEmpty($_) -and ($_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+") } | ForEach-Object {
             $plugPaths += $_
         }
         $this.PluginPaths = $plugPaths | Select-Object -Unique
@@ -336,6 +298,7 @@ if ($env:AWS_PROFILE) {
                 $content = $content.Replace($fullValue, "function global:$funcName {")
             }
         }
+        $content = $content -replace '\$PSDefaultParameterValues','$global:PSDefaultParameterValues'
         return $content
     }
     hidden [void] _cleanConfig() {
@@ -351,16 +314,16 @@ if ($env:AWS_PROFILE) {
                 "Verbose"
             )
             [hashtable[]]$final = @()
-            $this.$section | Where-Object {$_ -is [hashtable] -and $_.Name} | ForEach-Object {
+            $this.$section | Where-Object { $_ -is [hashtable] -and $_.Name } | ForEach-Object {
                 $final += $_
             }
-            $this.$section | Where-Object {$_ -is [string]} | ForEach-Object {
+            $this.$section | Where-Object { $_ -is [string] } | ForEach-Object {
                 $this._log(
                     "[$section] Converting module string to hashtable: $_",
                     "CleanConfig",
                     "Verbose"
                 )
-                $final += @{Name = $_}
+                $final += @{Name = $_ }
             }
             $this.$section = $final
         }
@@ -371,7 +334,7 @@ if ($env:AWS_PROFILE) {
                 "Verbose"
             )
             [string[]]$final = @()
-            $this.$section | Where-Object {-not [string]::IsNullOrEmpty($_)} | ForEach-Object {
+            $this.$section | Where-Object { -not [string]::IsNullOrEmpty($_) } | ForEach-Object {
                 $final += $_
             }
             $this.$section = $final
@@ -638,7 +601,7 @@ if ($env:AWS_PROFILE) {
                     $g = 0
                     $b = 0
                     $pInfo.EnumerateDirectories('.git',[System.IO.SearchOption]::AllDirectories) | ForEach-Object {
-                        $PathName = $_.Parent.BaseName
+                        $PathName = $_.Parent.Name
                         $FullPathName = $_.Parent.FullName
                         $g++
                         $this._log(
@@ -646,25 +609,25 @@ if ($env:AWS_PROFILE) {
                             'FindProjects',
                             'Verbose'
                         )
-                            $currPath = $_
-                            while($this.GitPathMap.ContainsKey($PathName)){
-                                $currPath = $currPath.Parent
-                                $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
-                                $this.GitPathMap["$($doublePath.Parent)\$($doublePath.BaseName)"] = $doublePath.FullName
-                                $this.GitPathMap.Remove($PathName)
-                                if($this.PSBuildPathMap.ContainsKey($PathName)){
-                                    $PSBuildPath = [System.IO.DirectoryInfo]::new($this.PSBuildPathMap[$PathName])
-                                    $this.PSBuildPathMap["$($PSBuildPath.Parent)\$($PSBuildPath.BaseName)"] = $doublePath.FullName
-                                    $this.PSBuildPathMap.Remove($PathName)
-                                }
-                                $PathName = "$($currPath.Parent.BaseName)\$PathName"
+                        $currPath = $_
+                        while ($this.GitPathMap.ContainsKey($PathName)) {
+                            $currPath = $currPath.Parent
+                            $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
+                            $this.GitPathMap["$($doublePath.Parent.Name)$([System.IO.Path]::DirectorySeparatorChar)$($doublePath.Name)"] = $doublePath.FullName
+                            $this.GitPathMap.Remove($PathName)
+                            if ($this.PSBuildPathMap.ContainsKey($PathName)) {
+                                $PSBuildPath = [System.IO.DirectoryInfo]::new($this.PSBuildPathMap[$PathName])
+                                $this.PSBuildPathMap["$($PSBuildPath.Parent.Name)$([System.IO.Path]::DirectorySeparatorChar)$($PSBuildPath.Name)"] = $doublePath.FullName
+                                $this.PSBuildPathMap.Remove($PathName)
                             }
+                            $PathName = "$($currPath.Parent.BaseName)$([System.IO.Path]::DirectorySeparatorChar)$PathName"
+                        }
                         $this.GitPathMap[$PathName] = $FullPathName
                         $bldPath = [System.IO.Path]::Combine($FullPathName,'build.ps1')
                         if ([System.IO.File]::Exists($bldPath)) {
                             $b++
                             $this._log(
-                                "Found build script @ $($_.FullName)",
+                                "Found build script @ $($bldPath)",
                                 'FindProjects',
                                 'Verbose'
                             )
@@ -954,74 +917,74 @@ if ($env:AWS_PROFILE) {
         )
         if ($this.Plugins.Count) {
             $this.Plugins.ForEach( {
-                if ($_.Name -ne 'PSProfile.PowerTools') {
-                    $plugin = $_
-                    $this._log(
-                        "'$($plugin.Name)' Searching for plugin",
-                        'LoadPlugins',
-                        'Verbose'
-                    )
-                    try {
-                        $found = $null
-                        $importParams = @{
-                            ErrorAction = 'Stop'
-                            Global      = $true
-                        }
-                        if ($plugin.ArgumentList) {
-                            $importParams['ArgumentList'] = $plugin.ArgumentList
-                        }
-                        [string[]]$pathsToSearch = @($this.PluginPaths)
-                        $env:PSModulePath.Split([System.IO.Path]::PathSeparator) | ForEach-Object {
-                            $pathsToSearch += $_
-                        }
-                        foreach ($plugPath in $pathsToSearch) {
-                            $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
-                            $this._log(
-                                "'$($plugin.Name)' Checking path: $fullPath",
-                                'LoadPlugins',
-                                'Debug'
-                            )
-                            if (Test-Path $fullPath) {
-                                $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
-                                if ($plugin.ArgumentList) {
-                                    .$sb($plugin.ArgumentList)
-                                }
-                                else {
-                                    .$sb
-                                }
-                                $found = $fullPath
-                                break
+                    if ($_.Name -ne 'PSProfile.PowerTools') {
+                        $plugin = $_
+                        $this._log(
+                            "'$($plugin.Name)' Searching for plugin",
+                            'LoadPlugins',
+                            'Verbose'
+                        )
+                        try {
+                            $found = $null
+                            $importParams = @{
+                                ErrorAction = 'Stop'
+                                Global      = $true
                             }
-                        }
-                        if ($null -ne $found) {
-                            $this._log(
-                                "'$($plugin.Name)' plugin loaded from path: $found",
-                                'LoadPlugins',
-                                'Verbose'
-                            )
-                        }
-                        else {
-                            if ($null -ne $plugin.Name -and $null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
-                                Import-Module $plugin.Name @importParams
+                            if ($plugin.ArgumentList) {
+                                $importParams['ArgumentList'] = $plugin.ArgumentList
+                            }
+                            [string[]]$pathsToSearch = @($this.PluginPaths)
+                            $env:PSModulePath.Split([System.IO.Path]::PathSeparator) | ForEach-Object {
+                                $pathsToSearch += $_
+                            }
+                            foreach ($plugPath in $pathsToSearch) {
+                                $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
                                 $this._log(
-                                    "'$($plugin.Name)' plugin loaded from PSModulePath!",
-                                    'LoadPlugins'
+                                    "'$($plugin.Name)' Checking path: $fullPath",
+                                    'LoadPlugins',
+                                    'Debug'
+                                )
+                                if (Test-Path $fullPath) {
+                                    $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
+                                    if ($plugin.ArgumentList) {
+                                        .$sb($plugin.ArgumentList)
+                                    }
+                                    else {
+                                        .$sb
+                                    }
+                                    $found = $fullPath
+                                    break
+                                }
+                            }
+                            if ($null -ne $found) {
+                                $this._log(
+                                    "'$($plugin.Name)' plugin loaded from path: $found",
+                                    'LoadPlugins',
+                                    'Verbose'
                                 )
                             }
                             else {
-                                $this._log(
-                                    "'$($plugin.Name)' plugin not found! To remove this plugin from your profile, run 'Remove-PSProfilePlugin $($plugin.Name)'",
-                                    'LoadPlugins',
-                                    'Warning'
-                                )
+                                if ($null -ne $plugin.Name -and $null -ne (Get-Module $plugin.Name -ListAvailable -ErrorAction SilentlyContinue)) {
+                                    Import-Module $plugin.Name @importParams
+                                    $this._log(
+                                        "'$($plugin.Name)' plugin loaded from PSModulePath!",
+                                        'LoadPlugins'
+                                    )
+                                }
+                                else {
+                                    $this._log(
+                                        "'$($plugin.Name)' plugin not found! To remove this plugin from your profile, run 'Remove-PSProfilePlugin $($plugin.Name)'",
+                                        'LoadPlugins',
+                                        'Warning'
+                                    )
+                                }
                             }
                         }
+                        catch {
+                            throw
+                        }
                     }
-                    catch {
-                        throw
-                    }
-                }
-            })
+                })
         }
         else {
             $this._log(
