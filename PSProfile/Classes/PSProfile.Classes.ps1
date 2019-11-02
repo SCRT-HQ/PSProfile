@@ -52,45 +52,7 @@ class PSProfileSecret {
         $this.SecureString = $secureString
     }
 }
-class PSProfileVault : Hashtable {
-    [hashtable] $_secrets
 
-    PSProfileVault() {
-        $this._secrets = @{ }
-    }
-    [void] SetSecret([string]$name, [string]$userName, [securestring]$password) {
-        $this._secrets[$name] = [PSCredential]::new(
-            $userName,
-            $password
-        )
-    }
-    [void] SetSecret([pscredential]$psCredential) {
-        $this._secrets[$psCredential.UserName] = $psCredential
-    }
-    [void] SetSecret([string]$name, [pscredential]$psCredential) {
-        $this._secrets[$name] = $psCredential
-    }
-    [void] SetSecret([string]$name, [securestring]$secureString) {
-        $this._secrets[$name] = $secureString
-    }
-    [pscredential] GetSecret() {
-        if ($env:USERNAME) {
-            return $this._secrets[$env:USERNAME]
-        }
-        elseif ($env:USER) {
-            return $this._secrets[$env:USER]
-        }
-        else {
-            return $null
-        }
-    }
-    [object] GetSecret([string]$name) {
-        return $this._secrets[$name]
-    }
-    [void] RemoveSecret([string]$name) {
-        $this._secrets.Remove($name)
-    }
-}
 class PSProfile {
     hidden [System.Collections.Generic.List[PSProfileEvent]] $Log
     [hashtable] $_internal
@@ -112,11 +74,11 @@ class PSProfile {
     [string[]] $ScriptPaths
     [hashtable] $SymbolicLinks
     [hashtable] $Variables
-    [PSProfileVault] $Vault
+    [hashtable] $Vault
 
     PSProfile() {
         $this.Log = [System.Collections.Generic.List[PSProfileEvent]]::new()
-        $this.Vault = [PSProfileVault]::new()
+        $this.Vault = @{_secrets = @{}}
         $this._internal = @{ }
         $this.GitPathMap = @{ }
         $this.PSBuildPathMap = @{ }
@@ -336,6 +298,7 @@ if ($env:AWS_PROFILE) {
                 $content = $content.Replace($fullValue, "function global:$funcName {")
             }
         }
+        $content = $content -replace '\$PSDefaultParameterValues','$global:PSDefaultParameterValues'
         return $content
     }
     hidden [void] _cleanConfig() {
