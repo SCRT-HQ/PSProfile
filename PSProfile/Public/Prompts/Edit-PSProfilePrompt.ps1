@@ -6,6 +6,9 @@ function Edit-PSProfilePrompt {
     .DESCRIPTION
     Enables editing the prompt from the desired editor. Once temporary file is saved, the prompt is updated in $PSProfile.Prompts.
 
+    .PARAMETER WithInsiders
+    If $true, looks for VS Code Insiders to load. If $true and code-insiders cannot be found, opens the file using VS Code stable. If $false, opens the file using VS Code stable. Defaults to $false.
+
     .PARAMETER Save
     If $true, saves prompt back to your PSProfile after updating.
 
@@ -16,14 +19,24 @@ function Edit-PSProfilePrompt {
     #>
     [CmdletBinding()]
     Param(
+        [Alias('wi')]
+        [Alias('insiders')]
+        [Switch]
+        $WithInsiders,
         [Parameter()]
         [Switch]
         $Save
     )
     Process {
+        $codeCommand = @('code','code-insiders')
+        if ($WithInsiders) {
+            $codeCommand = @('code-insiders','code')
+        }
+        $code = (Get-Command $codeCommand -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
         $in = @{
             StdIn   = Get-PSProfilePrompt -Global
             TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"ps-prompt-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")
+            Editor  = $code
         }
         $handler = {
             Param(
@@ -31,9 +44,8 @@ function Edit-PSProfilePrompt {
                 $in
             )
             try {
-                $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
                 $in.StdIn | Set-Content $in.TmpFile -Force
-                & $code $in.TmpFile --wait
+                & $in.Editor $in.TmpFile --wait
             }
             catch {
                 throw

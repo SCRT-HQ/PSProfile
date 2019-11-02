@@ -52,26 +52,29 @@ function Add-PSProfileSecret {
     Process {
         switch ($PSCmdlet.ParameterSetName) {
             PSCredential {
-                if ($Force -or $null -eq $Global:PSProfile.Vault.GetSecret($Credential.UserName)) {
+                if ($Force -or -not $Global:PSProfile.Vault._secrets.ContainsKey($Credential.UserName)) {
                     Write-Verbose "Adding PSCredential for user '$($Credential.UserName)' to `$PSProfile.Vault"
-                    $Global:PSProfile.Vault.SetSecret($Credential)
+                    $Global:PSProfile.Vault._secrets[$Credential.UserName] = $Credential
+                    if ($Save) {
+                        Save-PSProfile
+                    }
                 }
-                elseif (-not $Force -and $null -ne $Global:PSProfile.Vault.GetSecret($Credential.UserName)) {
+                elseif (-not $Force -and $Global:PSProfile.Vault._secrets.ContainsKey($Credential.UserName)) {
                     Write-Error "A secret with the name '$($Credential.UserName)' already exists! Include -Force to overwrite it."
                 }
             }
             SecureString {
-                if ($Force -or $null -eq $Global:PSProfile.Vault.GetSecret($Name)) {
+                if ($Force -or -not $Global:PSProfile.Vault._secrets.ContainsKey($Name)) {
                     Write-Verbose "Adding SecureString secret with name '$Name' to `$PSProfile.Vault"
-                    $Global:PSProfile.Vault.SetSecret($Name,$SecureString)
+                    $Global:PSProfile.Vault._secrets[$Name] = $SecureString
+                    if ($Save) {
+                        Save-PSProfile
+                    }
                 }
-                elseif (-not $Force -and $null -ne $Global:PSProfile.Vault.GetSecret($Name)) {
+                elseif (-not $Force -and $Global:PSProfile.Vault._secrets.ContainsKey($Name)) {
                     Write-Error "A secret with the name '$Name' already exists! Include -Force to overwrite it."
                 }
             }
-        }
-        if ($Save) {
-            Save-PSProfile
         }
     }
 }

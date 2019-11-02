@@ -31,7 +31,7 @@ function Remove-PSProfileSecret {
         if ($PSCmdlet.ShouldProcess("Removing '$Name' from `$PSProfile.Vault")) {
             if ($Global:PSProfile.Vault._secrets.ContainsKey($Name)) {
                 Write-Verbose "Removing '$Name' from `$PSProfile.Vault"
-                $Global:PSProfile.Vault.RemoveSecret($Name)
+                $Global:PSProfile.Vault._secrets.Remove($Name) | Out-Null
             }
             if ($Save) {
                 Save-PSProfile

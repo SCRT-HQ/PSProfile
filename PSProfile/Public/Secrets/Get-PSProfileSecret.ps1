@@ -7,7 +7,7 @@ function Get-PSProfileSecret {
     Gets a Secret from the $PSProfile.Vault.
 
     .PARAMETER Name
-    The name of the Secret you would like to retrieve from the Vault.
+    The name of the Secret you would like to retrieve from the Vault. If excluded, returns the entire Vault contents.
 
     .PARAMETER AsPlainText
     If $true and Confirm:$true, returns the decrypted password if the secret is a PSCredential object or the plain-text string if a SecureString. Requires confirmation.
@@ -22,7 +22,7 @@ function Get-PSProfileSecret {
     #>
     [CmdletBinding(SupportsShouldProcess,ConfirmImpact = "High")]
     Param(
-        [parameter(Mandatory,Position = 0)]
+        [parameter(Position = 0)]
         [String]
         $Name,
         [parameter()]
@@ -33,21 +33,28 @@ function Get-PSProfileSecret {
         $Force
     )
     Process {
-        Write-Verbose "Getting Secret '$Name' from `$PSProfile.Vault"
-        $sec = $global:PSProfile.Vault.GetSecret($Name)
-        if ($AsPlainText -and ($Force -or $PSCmdlet.ShouldProcess("Return plain-text value for Secret '$Name'"))) {
-            if ($sec -is [pscredential]) {
-                [PSCustomObject]@{
-                    UserName = $sec.UserName
-                    Password = $sec.GetNetworkCredential().Password
+        if ($Name) {
+            Write-Verbose "Getting Secret '$Name' from `$PSProfile.Vault"
+            if ($sec = $global:PSProfile.Vault._secrets[$Name]) {
+                if ($AsPlainText -and ($Force -or $PSCmdlet.ShouldProcess("Return plain-text value for Secret '$Name'"))) {
+                    if ($sec -is [pscredential]) {
+                        [PSCustomObject]@{
+                            UserName = $sec.UserName
+                            Password = $sec.GetNetworkCredential().Password
+                        }
+                    }
+                    else {
+                        Get-DecryptedValue $sec
+                    }
                 }
-            }
-            else {
-                Get-DecryptedValue $sec
+                else {
+                    $sec
+                }
             }
         }
         else {
-            $sec
+            Write-Verbose "Getting all Secrets"
+            $global:PSProfile.Vault._secrets
         }
     }
 }

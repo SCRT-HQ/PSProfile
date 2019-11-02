@@ -9,6 +9,9 @@ function Edit-PSProfileInitScript {
     .PARAMETER Name
     The name of the InitScript to edit from $PSProfile.InitScripts.
 
+    .PARAMETER WithInsiders
+    If $true, looks for VS Code Insiders to load. If $true and code-insiders cannot be found, opens the file using VS Code stable. If $false, opens the file using VS Code stable. Defaults to $false.
+
     .PARAMETER Save
     If $true, saves the updated PSProfile after updating.
 
@@ -22,16 +25,26 @@ function Edit-PSProfileInitScript {
         [Parameter(Mandatory,Position = 0,ValueFromPipeline,ValueFromPipelineByPropertyName)]
         [String[]]
         $Name,
+        [Alias('wi')]
+        [Alias('insiders')]
+        [Switch]
+        $WithInsiders,
         [Parameter()]
         [Switch]
         $Save
     )
     Process {
+        $codeCommand = @('code','code-insiders')
+        if ($WithInsiders) {
+            $codeCommand = @('code-insiders','code')
+        }
+        $code = (Get-Command $codeCommand -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
         foreach ($initScript in $Name) {
             if ($Global:PSProfile.InitScripts.Contains($initScript)) {
                 $in = @{
                     StdIn   = $Global:PSProfile.InitScripts[$initScript].ScriptBlock
                     TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"InitScript-$($initScript)-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")
+                    Editor  = $code
                 }
                 $handler = {
                     Param(
@@ -39,9 +52,8 @@ function Edit-PSProfileInitScript {
                         $in
                     )
                     try {
-                        $code = (Get-Command code -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
                         $in.StdIn | Set-Content $in.TmpFile -Force
-                        & $code $in.TmpFile --wait
+                        & $in.Editor $in.TmpFile --wait
                     }
                     catch {
                         throw
@@ -67,7 +79,7 @@ function Edit-PSProfileInitScript {
 
 Register-ArgumentCompleter -CommandName Edit-PSProfileInitScript -ParameterName Name -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
-    $Global:PSProfile.InitScripts.Keys | Where-Object {$_ -like "$wordToComplete*"} | ForEach-Object {
+    $Global:PSProfile.InitScripts.Keys | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
