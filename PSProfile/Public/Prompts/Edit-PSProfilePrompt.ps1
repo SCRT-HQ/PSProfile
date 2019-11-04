@@ -28,11 +28,27 @@ function Edit-PSProfilePrompt {
         $Save
     )
     Process {
-        $codeCommand = @('code','code-insiders')
-        if ($WithInsiders) {
-            $codeCommand = @('code-insiders','code')
+        $code = $null
+        $codeCommand = if($WithInsiders) {
+            @('code-insiders','code')
         }
-        $code = (Get-Command $codeCommand -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+        else {
+            @('code','code-insiders')
+        }
+        foreach ($cmd in $codeCommand) {
+            try {
+                if ($found = (Get-Command $cmd -All -ErrorAction Stop | Where-Object { $_.CommandType -notin @('Function','Alias') } | Select-Object -First 1 -ExpandProperty Source)) {
+                    $code = $found
+                    break
+                }
+            }
+            catch {
+                $Global:Error.Remove($Global:Error[0])
+            }
+        }
+        if ($null -eq $code){
+            throw "Editor not found!"
+        }
         $in = @{
             StdIn   = Get-PSProfilePrompt -Global
             TmpFile = [System.IO.Path]::Combine(([System.IO.Path]::GetTempPath()),"ps-prompt-$(-join ((97..(97+25)|%{[char]$_}) | Get-Random -Count 3)).ps1")

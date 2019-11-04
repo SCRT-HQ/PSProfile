@@ -1,4 +1,5 @@
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.6.1 - 2019-11-04](#061---2019-11-04)
     * [0.6.0 - 2019-11-02](#060---2019-11-02)
     * [0.5.0 - 2019-10-08](#050---2019-10-08)
     * [0.4.1 - 2019-10-08](#041---2019-10-08)
@@ -19,6 +20,11 @@
 ***
 
 # PSProfile - ChangeLog
+
+## 0.6.1 - 2019-11-04
+
+* Miscellaneous
+    * Fixed: Errors thrown on functions `Open-Code`, `Edit-PSProfileInitScript`, & `Edit-PSProfilePrompt` when `code-insiders` is not installed
 
 ## 0.6.0 - 2019-11-02
 

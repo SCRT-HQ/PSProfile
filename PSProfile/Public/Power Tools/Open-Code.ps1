@@ -118,11 +118,27 @@ function Open-Code {
         }
     }
     Process {
-        $codeCommand = @('code','code-insiders')
-        if($WithInsiders) {
-            $codeCommand = @('code-insiders','code')
+        $code = $null
+        $codeCommand = if($WithInsiders) {
+            @('code-insiders','code')
         }
-        $code = (Get-Command $codeCommand -All | Where-Object { $_.CommandType -notin @('Function','Alias') })[0].Source
+        else {
+            @('code','code-insiders')
+        }
+        foreach ($cmd in $codeCommand) {
+            try {
+                if ($found = (Get-Command $cmd -All -ErrorAction Stop | Where-Object { $_.CommandType -notin @('Function','Alias') } | Select-Object -First 1 -ExpandProperty Source)) {
+                    $code = $found
+                    break
+                }
+            }
+            catch {
+                $Global:Error.Remove($Global:Error[0])
+            }
+        }
+        if ($null -eq $code){
+            throw "Editor not found!"
+        }
         if ($PSCmdlet.ParameterSetName -eq 'InputObject') {
             $collection.Add($InputObject)
             if ($PSBoundParameters.ContainsKey('Path')) {
@@ -159,14 +175,6 @@ function Open-Code {
                     [System.IO.Path]::Combine($global:PSProfile.GitPathMap['chef-repo'],'cookbooks',$PSBoundParameters['Cookbook'])
                 }
             }
-            <# if ($AddToWorkspace) {
-                Write-Verbose "Running command: code --add $($PSBoundParameters[$PSCmdlet.ParameterSetName]) $ArgumentList"
-                & $code --add $target $ArgumentList
-            }
-            else {
-                Write-Verbose "Running command: code $($PSBoundParameters[$PSCmdlet.ParameterSetName]) $ArgumentList"
-                & $code $target $ArgumentList
-            } #>
             $cmd = @()
             if ($AddToWorkspace) {
                 $cmd += '--add'
