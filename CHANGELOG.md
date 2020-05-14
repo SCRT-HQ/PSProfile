@@ -1,6 +1,7 @@
 # PSProfile - ChangeLog
 
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.6.2 - 2020-05-14](#062---2020-05-14)
     * [0.6.1 - 2019-11-04](#061---2019-11-04)
     * [0.6.0 - 2019-11-02](#060---2019-11-02)
     * [0.5.0 - 2019-10-08](#050---2019-10-08)
@@ -20,6 +21,13 @@
     * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
+
+## 0.6.2 - 2020-05-14
+
+* Miscellaneous
+    * Fixed: `PSProfile.ADCompleters` plugin now correctly tab completes properties for `Get-ADComputer` and `Get-ADGroup`
+    * Added: InitScripts, ScriptPaths, and Plugins now create a dynamic module per item for easier discovery of where the command came from.
+    * Updated: `Get-PSProfileImportedCommands` logic so it pulls in commands from any module named `PSProfile.*`, which includes the changes to InitScripts, ScriptPaths, and Plugins where they are now loaded in as dynamic modules.
 
 ## 0.6.1 - 2019-11-04
 

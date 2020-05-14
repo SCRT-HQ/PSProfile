@@ -22,7 +22,7 @@ function Get-PSProfileImportedCommand {
         $Command
     )
     Begin {
-        $commands = Get-Command -Module PSProfile | Where-Object {$_.Name -notin (Get-Module PSProfile).ExportedCommands.Keys}
+        $commands = Get-Command -Module PSProfile.* #| Where-Object {$_.Name -notin (Get-Module PSProfile).ExportedCommands.Keys}
     }
     Process {
         if ($PSBoundParameters.ContainsKey('Command')) {
