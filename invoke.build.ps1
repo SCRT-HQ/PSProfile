@@ -252,6 +252,8 @@ task PublishToPSGallery -If $psGalleryConditions {
 
 task PublishToGitHub -If $gitHubConditions {
     Write-BuildLog "Creating Release ZIP..."
+    $commitId = git rev-parse --verify HEAD
+    $ReleaseNotes = . .\ci\GitHubReleaseNotes.ps1
     $zipPath = [System.IO.Path]::Combine($BuildRoot,"$($ModuleName).zip")
     if (Test-Path $zipPath) {
         Remove-Item $zipPath -Force
@@ -260,15 +262,13 @@ task PublishToGitHub -If $gitHubConditions {
     [System.IO.Compression.ZipFile]::CreateFromDirectory($TargetModuleDirectory,$zipPath)
     Write-BuildLog "Publishing Release v$($NextModuleVersion) @ commit Id [$($commitId)] to GitHub..."
 
-    $commitId = git rev-parse --verify HEAD
-    $ReleaseNotes = . .\ci\GitHubReleaseNotes.ps1
 
     $gitHubParams = @{
         VersionNumber    = $NextModuleVersion.ToString()
         CommitId         = $commitId
         ReleaseNotes     = $ReleaseNotes
         ArtifactPath     = $zipPath
-        GitHubUsername   = 'scrthq'
+        GitHubUsername   = 'SCRT-HQ'
         GitHubRepository = $ModuleName
         GitHubApiKey     = $env:GitHubPAT
         Draft            = $false
