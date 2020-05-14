@@ -682,7 +682,17 @@ if ($env:AWS_PROFILE) {
                                 'Verbose'
                             )
                             $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($i.FullName))))
-                            .$sb
+                            $newModuleArgs = @{
+                                Name = "PSProfile.ScriptPath.$($i.BaseName)"
+                                ScriptBlock = $sb
+                                ReturnResult = $true
+                            }
+                            $this._log(
+                                "'$($i.Name)' Importing dynamic ScriptPath module: $($newModuleArgs.Name)",
+                                'InvokeScripts',
+                                'Verbose'
+                            )
+                            New-Module @newModuleArgs | Import-Module -Global
                         }
                         catch {
                             $e = $_
@@ -754,7 +764,17 @@ if ($env:AWS_PROFILE) {
                 )
                 try {
                     $sb = [scriptblock]::Create($this._globalize($s.Value.ScriptBlock))
-                    .$sb
+                    $newModuleArgs = @{
+                        Name = "PSProfile.InitScript.$($s.Key)"
+                        ScriptBlock = $sb
+                        ReturnResult = $true
+                    }
+                    $this._log(
+                        "'$($s.Key)' Importing dynamic InitScript module: $($newModuleArgs.Name)",
+                        'InvokeInitScripts',
+                        'Verbose'
+                    )
+                    New-Module @newModuleArgs | Import-Module -Global
                 }
                 catch {
                     $this._log(
@@ -939,6 +959,13 @@ if ($env:AWS_PROFILE) {
                             }
                             foreach ($plugPath in $pathsToSearch) {
                                 $fullPath = [System.IO.Path]::Combine($plugPath,"$($plugin.Name).ps1")
+                                $paths = Get-ChildItem $plugPath -Filter "$($plugin.Name)*" | Where-Object {$_.Name -match "$($plugin.Name)\.psm*1$"}
+                                if ($paths.Count -gt 1) {
+                                    $fullPath = $paths.FullName | Where-Object {$_ -match 'psm1$'} | Select-Object -First 1
+                                }
+                                else {
+                                    $fullPath = $paths.FullName | Select-Object -First 1
+                                }
                                 $this._log(
                                     "'$($plugin.Name)' Checking path: $fullPath",
                                     'LoadPlugins',
@@ -946,12 +973,20 @@ if ($env:AWS_PROFILE) {
                                 )
                                 if (Test-Path $fullPath) {
                                     $sb = [scriptblock]::Create($this._globalize(([System.IO.File]::ReadAllText($fullPath))))
+                                    $newModuleArgs = @{
+                                        Name = "PSProfile.Plugin.$($plugin.Name -replace '^PSProfile\.')"
+                                        ScriptBlock = $sb
+                                        ReturnResult = $true
+                                    }
                                     if ($plugin.ArgumentList) {
-                                        .$sb($plugin.ArgumentList)
+                                        $newModuleArgs['ArgumentList'] = $plugin.ArgumentList
                                     }
-                                    else {
-                                        .$sb
-                                    }
+                                    $this._log(
+                                        "'$($plugin.Name)' Importing dynamic Plugin module: $($newModuleArgs.Name)",
+                                        'LoadPlugins',
+                                        'Verbose'
+                                    )
+                                    New-Module @newModuleArgs | Import-Module -Global
                                     $found = $fullPath
                                     break
                                 }

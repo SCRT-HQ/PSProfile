@@ -1,4 +1,3 @@
-
 Register-ArgumentCompleter -CommandName 'Get-ADUser' -ParameterName 'Properties' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     @(
@@ -142,6 +141,7 @@ Register-ArgumentCompleter -CommandName 'Get-ADUser' -ParameterName 'Properties'
 }
 
 Register-ArgumentCompleter -CommandName 'Get-ADComputer' -ParameterName 'Properties' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     @(
         'AccountExpirationDate'
         'accountExpires'
@@ -243,6 +243,7 @@ Register-ArgumentCompleter -CommandName 'Get-ADComputer' -ParameterName 'Propert
 }
 
 Register-ArgumentCompleter -CommandName 'Get-ADGroup' -ParameterName 'Properties' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameter)
     @(
         'AddedProperties'
         'CanonicalName'
