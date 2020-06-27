@@ -72,6 +72,7 @@ class PSProfile {
     [hashtable] $Prompts
     [hashtable] $InitScripts
     [string[]] $ScriptPaths
+    [string[]] $ConfigurationPaths
     [hashtable] $SymbolicLinks
     [hashtable] $Variables
     [hashtable] $Vault
@@ -85,11 +86,7 @@ class PSProfile {
         $this.SymbolicLinks = @{ }
         $this.Prompts = @{ }
         $this.Variables = @{
-            Environment = @{
-                Home         = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
-                UserName     = [System.Environment]::UserName
-                ComputerName = [System.Environment]::MachineName
-            }
+            Environment = @{}
             Global      = @{
                 PathAliasDirectorySeparator    = "$([System.IO.Path]::DirectorySeparatorChar)"
                 AltPathAliasDirectorySeparator = "$([char]0xe0b1)"
@@ -124,6 +121,7 @@ class PSProfile {
         $this.PluginPaths = @()
         $this.InitScripts = @{ }
         $this.ScriptPaths = @()
+        $this.ConfigurationPaths = @()
         $this.PathAliases = @{
             '~' = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
         }
@@ -237,6 +235,11 @@ if ($env:AWS_PROFILE) {
         $this._setVariables()
         $this._setCommandAliases()
         $this._loadPrompt()
+
+        $this.Variables['Environment']['Home'] = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::UserProfile)
+        $this.Variables['Environment']['UserName'] = [System.Environment]::UserName
+        $this.Variables['Environment']['ComputerName'] = [System.Environment]::MachineName
+
         $this._internal['ProfileLoadEnd'] = [datetime]::Now
         $this._internal['ProfileLoadDuration'] = $this._internal.ProfileLoadEnd - $this._internal.ProfileLoadStart
         $this._log(
@@ -460,6 +463,13 @@ if ($env:AWS_PROFILE) {
             "Verbose"
         )
         $this | Update-Object $conf
+        if ($this.ConfigurationPaths.Count) {
+            $this.ConfigurationPaths | ForEach-Object {
+                if (Test-Path $_) {
+                    $this._loadAdditionalConfiguration($_)
+                }
+            }
+        }
         $this._log(
             "SECTION END",
             "Configuration",

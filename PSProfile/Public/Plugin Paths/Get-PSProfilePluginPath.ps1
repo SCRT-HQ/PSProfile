@@ -28,7 +28,7 @@ function Get-PSProfilePluginPath {
     Process {
         if ($PSBoundParameters.ContainsKey('Path')) {
             Write-Verbose "Getting plugin path '$Path' from `$PSProfile.PluginPaths"
-            $Global:PSProfile.PluginPaths | Where-Object {$_ -in $Path}
+            $Global:PSProfile.PluginPaths | Where-Object {$_ -match "($(($Path | ForEach-Object {[regex]::Escape($_)}) -join '|'))"}
         }
         else {
             Write-Verbose "Getting all plugin paths from `$PSProfile.PluginPaths"

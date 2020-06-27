@@ -28,7 +28,7 @@ function Get-PSProfileProjectPath {
     Process {
         if ($PSBoundParameters.ContainsKey('Path')) {
             Write-Verbose "Getting project path '$Path' from `$PSProfile.ProjectPaths"
-            $Global:PSProfile.ProjectPaths | Where-Object {$_ -in $Path}
+            $Global:PSProfile.ProjectPaths | Where-Object {$_ -match "($(($Path | ForEach-Object {[regex]::Escape($_)}) -join '|'))"}
         }
         else {
             Write-Verbose "Getting all project paths from `$PSProfile.ProjectPaths"

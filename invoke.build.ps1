@@ -96,9 +96,9 @@ task Build Clean,{
     $psm1Header | Add-Content -Path $psm1 -Encoding UTF8
 
     foreach ($scope in @('Classes','Private','Public')) {
-        Write-BuildLog "Copying contents from files in source folder to PSM1: $($scope)"
         $gciPath = Join-Path $SourceModuleDirectory $scope
         if (Test-Path $gciPath) {
+            Write-BuildLog "Copying contents from files in source folder to PSM1: $($scope)"
             Get-ChildItem -Path $gciPath -Filter "*.ps1" -Recurse -File | ForEach-Object {
                 Write-BuildLog "Working on: $($_.FullName.Replace("$gciPath\",''))"
                 "$(Get-Content $_.FullName -Raw)`n" | Add-Content -Path $psm1 -Encoding UTF8
@@ -180,6 +180,7 @@ task Test Init,{
     $parameters = @{
         Name           = 'Pester'
         MinimumVersion = '4.8.1'
+        MaximumVersion = '4.99.99'
     }
     Write-BuildLog "[$($parameters.Name)] Resolving"
     try {
@@ -224,14 +225,14 @@ $psGalleryConditions = {
     -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
-    $env:BHBranchName -eq "master"
+    $env:BHBranchName -in @('master','main')
 }
 $gitHubConditions = {
     -not [String]::IsNullOrEmpty($env:GitHubPAT) -and
     -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
-    $env:BHBranchName -eq "master"
+    $env:BHBranchName -in @('master','main')
 }
 $tweetConditions = {
     -not [String]::IsNullOrEmpty($env:TwitterAccessSecret) -and
@@ -241,7 +242,7 @@ $tweetConditions = {
     -not [String]::IsNullOrEmpty($NextModuleVersion) -and
     $env:BHBuildSystem -eq 'VSTS' -and
     $env:BHCommitMessage -match '!deploy' -and
-    $env:BHBranchName -eq "master"
+    $env:BHBranchName -in @('master','main')
 }
 
 task PublishToPSGallery -If $psGalleryConditions {

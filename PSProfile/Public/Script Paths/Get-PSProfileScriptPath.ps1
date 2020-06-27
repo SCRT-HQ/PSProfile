@@ -28,7 +28,7 @@ function Get-PSProfileScriptPath {
     Process {
         if ($PSBoundParameters.ContainsKey('Path')) {
             Write-Verbose "Getting script path '$Path' from `$PSProfile.ScriptPaths"
-            $Global:PSProfile.ScriptPaths | Where-Object {$_ -in $Path}
+            $Global:PSProfile.ScriptPaths | Where-Object {$_ -match "($(($Path | ForEach-Object {[regex]::Escape($_)}) -join '|'))"}
         }
         else {
             Write-Verbose "Getting all script paths from `$PSProfile.ScriptPaths"

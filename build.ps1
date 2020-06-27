@@ -36,16 +36,19 @@ $helperUri = @(
     'scrthq'                                    # User
     'a99cc06e75eb31769d01b2adddc6d200'          # Gist ID
     'raw'
-    'ca1b0def9321dc5a71b9092d34e91180720eda2d'  # Commit SHA
+    '10d6ab6de6aa3f35c94acb7707970fe0ee755aa6'  # Commit SHA
     'AzurePipelineHelpers.ps1'                  # Filename
 ) -join '/'
 $fileUri = $helperUri -replace "[$([RegEx]::Escape("$(([System.IO.Path]::GetInvalidFileNameChars() + [System.IO.Path]::GetInvalidPathChars()) -join '')"))]","_"
-$localGistPath = [System.IO.Path]::Combine($PSScriptRoot,'ci',$fileUri)
+$ciPath = [System.IO.Path]::Combine($PSScriptRoot,'ci')
+$localGistPath = [System.IO.Path]::Combine($ciPath,$fileUri)
 if (Test-Path $localGistPath) {
     Write-Host -ForegroundColor Cyan "##[section] Importing Azure Pipelines Helper from Cached Gist: $localGistPath"
     $helperContent = Get-Content $localGistPath -Raw
 }
 else {
+    Write-Host -ForegroundColor Cyan "##[section] Cleaning out stale Gist scripts from the CI Path"
+    Get-ChildItem $ciPath -Filter 'https___gist.githubusercontent.com_scrthq*.ps1' | Remove-Item -Force
     Write-Host -ForegroundColor Cyan "##[section] Importing Azure Pipelines Helper from Gist: $helperUri"
     $helperContent = Invoke-RestMethod -Uri $helperUri
     $helperContent | Set-Content $localGistPath -Force
