@@ -7,7 +7,7 @@ PSProfile is a cross-platform PowerShell module built for profile customization.
 <div align="center">
   <!-- Azure Pipelines -->
   <a href="https://dev.azure.com/scrthq/SCRT%20HQ/_build/latest?definitionId=8">
-    <img src="https://dev.azure.com/scrthq/SCRT%20HQ/_apis/build/status/scrthq.PSProfile"
+    <img src="https://dev.azure.com/scrthq/SCRT%20HQ/_apis/build/status/scrthq.PSProfile?branchName=main"
       alt="Azure Pipelines" title="Azure Pipelines" />
   </a>&nbsp;&nbsp;&nbsp;&nbsp;
   <!-- Discord -->

@@ -1,6 +1,7 @@
 # PSProfile - ChangeLog
 
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.6.3 - 2020-06-27](#063---2020-06-27)
     * [0.6.2 - 2020-05-14](#062---2020-05-14)
     * [0.6.1 - 2019-11-04](#061---2019-11-04)
     * [0.6.0 - 2019-11-02](#060---2019-11-02)
@@ -21,6 +22,12 @@
     * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
+
+## 0.6.3 - 2020-06-27
+
+* [Issue #37](https://github.com/SCRT-HQ/PSProfile/issues/37)
+    * Fixed: Machine-specific environment variables set by PSProfile are now set after profile load to prevent issues when syncing configurations across machines.
+    * Added: `$PSProfile.ConfigurationPaths` and the surrounding functions to support management of this new property: `Add-PSProfileConfigurationPath`, `Get-PSProfileConfigurationPath`, `Remove-PSProfileConfigurationPath`.
 
 ## 0.6.2 - 2020-05-14
 

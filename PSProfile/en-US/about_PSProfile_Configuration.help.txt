@@ -10,12 +10,20 @@ LONG DESCRIPTION
     object directly for convenience.
 
 COMMANDS
+    * `Add-PSProfileConfigurationPath`
+        Adds an external Configuration Path to `$PSProfile.ConfigurationPaths`.
+        Configurations added here will be layered on top of the machine-specific
+        config during module import.
+
     * `Export-PSProfileConfiguration`
         Exports the PSProfile configuration to the desired path for portability.
 
         *Any secrets stored in the `$PSProfile.Vault` will be exported, but
         will be unable to be decrypted on another machine or by another user on
         the same machine due to encryption via Data Protection API.*
+
+    * `Get-PSProfileConfigurationPath`
+        Gets a specified path or list of paths from `$PSProfile.ConfigurationPaths`.
 
     * `Import-PSProfile`
         Invokes `$PSProfile.Load()` to run through the actions typically performed
@@ -25,6 +33,9 @@ COMMANDS
     * `Import-PSProfileConfiguration`
         Used when importing a non-standard configuration from a specific path,
         e.g. one you have migrated from another machine.
+
+    * `Remove-PSProfileConfigurationPath`
+        Removes a configuration path from `$PSProfile.ConfigurationPaths`.
 
     * `Save-PSProfile`
         Invokes `$PSProfile.Save()` to save your current PSProfile object back
