@@ -919,7 +919,7 @@ if ($env:AWS_PROFILE) {
                 }
                 catch {
                     $this._log(
-                        "'$($params['Name'])' Error importing module: $($Error[0].Exception.Message)",
+                        "'$($params['Name'])' Error importing module: $($_.Exception.Message)",
                         "ImportModules",
                         "Warning"
                     )
