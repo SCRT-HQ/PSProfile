@@ -45,17 +45,17 @@ PSProfile is a cross-platform PowerShell module built for profile customization.
 </div>
 <br />
 
-* [PSProfile](#psprofile)
-  * [Background](#background)
-  * [Quick Start](#quick-start)
-  * [Getting Help](#getting-help)
-  * [Tips & Tricks](#tips--tricks)
-    * [ProjectPaths](#projectpaths)
-    * [ScriptPaths](#scriptpaths)
-  * [Contributing](#contributing)
-  * [Code of Conduct](#code-of-conduct)
-  * [License](#license)
-  * [Changelog](#changelog)
+- [PSProfile](#psprofile)
+  - [Background](#background)
+  - [Quick Start](#quick-start)
+  - [Getting Help](#getting-help)
+  - [Tips & Tricks](#tips--tricks)
+    - [ProjectPaths](#projectpaths)
+    - [ScriptPaths](#scriptpaths)
+  - [Contributing](#contributing)
+  - [Code of Conduct](#code-of-conduct)
+  - [License](#license)
+  - [Changelog](#changelog)
 
 ## Background
 
@@ -177,7 +177,7 @@ This adds the script specified to `$PSProfile.ScriptPaths`. Any scripts here wil
 
 ## Contributing
 
-Interested in helping out with PSProfile development? Please check out our [Contribution Guidelines](https://github.com/scrthq/PSProfile/blob/master/CONTRIBUTING.md)!
+Interested in helping out with PSProfile development? Please check out our [Contribution Guidelines](https://github.com/scrthq/PSProfile/blob/main/CONTRIBUTING.md)!
 
 Building the module locally to test changes is as easy as running the `build.ps1` file in the root of the repo. This will compile the module with your changes and import the newly compiled module at the end by default.
 
@@ -189,7 +189,7 @@ Want to run the Pester tests locally? Pass `Test` as the value to the `Task` scr
 
 ## Code of Conduct
 
-Please adhere to our [Code of Conduct](https://github.com/scrthq/PSProfile/blob/master/CODE_OF_CONDUCT.md) when interacting with this repo.
+Please adhere to our [Code of Conduct](https://github.com/scrthq/PSProfile/blob/main/CODE_OF_CONDUCT.md) when interacting with this repo.
 
 ## License
 
@@ -197,4 +197,4 @@ Please adhere to our [Code of Conduct](https://github.com/scrthq/PSProfile/blob/
 
 ## Changelog
 
-[Full CHANGELOG here](https://github.com/scrthq/PSProfile/blob/master/CHANGELOG.md)
+[Full CHANGELOG here](https://github.com/scrthq/PSProfile/blob/main/CHANGELOG.md)
