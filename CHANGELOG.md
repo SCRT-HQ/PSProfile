@@ -1,6 +1,7 @@
 # PSProfile - ChangeLog
 
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.7.0 - 2021-11-17](#070---2021-11-17)
     * [0.6.3 - 2020-06-27](#063---2020-06-27)
     * [0.6.2 - 2020-05-14](#062---2020-05-14)
     * [0.6.1 - 2019-11-04](#061---2019-11-04)
@@ -22,6 +23,12 @@
     * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
+
+## 0.7.0 - 2021-11-17
+
+* Miscellaneous
+    * Added: Support for code-workspace aggregation in the GitPathMap if any are found under ProjectPaths.
+    * Updated: Tab-completion results now wrap the completion text in single-quotes if it contains any non-word characters.
 
 ## 0.6.3 - 2020-06-27
 
