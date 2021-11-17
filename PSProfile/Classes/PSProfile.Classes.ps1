@@ -136,73 +136,114 @@ class PSProfile {
             "Debug"
         )
         $this._loadConfiguration()
-        $this.Prompts['SCRTHQ'] = '$lastStatus = $?
-$lastColor = if ($lastStatus -eq $true) {
-    "Green"
+        $this.Prompts['SCRTHQ'] = @'
+$origDollarQuestion = $global:?
+$origLastExitCode = $global:LASTEXITCODE
+if ($null -eq $script:PoshGitOneDotOh) {
+    $script:PoshGitOneDotOh = (Get-Module posh-git).Version -ge ([System.Version]'1.0.0')
 }
-else {
-    "Red"
-}
-$isAdmin = $false
-$isDesktop = ($PSVersionTable.PSVersion.Major -eq 5)
-if ($isDesktop -or $IsWindows) {
-    $windowsIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $windowsPrincipal = New-Object "System.Security.Principal.WindowsPrincipal" $windowsIdentity
-    $isAdmin = $windowsPrincipal.IsInRole("Administrators") -eq 1
-} else {
-    $isAdmin = ((& id -u) -eq 0)
-}
-if ($isAdmin) {
-    $idColor = "Magenta"
-}
-else {
-    $idColor = "Cyan"
-}
-Write-Host "[" -NoNewline
-Write-Host -ForegroundColor $idColor "#$($MyInvocation.HistoryId)" -NoNewline
-Write-Host "] [" -NoNewline
-$verColor = @{
-    ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
-        "Yellow"
-    }
-    elseif ($PSVersionTable.PSVersion.Major -eq 6) {
-        "Magenta"
+if ($script:PoshGitOneDotOh) {
+    $origDollarQuestion = $global:?
+    $origLastExitCode = $global:LASTEXITCODE
+    $global:GitPromptSettings.BeforePath = '['
+    $global:GitPromptSettings.AfterPath = ("+" * (Get-Location -Stack).Count) + ']'
+    $lastCommandSuccessColor = if ($origDollarQuestion -eq $true) {
+        0x81FFC8
     }
     else {
-        "Cyan"
+        0xFF81A3
     }
-}
-Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
-Write-Host "] [" -NoNewline
-Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
-Write-Host "] [" -NoNewline
-Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
-if ((Get-Location -Stack).Count -gt 0) {
-    Write-Host (("+" * ((Get-Location -Stack).Count))) -NoNewLine -ForegroundColor Cyan
-}
-Write-Host "]" -NoNewline
-if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true) {
-    Write-VcsStatus
-    $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
+    $pathColor = 0xBA81FF
+    $global:GitPromptSettings.DefaultPromptPath.ForegroundColor = $pathColor
+    $global:GitPromptSettings.BeforePath.ForegroundColor = 'White'
+    $global:GitPromptSettings.AfterPath.ForegroundColor = 'White'
+    $global:GitPromptSettings.DefaultPromptPath.Text = '$(Get-PathAlias)'
+    $global:GitPromptSettings.DefaultPromptSuffix = ''
+    $prompt = Write-Prompt "[#$($MyInvocation.HistoryId) $("PS {0}" -f (Get-PSVersion))] " -ForegroundColor LightPink
+    $prompt += Write-Prompt "[$(Get-LastCommandDuration) @ $([DateTime]::now.ToString("HH:mm:ss.ffff"))]" -ForegroundColor $lastCommandSuccessColor
+    if ($env:AWS_PROFILE) {
+        $str = "$($env:AWS_PROFILE)$(if($env:AWS_DEFAULT_REGION){"\\$("$env:AWS_DEFAULT_REGION".Split('-').ForEach({"$_".Substring(0,1)}) -join '')"})"
+        $prompt += Write-Prompt " [$($str)]" -ForegroundColor 0xFFFC77
+    }
+    if ($env:CHEF_PROFILE) {
+        $prompt += Write-Prompt " [$($env:CHEF_PROFILE)]" -ForegroundColor 0xFFD580
+    }
+    $prompt += Write-Prompt "`n"
+    $prompt += & $GitPromptScriptBlock
+    $prompt += Write-Prompt "`n"
+    $prompt += Write-Prompt "$('λ' * ($nestedPromptLevel + 1))" -ForegroundColor 0xDAF7A6
+    $global:LASTEXITCODE = $origLastExitCode
+    "$prompt "
 }
 else {
-    $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
-}
-if ($env:AWS_PROFILE) {
-    Write-Host "`n[" -NoNewline
-    $awsIcon = if ($global:PSProfile.Settings.ContainsKey("FontType")) {
-        $global:PSProfile.Settings.PromptCharacters.AWS[$global:PSProfile.Settings.FontType]
+    $lastColor = if ($origDollarQuestion -eq $true) {
+        "Green"
     }
     else {
-        "AWS:"
+        "Red"
     }
-    if ([String]::IsNullOrEmpty($awsIcon)) {
-        $awsIcon = "AWS:"
+    $isAdmin = $false
+    $isDesktop = ($PSVersionTable.PSVersion.Major -eq 5)
+    if ($isDesktop -or $IsWindows) {
+        $windowsIdentity = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+        $windowsPrincipal = New-Object "System.Security.Principal.WindowsPrincipal" $windowsIdentity
+        $isAdmin = $windowsPrincipal.IsInRole("Administrators") -eq 1
+    } else {
+        $isAdmin = ((& id -u) -eq 0)
     }
-    Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)$(if($env:AWS_DEFAULT_REGION){" @ $env:AWS_DEFAULT_REGION"})" -NoNewline
+    if ($isAdmin) {
+        $idColor = "Magenta"
+    }
+    else {
+        $idColor = "Cyan"
+    }
+    Write-Host "[" -NoNewline
+    Write-Host -ForegroundColor $idColor "#$($MyInvocation.HistoryId)" -NoNewline
+    Write-Host "] [" -NoNewline
+    $verColor = @{
+        ForegroundColor = if ($PSVersionTable.PSVersion.Major -eq 7) {
+            "Yellow"
+        }
+        elseif ($PSVersionTable.PSVersion.Major -eq 6) {
+            "Magenta"
+        }
+        else {
+            "Cyan"
+        }
+    }
+    Write-Host @verColor ("PS {0}" -f (Get-PSVersion)) -NoNewline
+    Write-Host "] [" -NoNewline
+    Write-Host -ForegroundColor $lastColor ("{0}" -f (Get-LastCommandDuration)) -NoNewline
+    Write-Host "] [" -NoNewline
+    Write-Host ("{0}" -f $(Get-PathAlias)) -NoNewline -ForegroundColor DarkYellow
+    if ((Get-Location -Stack).Count -gt 0) {
+        Write-Host (("+" * ((Get-Location -Stack).Count))) -NoNewLine -ForegroundColor Cyan
+    }
     Write-Host "]" -NoNewline
+    if ($PWD.Path -notlike "\\*" -and $env:DisablePoshGit -ne $true) {
+        Write-VcsStatus
+        $GitPromptSettings.EnableWindowTitle = "PS {0} @" -f (Get-PSVersion)
+    }
+    else {
+        $Host.UI.RawUI.WindowTitle = "PS {0}" -f (Get-PSVersion)
+    }
+    if ($env:AWS_PROFILE) {
+        Write-Host "`n[" -NoNewline
+        $awsIcon = if ($global:PSProfile.Settings.ContainsKey("FontType")) {
+            $global:PSProfile.Settings.PromptCharacters.AWS[$global:PSProfile.Settings.FontType]
+        }
+        else {
+            "AWS:"
+        }
+        if ([String]::IsNullOrEmpty($awsIcon)) {
+            $awsIcon = "AWS:"
+        }
+        Write-Host -ForegroundColor Yellow "$($awsIcon) $($env:AWS_PROFILE)$(if($env:AWS_DEFAULT_REGION){" @ $env:AWS_DEFAULT_REGION"})" -NoNewline
+        Write-Host "]" -NoNewline
+    }
+    "`n>> "
 }
-"`n>> "'
+'@
         $plugPaths = @((Join-Path $PSScriptRoot "Plugins"))
         $curVer = (Import-Metadata (Join-Path $PSScriptRoot "PSProfile.psd1")).ModuleVersion
         $this.PluginPaths | Where-Object { -not [string]::IsNullOrEmpty($_) -and ($_ -match "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]$curVer" -or $_ -notmatch "[\/\\](Modules|BuildOutput)[\/\\]PSProfile[\/\\]\d+\.\d+\.\d+") } | ForEach-Object {
@@ -610,6 +651,7 @@ if ($env:AWS_PROFILE) {
                     )
                     $g = 0
                     $b = 0
+                    $w = 0
                     $pInfo.EnumerateDirectories('.git',[System.IO.SearchOption]::AllDirectories) | ForEach-Object {
                         $PathName = $_.Parent.Name
                         $FullPathName = $_.Parent.FullName
@@ -644,8 +686,32 @@ if ($env:AWS_PROFILE) {
                             $this.PSBuildPathMap[$PathName] = $FullPathName
                         }
                     }
+                    $pInfo.EnumerateFiles('*.code-workspace',[System.IO.SearchOption]::AllDirectories) | ForEach-Object {
+                        $PathName = $_.Name
+                        $FullPathName = $_.FullName
+                        $w++
+                        $this._log(
+                            "Found code-workspace @ $($FullPathName)",
+                            'FindProjects',
+                            'Verbose'
+                        )
+                        $currPath = $_
+                        while ($this.GitPathMap.ContainsKey($PathName)) {
+                            $currPath = $currPath.Parent
+                            $doublePath = [System.IO.DirectoryInfo]::new($this.GitPathMap[$PathName])
+                            $this.GitPathMap["$($doublePath.Parent.Name)$([System.IO.Path]::DirectorySeparatorChar)$($doublePath.Name)"] = $doublePath.FullName
+                            $this.GitPathMap.Remove($PathName)
+                            if ($this.PSBuildPathMap.ContainsKey($PathName)) {
+                                $PSBuildPath = [System.IO.DirectoryInfo]::new($this.PSBuildPathMap[$PathName])
+                                $this.PSBuildPathMap["$($PSBuildPath.Parent.Name)$([System.IO.Path]::DirectorySeparatorChar)$($PSBuildPath.Name)"] = $doublePath.FullName
+                                $this.PSBuildPathMap.Remove($PathName)
+                            }
+                            $PathName = "$($currPath.Parent.BaseName)$([System.IO.Path]::DirectorySeparatorChar)$PathName"
+                        }
+                        $this.GitPathMap[$PathName] = $FullPathName
+                    }
                     $this._log(
-                        "$p :: Found: $g git | $b build",
+                        "$p :: Found: $g git | $w code-workspace | $b build",
                         'FindProjects',
                         'Verbose'
                     )

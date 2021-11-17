@@ -94,7 +94,13 @@ function Get-PSProfileArguments {
                 else {
                     $_
                 }
-                [System.Management.Automation.CompletionResult]::new($result, $result, 'ParameterValue', $result)
+                $completionText = if ($result -match '\W') {
+                    "'$result'"
+                }
+                 else {
+                     $result
+                 }
+                [System.Management.Automation.CompletionResult]::new($completionText, $result, 'ParameterValue', $result)
             }
         }
     }
