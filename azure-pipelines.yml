@@ -42,5 +42,5 @@ stages:
     parameters:
       ModuleName: ${{ variables.ModuleName }}
       BuildReleasePoolName: '${{ parameters.BuildReleasePoolName }}'
-      TestBeta: 'No'
+      TestBeta: 'Yes'
       IncludeDocker: ${{ parameters.IncludeDocker }}
