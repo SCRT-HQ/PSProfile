@@ -6,12 +6,41 @@ resources:
       endpoint: Github
 
 variables:
-- group: deployment-vars
+  - name: ModuleName
+    value: PSProfile
+  - group: deployment-vars
 
 trigger:
   branches:
     include:
     - refs/heads/*
+  paths:
+    exclude:
+      - '.devcontainer/*'
+      - '.vscode/*'
+      - '.github/*'
+      - 'Deprecated/*'
+      - '*.md'
+      - 'LICENSE'
+      - '*.code-workspace'
+      - '.git*'
+
+parameters:
+  - name: BuildReleasePoolName
+    default: 'windows-latest'
+    type: string
+    values:
+      - windows-latest
+      - ubuntu-latest
+      - macOS-latest
+  - name: IncludeDocker
+    type: boolean
+    default: false
 
 stages:
-- template: BuildTestDeployModule/azure-pipelines.yml@templates
+  - template: BuildTestDeployModule/azure-pipelines.yml@templates
+    parameters:
+      ModuleName: ${{ variables.ModuleName }}
+      BuildReleasePoolName: '${{ parameters.BuildReleasePoolName }}'
+      TestBeta: 'No'
+      IncludeDocker: ${{ parameters.IncludeDocker }}
