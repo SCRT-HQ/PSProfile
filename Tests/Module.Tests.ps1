@@ -50,7 +50,7 @@ Describe "Module tests: $ModuleName" {
         $testCase = Get-ChildItem "$SourceModulePath\Private" -Recurse -Include *.ps1 | Foreach-Object { @{item = $_.BaseName } }
         It "Should throw when checking for '<item>' in the module commands" -TestCases $testCase {
             param($item)
-            { Get-Command -Name $item -Module $ModuleName -ErrorAction Stop } | Should -Throw "The term '$item' is not recognized as the name of a cmdlet, function, script file, or operable program."
+            { Get-Command -Name $item -Module $ModuleName -ErrorAction Stop } | Should -Throw
         }
     }
     Context "Confirm all aliases are created" {
