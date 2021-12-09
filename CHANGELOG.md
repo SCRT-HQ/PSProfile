@@ -1,6 +1,7 @@
 # PSProfile - ChangeLog
 
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.7.2 - 2021-12-09](#072---2021-12-09)
     * [0.7.1 - 2021-11-17](#071---2021-11-17)
     * [0.6.3 - 2020-06-27](#063---2020-06-27)
     * [0.6.2 - 2020-05-14](#062---2020-05-14)
@@ -23,6 +24,11 @@
     * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
+
+## 0.7.2 - 2021-12-09
+
+* Miscellaneous
+    * Updated: Tab-completion results only wrap completion text if the text contains any white-space or commas to improve completion results in normal PS history.
 
 ## 0.7.1 - 2021-11-17
 
