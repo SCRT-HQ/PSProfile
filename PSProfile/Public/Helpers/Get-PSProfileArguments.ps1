@@ -94,7 +94,7 @@ function Get-PSProfileArguments {
                 else {
                     $_
                 }
-                $completionText = if ($result -match '\W') {
+                $completionText = if ($result -match '[\s,]') {
                     "'$result'"
                 }
                  else {
