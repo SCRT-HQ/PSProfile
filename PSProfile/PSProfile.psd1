@@ -12,10 +12,10 @@
     RootModule           = 'PSProfile.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '0.7.2'
+    ModuleVersion        = '0.8.0'
 
     # Supported PSEditions
-    CompatiblePSEditions = @('Desktop','Core')
+    CompatiblePSEditions = @('Core')
 
     # ID used to uniquely identify this module
     GUID                 = '93918f5c-12cf-4ef8-a871-04c6c8be4812'
@@ -33,7 +33,7 @@
     Description          = "PSProfile is a cross-platform PowerShell module built for profile customization. It uses PoshCode's Configuration module to handle the layered Configuration"
 
     # Minimum version of the Windows PowerShell engine required by this module
-    PowerShellVersion    = '5.1.0'
+    PowerShellVersion    = '7.2'
 
     # Name of the Windows PowerShell host required by this module
     # PowerShellHostName = ''
@@ -51,7 +51,7 @@
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules      = @('Configuration','PoshRSJob','posh-git')
+    RequiredModules      = @('Configuration','posh-git')
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()

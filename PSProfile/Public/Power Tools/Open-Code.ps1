@@ -225,9 +225,9 @@ function Open-Code {
                 }
             }
             if (-not $in.Wait) {
-                Write-Verbose "Piping input to Code as a Runspace job: `$in | Start-RSJob {code -}"
-                $ind = [int]((Get-RSJob).Count) + 1
-                $null = Start-RSJob -Name "_PSProfile_OpenCode_$ind" -ScriptBlock $handler -ArgumentList $in
+                Write-Verbose "Piping input to Code as a thread job: `$in | Start-ThreadJob {code -}"
+                $ind = [int]((Get-Job | Where-Object {$_.Name -like '_PSProfile_OpenCode_*'}).Count) + 1
+                $null = Start-ThreadJob -Name "_PSProfile_OpenCode_$ind" -ThrottleLimit 32 -ScriptBlock $handler -ArgumentList $in
             }
             else {
                 Write-Verbose "Piping input to Code and waiting for file to exit: `$in | code -"

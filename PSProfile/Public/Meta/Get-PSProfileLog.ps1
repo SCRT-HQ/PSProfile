@@ -60,7 +60,7 @@ function Get-PSProfileLog {
                     Start = $sectCaps[0].Time.ToString('HH:mm:ss.fff')
                     SectionDuration = "$([Math]::Round(($sectCaps[-1].Time - $sectCaps[0].Time).TotalMilliseconds))ms"
                     FullDuration = "$([Math]::Round(($Group[-1].Time - $Group[0].Time).TotalMilliseconds))ms"
-                    RunningJobs = Get-RSJob -State Running | Where-Object {$_.Name -match $sectName} | Select-Object -ExpandProperty Name
+                    RunningJobs = Get-Job -State Running | Where-Object {$_.Name -match $sectName} | Select-Object -ExpandProperty Name
                 }
             } | Sort-Object Start | Format-Table -AutoSize
         }

@@ -564,9 +564,17 @@ else {
             'Debug'
         )
         if ($null -ne $this.SymbolicLinks.Keys) {
-            $null = $this.SymbolicLinks.GetEnumerator() | Start-RSJob -Name { "_PSProfile_SymbolicLinks_" + $_.Key } -ScriptBlock {
-                if (-not (Test-Path $_.Key) -or ((Get-Item $_.Key).LinkType -eq 'SymbolicLink' -and (Get-Item $_.Key).Target -ne $_.Value)) {
-                    New-Item -ItemType SymbolicLink -Path $_.Key -Value $_.Value -Force
+            foreach ($link in $this.SymbolicLinks.GetEnumerator()) {
+                $null = Start-ThreadJob -Name "_PSProfile_SymbolicLinks_$($link.Key)" -ThrottleLimit 32 -ArgumentList $link.Key,$link.Value -ScriptBlock {
+                    Param (
+                        [string]
+                        $Path,
+                        [string]
+                        $Target
+                    )
+                    if (-not (Test-Path $Path) -or ((Get-Item $Path).LinkType -eq 'SymbolicLink' -and (Get-Item $Path).Target -ne $Target)) {
+                        New-Item -ItemType SymbolicLink -Path $Path -Value $Target -Force
+                    }
                 }
             }
         }
@@ -881,40 +889,33 @@ else {
             'Debug'
         )
         if (-not [string]::IsNullOrEmpty((-join $this.ModulesToInstall))) {
-            $null = $this.ModulesToInstall | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) } | Start-RSJob -Name { "_PSProfile_InstallModule_$($_)" } -VariablesToImport this -ScriptBlock {
-                Param (
-                    [parameter()]
-                    [object]
-                    $Module
-                )
-                $params = if ($Module -is [string]) {
-                    @{Name = $Module }
-                }
-                elseif ($Module -is [hashtable]) {
-                    $Module
+            $modules = $this.ModulesToInstall | Where-Object { ($_ -is [hashtable] -and $_.Name) -or ($_ -is [string] -and -not [string]::IsNullOrEmpty($_.Trim())) }
+            foreach ($module in $modules) {
+                $params = if ($module -is [string]) {
+                    @{Name = $module }
                 }
                 else {
-                    $null
+                    $module
                 }
+                # Class methods are bound to the runspace that created the instance, so
+                # logging happens here instead of inside the background thread job.
                 $this._log(
-                    "Checking if module is installed already: $($params | ConvertTo-Json -Compress)",
+                    "Queuing background install of module if not already installed: $($params | ConvertTo-Json -Compress)",
                     'InstallModules',
                     'Verbose'
                 )
-                if ($null -eq (Get-Module $params['Name'] -ListAvailable)) {
-                    $this._log(
-                        "Installing missing module to CurrentUser scope: $($params | ConvertTo-Json -Compress)",
-                        'InstallModules',
-                        'Verbose'
+                $null = Start-ThreadJob -Name "_PSProfile_InstallModule_$($params['Name'])" -ThrottleLimit 32 -ArgumentList $params -ScriptBlock {
+                    Param (
+                        [hashtable]
+                        $Params
                     )
-                    Install-Module -Name @params -Scope CurrentUser -AllowClobber -SkipPublisherCheck
-                }
-                else {
-                    $this._log(
-                        "Module already installed, skipping: $($params | ConvertTo-Json -Compress)",
-                        'InstallModules',
-                        'Verbose'
-                    )
+                    if ($null -eq (Get-Module $Params['Name'] -ListAvailable)) {
+                        Write-Verbose "Installing missing module to CurrentUser scope: $($Params | ConvertTo-Json -Compress)"
+                        Install-Module @Params -Scope CurrentUser -AllowClobber -SkipPublisherCheck
+                    }
+                    else {
+                        Write-Verbose "Module already installed, skipping: $($Params | ConvertTo-Json -Compress)"
+                    }
                 }
             }
         }

@@ -4,7 +4,7 @@ Param (
     [hashtable]
     $AliasHash
 )
-# Async function by use of runspace jobs.
+# Async function by use of thread jobs.
 # Async is perfect for this since we don't need the result of this function to be something available in the session it's invoked from.
 function Update-GitAliases {
     Param (
@@ -12,7 +12,7 @@ function Update-GitAliases {
         [hashtable]
         $AliasHash
     )
-    $null = Start-RSJob -Name {"_PSProfile_GitAliases"} -ArgumentList $AliasHash -ScriptBlock {
+    $null = Start-ThreadJob -Name "_PSProfile_GitAliases" -ThrottleLimit 32 -ArgumentList $AliasHash -ScriptBlock {
         Param ([hashtable]$hash)
         $hash.GetEnumerator() | ForEach-Object {
             $i = 0

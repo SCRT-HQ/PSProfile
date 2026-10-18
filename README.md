@@ -72,7 +72,7 @@ I do a LOT of profile customization, including loading in various custom functio
 5. Maintain my PowerShell environment's desired state.
    * PSProfile includes additional configuration options to specify modules you'd like to ensure are installed or are imported during profile load, scripts to invoke, Symbolic Links to create, etc.
 
-I hope that you enjoy PSProfile as much as I do! It includes a TON of convenience features and is built to run cross-platform and tested in Azure Pipelines with Windows PowerShell, PowerShell 6+ on Windows, PowerShell 6+ on Linux, and PowerShell 6+ on MacOS.
+I hope that you enjoy PSProfile as much as I do! It includes a TON of convenience features and is built to run cross-platform on PowerShell 7.2+ (Windows, Linux, and MacOS). Windows PowerShell 5.1 is no longer supported as of v0.8.0.
 
 ## Quick Start
 

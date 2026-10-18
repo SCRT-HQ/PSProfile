@@ -1,6 +1,7 @@
 # PSProfile - ChangeLog
 
 * [PSProfile - ChangeLog](#psprofile---changelog)
+    * [0.8.0 - 2026-10-18](#080---2026-10-18)
     * [0.7.2 - 2021-12-09](#072---2021-12-09)
     * [0.7.1 - 2021-11-17](#071---2021-11-17)
     * [0.6.3 - 2020-06-27](#063---2020-06-27)
@@ -24,6 +25,14 @@
     * [0.1.0 - 2019-08-19](#010---2019-08-19)
 
 ***
+
+## 0.8.0 - 2026-10-18
+
+* Breaking Changes
+    * Updated: Minimum PowerShell version is now 7.2 and Windows PowerShell (Desktop edition) is no longer supported.
+    * Removed: `PoshRSJob` dependency. It is still listed on the PowerShell Gallery, but `Install-Module` (PowerShellGet v2) can no longer install it, which caused `Install-Module PSProfile` to fail. Background work now uses the built-in `Start-ThreadJob` cmdlet.
+* Miscellaneous
+    * Fixed: `ModulesToInstall` background installs no longer call class methods from the background thread, and splat install parameters correctly.
 
 ## 0.7.2 - 2021-12-09
 

@@ -14,8 +14,8 @@ LONG DESCRIPTION
 
     Modules found in `$PSProfile.ModulesToInstall` will be installed to the
     CurrentUser scope if not already installed. This is done during a PSProfile
-    refresh only and handled via background runspace through the PoshRSJob
-    module so as to not extend the current profile load time.
+    refresh only and handled via background thread jobs (Start-ThreadJob)
+    so as to not extend the current profile load time.
 
 COMMANDS
     * `Add-PSProfileModuleToInstall`

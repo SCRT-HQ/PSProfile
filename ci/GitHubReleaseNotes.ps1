@@ -9,7 +9,6 @@ Param(
     [String[]]
     $Dependencies = @(
         '[Configuration](https://github.com/poshcode/Configuration)',
-        '[PoshRSJob](https://github.com/proxb/PoshRSJob)',
         '[posh-git](https://github.com/dahlbyk/posh-git)'
     )
 )
