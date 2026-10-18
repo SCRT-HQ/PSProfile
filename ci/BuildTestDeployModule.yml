@@ -1,0 +1,307 @@
+# Copied from SCRT-HQ/AzurePipelineTemplates (BuildTestDeployModule/azure-pipelines.yml @ 675e96d).
+# The Windows PowerShell 5.1 test stage is removed: PSProfile requires PowerShell 7.2+.
+parameters:
+  - name: ModuleName
+    default: $(ModuleName)
+    type: string
+  - name: MkDocs
+    default: ''
+  - name: GitUrl
+    default: ''
+  - name: BuildReleasePoolName
+    default: 'windows-latest'
+    type: string
+  - name: TestBeta
+    default: 'No'
+    type: string
+  - name: IncludeDocker
+    type: boolean
+    default: false
+
+stages:
+  - stage: Build
+    displayName: Build Module
+    dependsOn: []
+    jobs:
+      - job: Job1
+        displayName: Build Module
+        pool:
+          vmImage: '${{ parameters.BuildReleasePoolName }}'
+        timeoutInMinutes: 120
+        steps:
+          - checkout: self
+            submodules: recursive
+
+          - pwsh: . ./build.ps1
+            displayName: Build Module
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact: Built Module'
+            inputs:
+              PathtoPublish: BuildOutput
+              ArtifactName: BuildOutput
+            condition: succeededOrFailed()
+
+  - stage: Test_Ubuntu
+    displayName: Test Ubuntu (latest)
+    condition: and(succeeded(), or(ne('${{ parameters.TestBeta }}', 'No'), ne(variables['Build.SourceBranch'], 'refs/heads/beta')), ne(variables['Build.SourceBranch'], 'refs/heads/alpha'))
+    dependsOn:
+      - Build
+    jobs:
+      - job: Job3
+        displayName: Test Ubuntu
+        condition: succeeded()
+        pool:
+          vmImage: 'ubuntu-latest'
+        timeoutInMinutes: 120
+        steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: BuildOutput
+              downloadPath: '$(Build.SourcesDirectory)'
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+
+          - pwsh: . ./build.ps1 -Task Test
+            displayName: Test Module
+            env:
+              PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results **/Test*.xml'
+            inputs:
+              testRunner: NUnit
+              testResultsFiles: '**/Test*.xml'
+            condition: and(succeededOrFailed(), not(contains(variables['Build.SourceVersionMessage'], '!docs')))
+
+  - stage: Test_macOS
+    displayName: Test macOS (latest)
+    condition: and(succeeded(), or(ne('${{ parameters.TestBeta }}', 'No'), ne(variables['Build.SourceBranch'], 'refs/heads/beta')), ne(variables['Build.SourceBranch'], 'refs/heads/alpha'))
+    dependsOn:
+      - Build
+    jobs:
+      - job: Job4
+        displayName: Test macOS
+        condition: succeeded()
+        pool:
+          vmImage: 'macOS-latest'
+        timeoutInMinutes: 120
+
+        steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: BuildOutput
+              downloadPath: '$(Build.SourcesDirectory)'
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+
+          - pwsh: . ./build.ps1 -Task Test
+            displayName: Test Module
+            env:
+              PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results **/Test*.xml'
+            inputs:
+              testRunner: NUnit
+              testResultsFiles: '**/Test*.xml'
+            condition: and(succeededOrFailed(), not(contains(variables['Build.SourceVersionMessage'], '!docs')))
+
+  - stage: Test_Windows_Latest
+    displayName: Test Windows (latest)
+    condition: and(succeeded(), or(ne('${{ parameters.TestBeta }}', 'No'), ne(variables['Build.SourceBranch'], 'refs/heads/beta')), ne(variables['Build.SourceBranch'], 'refs/heads/alpha'))
+    dependsOn:
+      - Build
+    jobs:
+      - job: Job5
+        displayName: Test Windows (latest)
+        condition: succeeded()
+        pool:
+          vmImage: 'windows-latest'
+        timeoutInMinutes: 120
+        steps:
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+            inputs:
+              artifactName: BuildOutput
+              downloadPath: '$(Build.SourcesDirectory)'
+
+          - pwsh: . ./build.ps1 -Task Test
+            displayName: Test Module
+            condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+            env:
+              PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results **/Test*.xml'
+            inputs:
+              testRunner: NUnit
+              testResultsFiles: '**/Test*.xml'
+            condition: and(succeededOrFailed(), not(contains(variables['Build.SourceVersionMessage'], '!docs')))
+
+  - ${{ if parameters.IncludeDocker }}:
+    - stage: Test_Docker
+      displayName: Test Docker (latest preview)
+      dependsOn:
+        - Build
+      condition: and(succeeded(), or(ne('${{ parameters.TestBeta }}', 'No'), ne(variables['Build.SourceBranch'], 'refs/heads/beta')), ne(variables['Build.SourceBranch'], 'refs/heads/alpha'))
+      jobs:
+        - job: Job6
+          displayName: Test Docker (latest preview)
+          condition: succeeded()
+          pool:
+            vmImage: 'ubuntu-latest'
+          timeoutInMinutes: 120
+          container: scrthq/powershell:preview-noentrypoint-buildtest-ubu-2004
+          steps:
+            - task: DownloadBuildArtifacts@0
+              displayName: 'Download Build Artifacts'
+              condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+              inputs:
+                artifactName: BuildOutput
+                downloadPath: '$(Build.SourcesDirectory)'
+
+            - pwsh: . ./build.ps1 -Task Test
+              displayName: Test Module
+              condition: not(contains(variables['Build.SourceVersionMessage'], '!docs'))
+              env:
+                PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+
+            - task: PublishTestResults@2
+              displayName: 'Publish Test Results **/Test*.xml'
+              inputs:
+                testRunner: NUnit
+                testResultsFiles: '**/Test*.xml'
+              condition: and(succeededOrFailed(), not(contains(variables['Build.SourceVersionMessage'], '!docs')))
+  - ${{ if in(variables['Build.SourceBranchName'],'beta','alpha','rc','master','main') }}:
+    - stage: Deploy
+      ${{ if in(variables['Build.SourceBranchName'],'beta','alpha','rc') }}:
+        displayName: Deploy Prerelease Module
+      ${{ if in(variables['Build.SourceBranchName'],'master','main') }}:
+        displayName: Deploy Module
+      condition: and(succeeded(), in(variables['Build.Reason'], 'Schedule', 'Manual', 'IndividualCI', 'BatchedCI'), in(variables['Build.SourceBranchName'],'master','main','beta','alpha','rc'))
+      ${{ if in(variables['Build.SourceBranchName'],'beta','alpha','rc') }}:
+        dependsOn:
+          - Build
+      ${{ if in(variables['Build.SourceBranchName'],'master','main') }}:
+        dependsOn:
+          - Build
+          - Test_Ubuntu
+          - Test_macOS
+          - ${{ if parameters.IncludeDocker }}:
+            - Test_Docker
+          - Test_Windows_Latest
+      jobs:
+
+        - ${{ if in(variables['Build.SourceBranchName'],'beta','alpha','rc') }}:
+          - deployment: Job7
+            displayName: Deploy Prerelease Module
+            condition: in(variables['Build.SourceBranchName'],'beta','alpha','rc')
+            pool:
+              vmImage: '${{ parameters.BuildReleasePoolName }}'
+            timeoutInMinutes: 120
+            environment: ${{ parameters.ModuleName }}-Prerelease
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - checkout: self
+                      submodules: recursive
+                    - task: DownloadBuildArtifacts@0
+                      displayName: 'Download Build Artifacts'
+                      inputs:
+                        artifactName: BuildOutput
+                        downloadPath: '$(Build.SourcesDirectory)'
+
+                    - pwsh: |
+                        . ./build.ps1 -Task Deploy
+                      displayName: Deploy Prerelease to PowerShell Gallery
+                      env:
+                        PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+                        GitHubPAT: $(GitHub.PAT)
+                        NuGetApiKey: $(NuGetApiKey)
+                        TwitterAccessSecret: $(Twitter.AccessSecret)
+                        TwitterAccessToken: $(Twitter.AccessToken)
+                        TwitterConsumerKey: $(Twitter.ConsumerKey)
+                        TwitterConsumerSecret: $(Twitter.ConsumerSecret)
+        - ${{ if in(variables['Build.SourceBranchName'],'master','main') }}:
+          - deployment: Job8
+            displayName: Deploy Module
+            condition: in(variables['Build.SourceBranchName'],'master','main')
+            pool:
+              vmImage: '${{ parameters.BuildReleasePoolName }}'
+            timeoutInMinutes: 120
+            environment: ${{ parameters.ModuleName }}
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - checkout: self
+                      submodules: recursive
+                    - task: DownloadBuildArtifacts@0
+                      displayName: 'Download Build Artifacts'
+                      inputs:
+                        artifactName: BuildOutput
+                        downloadPath: '$(Build.SourcesDirectory)'
+
+                    - pwsh: |
+                        if ($null -eq $env:BUILD_SOURCEVERSIONMESSAGE) {$env:BUILD_SOURCEVERSIONMESSAGE = (git log -1 --format=%B) -join "`n"}
+                        if ($env:BUILD_SOURCEVERSIONMESSAGE -match '^!deploy') {. ./build.ps1 -Task Deploy} else {Write-Host "Skipping deploy due to SourceVersionMessage not starting with '!deploy'..."; Get-ChildItem Env:\ | Where-Object {$_.Name -match 'Build'} | Format-Table Name,Value -AutoSize; "Source Version Message"; $env:BUILD_SOURCEVERSIONMESSAGE}
+                      displayName: Deploy to PowerShell Gallery
+                      env:
+                        PSGSuiteConfigJson: '$(PSGSuiteConfigJson)'
+                        GitHubPAT: $(GitHub.PAT)
+                        NuGetApiKey: $(NuGetApiKey)
+                        TwitterAccessSecret: $(Twitter.AccessSecret)
+                        TwitterAccessToken: $(Twitter.AccessToken)
+                        TwitterConsumerKey: $(Twitter.ConsumerKey)
+                        TwitterConsumerSecret: $(Twitter.ConsumerSecret)
+
+  - stage: Docs
+    displayName: Build/Deploy Docs
+    dependsOn:
+      - Build
+      - Test_Ubuntu
+      - Test_macOS
+      - ${{ if parameters.IncludeDocker }}:
+        - Test_Docker
+      - Test_Windows_Latest
+    jobs:
+      - job: Job9
+        displayName: Build/Deploy Docs
+        condition: and(succeeded(), ne('${{ parameters.MkDocs }}', ''), ne('${{ parameters.GitUrl }}', ''), in(variables['Build.SourceBranchName'],'master','main','beta','alpha','rc'))
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+          - checkout: self
+            submodules: recursive
+            persistCredentials: true
+
+          - task: DownloadBuildArtifacts@0
+            displayName: 'Download Build Artifacts'
+            inputs:
+              artifactName: BuildOutput
+              downloadPath: '$(Build.SourcesDirectory)'
+
+          - task: DownloadSecureFile@1
+            inputs:
+              secureFile: deploy_key
+            displayName: 'Download Deploy Key'
+
+          - script: |
+              git config --local user.name "Azure Pipelines"
+              git config --local user.email "azuredevops@microsoft.com"
+              mkdir ~/.ssh && mv $DOWNLOADSECUREFILE_SECUREFILEPATH ~/.ssh/id_rsa
+              chmod 700 ~/.ssh && chmod 600 ~/.ssh/id_rsa
+              ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+              git remote set-url origin ${{ parameters.GitUrl }}
+            displayName: Configure Git
+
+          - pwsh: . ./build.ps1 -Task Docs
+            displayName: Build and Deploy Docs
+            env:
+              GitHubPAT: $(GitHub.PAT)
